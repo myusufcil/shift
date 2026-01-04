@@ -1,0 +1,33 @@
+package com.cil.shift.feature.habits.presentation.home
+
+import com.cil.shift.feature.habits.domain.model.Habit
+import com.cil.shift.feature.habits.domain.model.HabitCompletion
+import kotlinx.datetime.LocalDate
+
+enum class WeeklyChartType {
+    LINE,
+    BAR,
+    PIE
+}
+
+data class HomeState(
+    val habits: List<HabitWithCompletion> = emptyList(),
+    val userName: String = "Alex",
+    val currentDate: String = "",
+    val selectedDate: LocalDate? = null,
+    val selectedDateCompletions: Map<String, HabitCompletion> = emptyMap(),
+    val showDayProgress: Boolean = false,
+    val showAllHabits: Boolean = false,
+    val weeklyChartData: List<Pair<String, Float>> = emptyList(),
+    val weeklyChartType: WeeklyChartType = WeeklyChartType.LINE,
+    val isLoading: Boolean = true,
+    val error: String? = null
+)
+
+data class HabitWithCompletion(
+    val habit: Habit,
+    val isCompletedToday: Boolean,
+    val currentValue: Int = 0 // For measurable/timer habits
+) {
+    val isCompleted: Boolean get() = isCompletedToday
+}

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Disable splash screen icon animation -->
+    <style name="Theme.Shift.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenAnimatedIcon">@null</item>
+        <item name="windowSplashScreenBackground">@color/ic_launcher_background</item>
+        <item name="postSplashScreenTheme">@style/Theme.Shift</item>
+    </style>
+</resources>

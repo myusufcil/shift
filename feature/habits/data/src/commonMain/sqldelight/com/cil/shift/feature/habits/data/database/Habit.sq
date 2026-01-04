@@ -1,0 +1,215 @@
+-- Habit table
+CREATE TABLE Habit (
+    id TEXT NOT NULL PRIMARY KEY,
+    name TEXT NOT NULL,
+    icon TEXT NOT NULL,
+    color TEXT NOT NULL,
+    frequency_type TEXT NOT NULL,
+    frequency_data TEXT,
+    habit_type TEXT NOT NULL DEFAULT 'SIMPLE',
+    target_value INTEGER,
+    target_unit TEXT,
+    reminder_time TEXT,
+    notes TEXT,
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    created_at INTEGER NOT NULL,
+    is_archived INTEGER NOT NULL DEFAULT 0
+);
+
+-- Index for faster queries on created_at
+CREATE INDEX habit_created_at ON Habit(created_at);
+
+-- Index for filtering active habits
+CREATE INDEX habit_is_archived ON Habit(is_archived);
+
+-- Get all active habits ordered by sort order and creation date
+getAll:
+SELECT *
+FROM Habit
+WHERE is_archived = 0
+ORDER BY sort_order ASC, created_at DESC;
+
+-- Get a specific habit by ID
+getById:
+SELECT *
+FROM Habit
+WHERE id = ?;
+
+-- Insert or replace a habit
+insert:
+INSERT OR REPLACE INTO Habit (
+    id,
+    name,
+    icon,
+    color,
+    frequency_type,
+    frequency_data,
+    habit_type,
+    target_value,
+    target_unit,
+    reminder_time,
+    notes,
+    sort_order,
+    created_at,
+    is_archived
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+-- Soft delete a habit (mark as archived)
+deleteById:
+UPDATE Habit
+SET is_archived = 1
+WHERE id = ?;
+
+-- Hard delete a habit (for testing/cleanup)
+hardDelete:
+DELETE FROM Habit
+WHERE id = ?;
+
+-- Update sort order for a habit
+updateSortOrder:
+UPDATE Habit
+SET sort_order = ?
+WHERE id = ?;
+
+-- Habit Completion table
+CREATE TABLE HabitCompletion (
+    habit_id TEXT NOT NULL,
+    date TEXT NOT NULL,
+    is_completed INTEGER NOT NULL DEFAULT 0,
+    current_value INTEGER DEFAULT 0,
+    note TEXT,
+    PRIMARY KEY (habit_id, date),
+    FOREIGN KEY (habit_id) REFERENCES Habit(id) ON DELETE CASCADE
+);
+
+-- Index for faster date queries
+CREATE INDEX completion_date ON HabitCompletion(date);
+
+-- Get completion for a specific habit on a specific date
+getCompletion:
+SELECT *
+FROM HabitCompletion
+WHERE habit_id = ? AND date = ?;
+
+-- Get all completions for a specific date
+getCompletionsForDate:
+SELECT *
+FROM HabitCompletion
+WHERE date = ?;
+
+-- Insert or update completion
+upsertCompletion:
+INSERT OR REPLACE INTO HabitCompletion (
+    habit_id,
+    date,
+    is_completed,
+    current_value,
+    note
+) VALUES (?, ?, ?, ?, ?);
+
+-- Toggle completion status
+toggleCompletion:
+INSERT OR REPLACE INTO HabitCompletion (habit_id, date, is_completed, current_value, note)
+VALUES (
+    ?,
+    ?,
+    CASE
+        WHEN (SELECT is_completed FROM HabitCompletion WHERE habit_id = ? AND date = ?) IS NULL THEN 1
+        WHEN (SELECT is_completed FROM HabitCompletion WHERE habit_id = ? AND date = ?) = 0 THEN 1
+        ELSE 0
+    END,
+    COALESCE((SELECT current_value FROM HabitCompletion WHERE habit_id = ? AND date = ?), 0),
+    COALESCE((SELECT note FROM HabitCompletion WHERE habit_id = ? AND date = ?), NULL)
+);
+
+-- Update current value for measurable habits
+updateCurrentValue:
+UPDATE HabitCompletion
+SET current_value = ?
+WHERE habit_id = ? AND date = ?;
+
+-- Update note for completion
+updateNote:
+UPDATE HabitCompletion
+SET note = ?
+WHERE habit_id = ? AND date = ?;
+
+-- Get all completions for a specific habit
+getCompletionsForHabit:
+SELECT *
+FROM HabitCompletion
+WHERE habit_id = ?
+ORDER BY date DESC;
+
+-- Notification History table
+CREATE TABLE NotificationHistory (
+    id TEXT NOT NULL PRIMARY KEY,
+    habit_id TEXT NOT NULL,
+    habit_name TEXT NOT NULL,
+    title TEXT NOT NULL,
+    message TEXT NOT NULL,
+    timestamp INTEGER NOT NULL,
+    is_read INTEGER NOT NULL DEFAULT 0,
+    action_taken TEXT,
+    FOREIGN KEY (habit_id) REFERENCES Habit(id) ON DELETE CASCADE
+);
+
+-- Index for faster queries on timestamp
+CREATE INDEX notification_timestamp ON NotificationHistory(timestamp DESC);
+
+-- Index for filtering unread notifications
+CREATE INDEX notification_is_read ON NotificationHistory(is_read);
+
+-- Get all notifications ordered by timestamp
+getAllNotifications:
+SELECT *
+FROM NotificationHistory
+ORDER BY timestamp DESC;
+
+-- Get unread notifications
+getUnreadNotifications:
+SELECT *
+FROM NotificationHistory
+WHERE is_read = 0
+ORDER BY timestamp DESC;
+
+-- Get notifications for a specific habit
+getNotificationsForHabit:
+SELECT *
+FROM NotificationHistory
+WHERE habit_id = ?
+ORDER BY timestamp DESC;
+
+-- Insert notification
+insertNotification:
+INSERT INTO NotificationHistory (
+    id,
+    habit_id,
+    habit_name,
+    title,
+    message,
+    timestamp,
+    is_read,
+    action_taken
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+
+-- Mark notification as read
+markAsRead:
+UPDATE NotificationHistory
+SET is_read = 1
+WHERE id = ?;
+
+-- Mark all notifications as read
+markAllAsRead:
+UPDATE NotificationHistory
+SET is_read = 1;
+
+-- Delete notification
+deleteNotification:
+DELETE FROM NotificationHistory
+WHERE id = ?;
+
+-- Delete old notifications (older than 30 days)
+deleteOldNotifications:
+DELETE FROM NotificationHistory
+WHERE timestamp < ?;
