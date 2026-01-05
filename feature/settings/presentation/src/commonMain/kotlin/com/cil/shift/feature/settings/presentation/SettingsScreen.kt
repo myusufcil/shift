@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -34,6 +35,11 @@ fun SettingsScreen(
     val scrollState = rememberScrollState()
     val themeManager = LocalThemeManager.current
     val currentTheme by themeManager.currentTheme.collectAsState()
+    val uriHandler = LocalUriHandler.current
+
+    // Update these URLs with your actual privacy policy and terms pages
+    val privacyPolicyUrl = "https://shift-app.com/privacy"
+    val termsOfServiceUrl = "https://shift-app.com/terms"
 
     val backgroundColor = MaterialTheme.colorScheme.background
     val textColor = MaterialTheme.colorScheme.onBackground
@@ -131,7 +137,7 @@ fun SettingsScreen(
                 subtitle = "View our privacy policy",
                 cardColor = cardColor,
                 textColor = textColor,
-                onClick = { /* TODO: Open privacy policy */ }
+                onClick = { uriHandler.openUri(privacyPolicyUrl) }
             )
 
             SettingItem(
@@ -139,7 +145,7 @@ fun SettingsScreen(
                 subtitle = "View terms of service",
                 cardColor = cardColor,
                 textColor = textColor,
-                onClick = { /* TODO: Open terms */ }
+                onClick = { uriHandler.openUri(termsOfServiceUrl) }
             )
 
             HorizontalDivider(color = textColor.copy(alpha = 0.1f))
