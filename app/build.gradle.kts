@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidApplication)
@@ -5,6 +7,13 @@ plugins {
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.kotlinSerialization)
     alias(libs.plugins.googleServices)
+}
+
+val localProperties = Properties().apply {
+    val localPropertiesFile = rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        load(localPropertiesFile.inputStream())
+    }
 }
 
 kotlin {
@@ -106,10 +115,10 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = file("../shift-release.keystore")
-            storePassword = "shift123"
-            keyAlias = "shift"
-            keyPassword = "shift123"
+            storeFile = file(localProperties.getProperty("RELEASE_STORE_FILE", "../shift-release.keystore"))
+            storePassword = localProperties.getProperty("RELEASE_STORE_PASSWORD", "")
+            keyAlias = localProperties.getProperty("RELEASE_KEY_ALIAS", "")
+            keyPassword = localProperties.getProperty("RELEASE_KEY_PASSWORD", "")
         }
     }
 
