@@ -6,6 +6,7 @@ import com.cil.shift.core.common.currentDate
 import com.cil.shift.feature.habits.domain.repository.HabitRepository
 import com.cil.shift.feature.habits.domain.usecase.DeleteHabitUseCase
 import com.cil.shift.feature.habits.domain.usecase.ToggleHabitCompletionUseCase
+import com.cil.shift.feature.habits.domain.usecase.UpdateHabitUseCase
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -14,6 +15,7 @@ class HabitDetailViewModel(
     private val selectedDate: String? = null, // Optional selected date, defaults to today
     private val repository: HabitRepository,
     private val deleteHabitUseCase: DeleteHabitUseCase,
+    private val updateHabitUseCase: UpdateHabitUseCase,
     private val toggleHabitCompletionUseCase: ToggleHabitCompletionUseCase
 ) : ViewModel() {
 
@@ -164,7 +166,7 @@ class HabitDetailViewModel(
 
                     if (currentHabit != null && newName.isNotEmpty()) {
                         val updatedHabit = currentHabit.copy(name = newName)
-                        repository.updateHabit(updatedHabit)
+                        updateHabitUseCase(updatedHabit, currentHabit.reminderTime)
 
                         _state.update {
                             it.copy(

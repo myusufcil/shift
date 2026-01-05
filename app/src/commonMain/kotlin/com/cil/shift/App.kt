@@ -11,9 +11,12 @@ import cafe.adriel.voyager.navigator.tab.CurrentTab
 import cafe.adriel.voyager.navigator.tab.TabNavigator
 import com.cil.shift.core.common.localization.LocalizationManager
 import com.cil.shift.core.common.localization.ProvideLocalization
+import com.cil.shift.core.common.notification.NotificationHistoryRepository
+import com.cil.shift.core.common.notification.NotificationManager
 import com.cil.shift.core.common.onboarding.OnboardingPreferences
 import com.cil.shift.core.common.theme.ProvideTheme
 import com.cil.shift.core.common.theme.ThemeManager
+import kotlinx.coroutines.launch
 import com.cil.shift.core.designsystem.theme.ShiftTheme
 import com.cil.shift.navigation.BottomNavigationBar
 import com.cil.shift.navigation.GlobalNavigationEvents
@@ -30,6 +33,32 @@ fun App() {
         val localizationManager = koinInject<LocalizationManager>()
         val onboardingPreferences = koinInject<OnboardingPreferences>()
         val themeManager = koinInject<ThemeManager>()
+        val notificationManager = koinInject<NotificationManager>()
+        val notificationHistoryRepository = koinInject<NotificationHistoryRepository>()
+
+        // Sync delivered notifications to history (primarily for iOS)
+        val scope = rememberCoroutineScope()
+        LaunchedEffect(Unit) {
+            scope.launch {
+                try {
+                    val deliveredNotifications = notificationManager.getDeliveredNotifications()
+                    deliveredNotifications.forEach { notification ->
+                        notificationHistoryRepository.saveNotification(
+                            habitId = notification.habitId,
+                            habitName = notification.habitName,
+                            title = notification.title,
+                            message = notification.message
+                        )
+                    }
+                    if (deliveredNotifications.isNotEmpty()) {
+                        notificationManager.clearDeliveredNotifications()
+                    }
+                } catch (e: Exception) {
+                    // Silently handle errors during notification sync
+                    e.printStackTrace()
+                }
+            }
+        }
 
         val currentTheme by themeManager.currentTheme.collectAsState()
         val isSystemInDarkTheme = isSystemInDarkTheme()

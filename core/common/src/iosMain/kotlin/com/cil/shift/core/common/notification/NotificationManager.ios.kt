@@ -85,4 +85,39 @@ actual class NotificationManager {
             continuation.resume(granted)
         }
     }
+
+    actual suspend fun getDeliveredNotifications(): List<DeliveredNotification> = suspendCoroutine { continuation ->
+        center.getDeliveredNotificationsWithCompletionHandler { notifications ->
+            val deliveredList = notifications?.mapNotNull { notification ->
+                val un = notification as? UNNotification ?: return@mapNotNull null
+                val request = un.request
+                val identifier = request.identifier
+
+                // Extract habitId from identifier (format: "habit_reminder_{habitId}")
+                if (!identifier.startsWith("habit_reminder_")) return@mapNotNull null
+                val habitId = identifier.removePrefix("habit_reminder_")
+
+                val content = request.content
+                val title = content.title
+                val message = content.body
+
+                // Extract habit name from title (format: "Time for {habitName}!")
+                val habitName = title.removePrefix("Time for ").removeSuffix("!")
+
+                DeliveredNotification(
+                    habitId = habitId,
+                    habitName = habitName,
+                    title = title,
+                    message = message,
+                    timestamp = (un.date.timeIntervalSince1970 * 1000).toLong()
+                )
+            } ?: emptyList()
+
+            continuation.resume(deliveredList)
+        }
+    }
+
+    actual fun clearDeliveredNotifications() {
+        center.removeAllDeliveredNotifications()
+    }
 }

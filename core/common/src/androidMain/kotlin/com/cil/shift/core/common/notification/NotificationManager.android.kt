@@ -126,12 +126,13 @@ actual class NotificationManager(private val context: Context) {
         }
     }
 
-    /**
-     * Saves notification to history database.
-     */
-    fun saveNotificationToHistory(habitId: String, habitName: String, title: String, message: String) {
-        // TODO: Save to database using HabitRepository
-        // This will be called after showing notification
+    actual suspend fun getDeliveredNotifications(): List<DeliveredNotification> {
+        // Android handles notification history in the Worker, so this returns empty
+        return emptyList()
+    }
+
+    actual fun clearDeliveredNotifications() {
+        // No-op on Android, history is handled in Worker
     }
 
     /**

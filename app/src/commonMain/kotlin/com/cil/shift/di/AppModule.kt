@@ -11,6 +11,7 @@ import com.cil.shift.feature.habits.domain.usecase.CreateHabitUseCase
 import com.cil.shift.feature.habits.domain.usecase.DeleteHabitUseCase
 import com.cil.shift.feature.habits.domain.usecase.GetHabitsUseCase
 import com.cil.shift.feature.habits.domain.usecase.ToggleHabitCompletionUseCase
+import com.cil.shift.feature.habits.domain.usecase.UpdateHabitUseCase
 import org.koin.core.context.startKoin
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.singleOf
@@ -51,6 +52,7 @@ val domainModule = module {
     // Habit Use Cases
     singleOf(::GetHabitsUseCase)
     singleOf(::CreateHabitUseCase)
+    singleOf(::UpdateHabitUseCase)
     singleOf(::DeleteHabitUseCase)
     singleOf(::ToggleHabitCompletionUseCase)
 

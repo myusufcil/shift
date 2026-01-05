@@ -1,6 +1,17 @@
 package com.cil.shift.core.common.notification
 
 /**
+ * Represents a delivered notification that needs to be saved to history.
+ */
+data class DeliveredNotification(
+    val habitId: String,
+    val habitName: String,
+    val title: String,
+    val message: String,
+    val timestamp: Long
+)
+
+/**
  * Platform-specific notification manager for scheduling and managing habit reminders.
  * Implementations handle platform-specific notification APIs (Android WorkManager, iOS UserNotifications).
  */
@@ -36,4 +47,15 @@ expect class NotificationManager {
      * Checks if notification permission has been granted.
      */
     suspend fun hasNotificationPermission(): Boolean
+
+    /**
+     * Gets delivered notifications that haven't been saved to history yet.
+     * Used primarily on iOS where notifications are shown by the system.
+     */
+    suspend fun getDeliveredNotifications(): List<DeliveredNotification>
+
+    /**
+     * Clears delivered notifications after they've been saved to history.
+     */
+    fun clearDeliveredNotifications()
 }
