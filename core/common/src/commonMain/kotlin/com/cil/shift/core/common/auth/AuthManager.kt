@@ -30,6 +30,8 @@ class AuthManager {
     val isLoggedIn: Boolean
         get() = auth.currentUser != null
 
+    fun getCurrentUserEmail(): String? = auth.currentUser?.email
+
     init {
         // Initialize auth state
         _authState.value = if (auth.currentUser != null) {

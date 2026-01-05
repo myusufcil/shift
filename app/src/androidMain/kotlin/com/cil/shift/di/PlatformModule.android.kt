@@ -13,6 +13,8 @@ import com.cil.shift.core.common.onboarding.AndroidOnboardingPreferences
 import com.cil.shift.core.common.onboarding.OnboardingPreferences
 import com.cil.shift.core.common.premium.AndroidPremiumPreferences
 import com.cil.shift.core.common.premium.PremiumPreferences
+import com.cil.shift.core.common.settings.AndroidSettingsPreferences
+import com.cil.shift.core.common.settings.SettingsPreferences
 import com.cil.shift.core.common.theme.AndroidThemePreferences
 import com.cil.shift.core.common.theme.ThemePreferences
 import com.cil.shift.core.database.DatabaseDriverFactory
@@ -30,6 +32,7 @@ actual fun platformModule(): Module = module {
     single<PremiumPreferences> { AndroidPremiumPreferences(androidContext()) }
     single<OnboardingPreferences> { AndroidOnboardingPreferences(androidContext()) }
     single<ThemePreferences> { AndroidThemePreferences(androidContext()) }
+    single<SettingsPreferences> { AndroidSettingsPreferences(androidContext()) }
     single { NotificationManager(androidContext()) }
     single<AchievementPreferences> { AndroidAchievementPreferences(androidContext()) }
     single { AchievementManager(get()) }

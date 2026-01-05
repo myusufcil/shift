@@ -13,6 +13,8 @@ import com.cil.shift.core.common.onboarding.IOSOnboardingPreferences
 import com.cil.shift.core.common.onboarding.OnboardingPreferences
 import com.cil.shift.core.common.premium.IOSPremiumPreferences
 import com.cil.shift.core.common.premium.PremiumPreferences
+import com.cil.shift.core.common.settings.IOSSettingsPreferences
+import com.cil.shift.core.common.settings.SettingsPreferences
 import com.cil.shift.core.common.theme.IOSThemePreferences
 import com.cil.shift.core.common.theme.ThemePreferences
 import com.cil.shift.core.database.DatabaseDriverFactory
@@ -25,6 +27,7 @@ actual fun platformModule(): Module = module {
     single<PremiumPreferences> { IOSPremiumPreferences() }
     single<OnboardingPreferences> { IOSOnboardingPreferences() }
     single<ThemePreferences> { IOSThemePreferences() }
+    single<SettingsPreferences> { IOSSettingsPreferences() }
     single { NotificationManager() }
     single<AchievementPreferences> { IOSAchievementPreferences() }
     single { AchievementManager(get()) }

@@ -25,6 +25,6 @@ val viewModelModule = module {
     factory { StatisticsViewModel(get(), get()) }
 
     // Settings
-    factoryOf(::SettingsViewModel)
+    factory { SettingsViewModel(get(), get(), get()) }
     factory { NotificationsViewModel(get()) }
 }

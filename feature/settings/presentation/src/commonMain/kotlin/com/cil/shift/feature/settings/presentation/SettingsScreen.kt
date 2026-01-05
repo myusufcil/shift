@@ -21,14 +21,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.cil.shift.core.common.theme.AppTheme
 import com.cil.shift.core.common.theme.LocalThemeManager
+import org.koin.compose.koinInject
 
 @Composable
 fun SettingsScreen(
     modifier: Modifier = Modifier,
-    viewModel: SettingsViewModel = viewModel { SettingsViewModel() }
+    viewModel: SettingsViewModel = koinInject()
 ) {
     val state by viewModel.state.collectAsState()
     val scrollState = rememberScrollState()
