@@ -61,9 +61,13 @@ fun SignUpScreen(
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
-    // Email validation
-    val emailRegex = remember { Regex("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}\$") }
-    fun isValidEmail(email: String): Boolean = emailRegex.matches(email)
+    // Email validation - simple check
+    fun isValidEmail(email: String): Boolean {
+        return email.contains("@") &&
+               email.contains(".") &&
+               email.indexOf("@") < email.lastIndexOf(".") &&
+               email.length >= 5
+    }
 
     // Password validation rules
     val hasMinLength = password.length >= 8

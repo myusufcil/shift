@@ -11,6 +11,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -40,6 +41,10 @@ fun Step2Schedule(
     onReminderTimeRemoved: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val textColor = MaterialTheme.colorScheme.onBackground
+    val cardColor = MaterialTheme.colorScheme.surface
+    val accentColor = Color(0xFF4E7CFF)
+
     androidx.compose.foundation.lazy.LazyColumn(
         modifier = modifier
             .fillMaxSize()
@@ -54,13 +59,13 @@ fun Step2Schedule(
             text = "Set your schedule",
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.White
+            color = textColor
         )
 
         Text(
             text = "Consistency is key. Choose a rhythm that works for you.",
             fontSize = 14.sp,
-            color = Color.White.copy(alpha = 0.7f),
+            color = textColor.copy(alpha = 0.7f),
             lineHeight = 20.sp
         )
 
@@ -72,7 +77,7 @@ fun Step2Schedule(
                 text = "Frequency",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = Color.White
+                color = textColor
             )
 
             Row(
@@ -83,7 +88,10 @@ fun Step2Schedule(
                     text = "Everyday",
                     isSelected = frequency is Frequency.Daily,
                     onClick = { onFrequencyChange(Frequency.Daily) },
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    textColor = textColor,
+                    cardColor = cardColor,
+                    accentColor = accentColor
                 )
 
                 FrequencyChip(
@@ -92,7 +100,10 @@ fun Step2Schedule(
                     onClick = {
                         onFrequencyChange(Frequency.Weekly(listOf(DayOfWeek.MONDAY)))
                     },
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    textColor = textColor,
+                    cardColor = cardColor,
+                    accentColor = accentColor
                 )
 
                 FrequencyChip(
@@ -111,7 +122,10 @@ fun Step2Schedule(
                             )
                         )
                     },
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    textColor = textColor,
+                    cardColor = cardColor,
+                    accentColor = accentColor
                 )
             }
         }
@@ -141,7 +155,10 @@ fun Step2Schedule(
                                 if (newDays.isNotEmpty()) {
                                     onFrequencyChange(Frequency.Weekly(newDays))
                                 }
-                            }
+                            },
+                            textColor = textColor,
+                            cardColor = cardColor,
+                            accentColor = accentColor
                         )
                     }
                 }
@@ -156,7 +173,7 @@ fun Step2Schedule(
                 text = "TIME OF DAY",
                 fontSize = 11.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = Color.White.copy(alpha = 0.5f),
+                color = textColor.copy(alpha = 0.5f),
                 letterSpacing = 1.sp
             )
 
@@ -169,7 +186,10 @@ fun Step2Schedule(
                         timeOfDay = time,
                         isSelected = timeOfDay == time,
                         onClick = { onTimeOfDayChange(time) },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        textColor = textColor,
+                        cardColor = cardColor,
+                        accentColor = accentColor
                     )
                 }
             }
@@ -182,7 +202,7 @@ fun Step2Schedule(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(16.dp))
-                .background(Color(0xFF1A2942))
+                .background(cardColor)
                 .padding(16.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
@@ -192,12 +212,12 @@ fun Step2Schedule(
                     text = "Reminder",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color.White
+                    color = textColor
                 )
                 Text(
                     text = "Get notified to stay on track",
                     fontSize = 12.sp,
-                    color = Color.White.copy(alpha = 0.5f)
+                    color = textColor.copy(alpha = 0.5f)
                 )
             }
 
@@ -206,9 +226,9 @@ fun Step2Schedule(
                 onCheckedChange = onReminderToggle,
                 colors = SwitchDefaults.colors(
                     checkedThumbColor = Color.White,
-                    checkedTrackColor = Color(0xFF4E7CFF),
-                    uncheckedThumbColor = Color.White,
-                    uncheckedTrackColor = Color.White.copy(alpha = 0.2f)
+                    checkedTrackColor = accentColor,
+                    uncheckedThumbColor = textColor.copy(alpha = 0.7f),
+                    uncheckedTrackColor = textColor.copy(alpha = 0.2f)
                 )
             )
         }
@@ -217,7 +237,10 @@ fun Step2Schedule(
         if (hasReminder) {
             TimePicker(
                 time = reminderTime ?: "09:00",
-                onTimeChange = onReminderTimeChange
+                onTimeChange = onReminderTimeChange,
+                textColor = textColor,
+                cardColor = cardColor,
+                accentColor = accentColor
             )
         }
             }
@@ -230,15 +253,23 @@ private fun FrequencyChip(
     text: String,
     isSelected: Boolean,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    textColor: Color = Color.White,
+    cardColor: Color = Color(0xFF1A2942),
+    accentColor: Color = Color(0xFF4E7CFF)
 ) {
     Box(
         modifier = modifier
             .height(44.dp)
             .clip(RoundedCornerShape(22.dp))
             .background(
-                if (isSelected) Color(0xFF4E7CFF)
-                else Color(0xFF1A2942)
+                if (isSelected) accentColor
+                else cardColor
+            )
+            .border(
+                width = if (isSelected) 0.dp else 1.dp,
+                color = if (isSelected) Color.Transparent else textColor.copy(alpha = 0.15f),
+                shape = RoundedCornerShape(22.dp)
             )
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
@@ -247,7 +278,7 @@ private fun FrequencyChip(
             text = text,
             fontSize = 13.sp,
             fontWeight = FontWeight.Medium,
-            color = Color.White
+            color = if (isSelected) Color.White else textColor
         )
     }
 }
@@ -257,19 +288,22 @@ private fun DayCircle(
     day: String,
     isSelected: Boolean,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    textColor: Color = Color.White,
+    cardColor: Color = Color(0xFF1A2942),
+    accentColor: Color = Color(0xFF4E7CFF)
 ) {
     Box(
         modifier = modifier
             .size(40.dp)
             .clip(CircleShape)
             .background(
-                if (isSelected) Color(0xFF4E7CFF)
-                else Color(0xFF1A2942)
+                if (isSelected) accentColor
+                else cardColor
             )
             .border(
-                width = if (isSelected) 2.dp else 0.dp,
-                color = if (isSelected) Color(0xFF00D9FF) else Color.Transparent,
+                width = if (isSelected) 2.dp else 1.dp,
+                color = if (isSelected) Color(0xFF00D9FF) else textColor.copy(alpha = 0.15f),
                 shape = CircleShape
             )
             .clickable(onClick = onClick),
@@ -279,7 +313,7 @@ private fun DayCircle(
             text = day,
             fontSize = 14.sp,
             fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-            color = Color.White
+            color = if (isSelected) Color.White else textColor
         )
     }
 }
@@ -288,7 +322,10 @@ private fun DayCircle(
 private fun TimePicker(
     time: String,
     onTimeChange: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    textColor: Color = Color.White,
+    cardColor: Color = Color(0xFF1A2942),
+    accentColor: Color = Color(0xFF4E7CFF)
 ) {
     // Parse time (format: "HH:mm" or "hh:mm")
     val parts = time.split(":")
@@ -321,14 +358,15 @@ private fun TimePicker(
                 onDecrement = {
                     hour = if (hour == 0) 23 else hour - 1
                     isAM = hour < 12
-                }
+                },
+                textColor = textColor
             )
 
             Text(
                 text = ":",
                 fontSize = 48.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.White
+                color = textColor
             )
 
             // Minute picker
@@ -339,7 +377,8 @@ private fun TimePicker(
                 },
                 onDecrement = {
                     minute = if (minute == 0) 55 else minute - 5
-                }
+                },
+                textColor = textColor
             )
 
             // AM/PM toggle
@@ -350,7 +389,7 @@ private fun TimePicker(
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(8.dp))
-                        .background(if (isAM) Color(0xFF4E7CFF) else Color(0xFF1A2942))
+                        .background(if (isAM) accentColor else cardColor)
                         .clickable {
                             isAM = true
                             if (hour >= 12) hour -= 12
@@ -361,14 +400,14 @@ private fun TimePicker(
                         text = "AM",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = Color.White
+                        color = if (isAM) Color.White else textColor
                     )
                 }
 
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(8.dp))
-                        .background(if (!isAM) Color(0xFF4E7CFF) else Color(0xFF1A2942))
+                        .background(if (!isAM) accentColor else cardColor)
                         .clickable {
                             isAM = false
                             if (hour < 12) hour += 12
@@ -379,7 +418,7 @@ private fun TimePicker(
                         text = "PM",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = Color.White
+                        color = if (!isAM) Color.White else textColor
                     )
                 }
             }
@@ -392,7 +431,8 @@ private fun TimePickerColumn(
     value: Int,
     onIncrement: () -> Unit,
     onDecrement: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    textColor: Color = Color.White
 ) {
     Column(
         modifier = modifier,
@@ -403,7 +443,7 @@ private fun TimePickerColumn(
             Icon(
                 imageVector = Icons.Default.KeyboardArrowUp,
                 contentDescription = "Increase",
-                tint = Color.White.copy(alpha = 0.5f),
+                tint = textColor.copy(alpha = 0.5f),
                 modifier = Modifier.size(32.dp)
             )
         }
@@ -412,14 +452,14 @@ private fun TimePickerColumn(
             text = value.toString().padStart(2, '0'),
             fontSize = 48.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.White
+            color = textColor
         )
 
         IconButton(onClick = onDecrement) {
             Icon(
                 imageVector = Icons.Default.KeyboardArrowDown,
                 contentDescription = "Decrease",
-                tint = Color.White.copy(alpha = 0.5f),
+                tint = textColor.copy(alpha = 0.5f),
                 modifier = Modifier.size(32.dp)
             )
         }
@@ -431,37 +471,40 @@ private fun TimeOfDayChip(
     timeOfDay: com.cil.shift.feature.habits.presentation.create.TimeOfDay,
     isSelected: Boolean,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    textColor: Color = Color.White,
+    cardColor: Color = Color(0xFF1A2942),
+    accentColor: Color = Color(0xFF4E7CFF)
 ) {
     Box(
         modifier = modifier
-            .height(52.dp)
-            .clip(RoundedCornerShape(12.dp))
+            .height(64.dp)
+            .clip(RoundedCornerShape(16.dp))
             .background(
-                if (isSelected) Color(0xFF4E7CFF)
-                else Color(0xFF1A2942)
+                if (isSelected) accentColor
+                else cardColor
             )
             .border(
-                width = if (isSelected) 2.dp else 0.dp,
-                color = if (isSelected) Color(0xFF00D9FF) else Color.Transparent,
-                shape = RoundedCornerShape(12.dp)
+                width = if (isSelected) 2.dp else 1.dp,
+                color = if (isSelected) Color(0xFF00D9FF) else textColor.copy(alpha = 0.15f),
+                shape = RoundedCornerShape(16.dp)
             )
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(2.dp)
+            verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             Text(
                 text = timeOfDay.emoji,
-                fontSize = 16.sp
+                fontSize = 18.sp
             )
             Text(
                 text = timeOfDay.displayName,
                 fontSize = 11.sp,
                 fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                color = Color.White
+                color = if (isSelected) Color.White else textColor
             )
         }
     }

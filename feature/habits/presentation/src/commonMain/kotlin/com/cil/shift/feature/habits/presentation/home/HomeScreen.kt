@@ -31,18 +31,21 @@ fun HomeScreen(
     }
 ) {
     val state by viewModel.state.collectAsState()
+    val backgroundColor = MaterialTheme.colorScheme.background
+    val textColor = MaterialTheme.colorScheme.onBackground
+    val accentColor = Color(0xFF4E7CFF)
 
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = onNavigateToCreateHabit,
-                containerColor = Color(0xFF00D9FF),
+                containerColor = accentColor,
                 shape = CircleShape
             ) {
                 Icon(
                     imageVector = Icons.Default.Add,
                     contentDescription = "Create new habit",
-                    tint = Color.Black
+                    tint = Color.White
                 )
             }
         }
@@ -50,14 +53,14 @@ fun HomeScreen(
         Box(
             modifier = modifier
                 .fillMaxSize()
-                .background(Color(0xFF0A1628))
+                .background(backgroundColor)
                 .padding(paddingValues)
         ) {
             when {
                 state.isLoading -> {
                     CircularProgressIndicator(
                         modifier = Modifier.align(Alignment.Center),
-                        color = Color(0xFF00D9FF)
+                        color = accentColor
                     )
                 }
                 state.error != null -> {
@@ -88,12 +91,12 @@ fun HomeScreen(
                                     text = "Hello, ${state.userName}",
                                     fontSize = 28.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = Color.White
+                                    color = textColor
                                 )
                                 Text(
                                     text = state.currentDate,
                                     fontSize = 14.sp,
-                                    color = Color.White.copy(alpha = 0.6f)
+                                    color = textColor.copy(alpha = 0.6f)
                                 )
                             }
                         }
@@ -104,7 +107,7 @@ fun HomeScreen(
                                 text = "Today's Habits",
                                 fontSize = 20.sp,
                                 fontWeight = FontWeight.SemiBold,
-                                color = Color.White
+                                color = textColor
                             )
                         }
 
@@ -119,7 +122,7 @@ fun HomeScreen(
                                     Text(
                                         text = "No habits yet. Tap + to create one!",
                                         fontSize = 16.sp,
-                                        color = Color.White.copy(alpha = 0.5f)
+                                        color = textColor.copy(alpha = 0.5f)
                                     )
                                 }
                             }

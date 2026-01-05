@@ -78,6 +78,10 @@ fun CalendarScreen(
     var allHabits by remember { mutableStateOf<List<Habit>>(emptyList()) }
     var schedules by remember { mutableStateOf<List<HabitSchedule>>(emptyList()) }
 
+    // Selection mode for deleting
+    var isSelectionMode by remember { mutableStateOf(false) }
+    var selectedScheduleIds by remember { mutableStateOf(setOf<String>()) }
+
     // Load habits
     LaunchedEffect(Unit) {
         habitRepository.getHabits().collect { habits ->
@@ -147,20 +151,45 @@ fun CalendarScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // View Mode Toggle
-                Box {
-                    IconButton(
-                        onClick = { showViewModeMenu = true },
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(accentColor.copy(alpha = 0.15f))
+                if (isSelectionMode) {
+                    // Selection mode top bar
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.ViewWeek,
-                            contentDescription = "View Mode",
-                            tint = accentColor
+                        IconButton(
+                            onClick = {
+                                isSelectionMode = false
+                                selectedScheduleIds = emptySet()
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Cancel",
+                                tint = textColor
+                            )
+                        }
+                        Text(
+                            text = "${selectedScheduleIds.size} seçildi",
+                            fontWeight = FontWeight.Medium,
+                            color = textColor
                         )
                     }
+                } else {
+                    // View Mode Toggle
+                    Box {
+                        IconButton(
+                            onClick = { showViewModeMenu = true },
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(accentColor.copy(alpha = 0.15f))
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.ViewWeek,
+                                contentDescription = "View Mode",
+                                tint = accentColor
+                            )
+                        }
 
                     DropdownMenu(
                         expanded = showViewModeMenu,
@@ -185,20 +214,43 @@ fun CalendarScreen(
                         }
                     }
                 }
+                }
 
                 Text(
-                    text = StringResources.schedule.localized(),
+                    text = if (isSelectionMode) "" else StringResources.schedule.localized(),
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     color = textColor
                 )
 
-                IconButton(onClick = { /* Toggle list view */ }) {
-                    Icon(
-                        imageVector = Icons.Default.ViewList,
-                        contentDescription = "List View",
-                        tint = accentColor
-                    )
+                if (isSelectionMode) {
+                    // Delete button
+                    IconButton(
+                        onClick = {
+                            scope.launch {
+                                selectedScheduleIds.forEach { id ->
+                                    habitRepository.deleteSchedule(id)
+                                }
+                                isSelectionMode = false
+                                selectedScheduleIds = emptySet()
+                            }
+                        },
+                        enabled = selectedScheduleIds.isNotEmpty()
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Delete",
+                            tint = if (selectedScheduleIds.isNotEmpty()) Color.Red else textColor.copy(alpha = 0.3f)
+                        )
+                    }
+                } else {
+                    IconButton(onClick = { /* Toggle list view */ }) {
+                        Icon(
+                            imageVector = Icons.Default.ViewList,
+                            contentDescription = "List View",
+                            tint = accentColor
+                        )
+                    }
                 }
             }
 
@@ -295,18 +347,30 @@ fun CalendarScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .horizontalScroll(horizontalScrollState)
+                    .then(
+                        if (isMonthView || viewMode == ScheduleViewMode.WEEK)
+                            Modifier.horizontalScroll(horizontalScrollState)
+                        else
+                            Modifier
+                    )
             ) {
                 // Time column spacer
                 Spacer(modifier = Modifier.width(50.dp))
 
-                daysToShow.forEach { date ->
+                // For DAY_1 and DAY_3, use weight to fill available space
+                val useWeight = viewMode == ScheduleViewMode.DAY_1 || viewMode == ScheduleViewMode.DAY_3
+
+                daysToShow.forEachIndexed { index, date ->
                     val isToday = date == today
-                    val dayWidth = if (isMonthView) 48.dp else 60.dp
+                    val isWeekend = date.dayOfWeek == DayOfWeek.SATURDAY || date.dayOfWeek == DayOfWeek.SUNDAY
 
                     Box(
                         modifier = Modifier
-                            .width(dayWidth)
+                            .then(
+                                if (useWeight) Modifier.weight(1f)
+                                else Modifier.width(if (isMonthView) 48.dp else 60.dp)
+                            )
+                            .background(if (isWeekend) textColor.copy(alpha = 0.04f) else Color.Transparent)
                             .padding(vertical = 8.dp),
                         contentAlignment = Alignment.Center
                     ) {
@@ -315,15 +379,21 @@ fun CalendarScreen(
                         ) {
                             Text(
                                 text = getDayAbbreviation(date.dayOfWeek, currentLanguage),
-                                fontSize = if (isMonthView) 10.sp else 12.sp,
+                                fontSize = if (viewMode == ScheduleViewMode.DAY_1) 16.sp
+                                          else if (isMonthView) 10.sp
+                                          else 14.sp,
                                 fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal,
                                 color = if (isToday) textColor else textColor.copy(alpha = 0.6f)
                             )
                             Box(
                                 modifier = Modifier
                                     .padding(top = 4.dp)
-                                    .size(if (isMonthView) 28.dp else 32.dp)
-                                    .clip(RoundedCornerShape(8.dp))
+                                    .size(
+                                        if (viewMode == ScheduleViewMode.DAY_1) 48.dp
+                                        else if (isMonthView) 28.dp
+                                        else 36.dp
+                                    )
+                                    .clip(RoundedCornerShape(if (viewMode == ScheduleViewMode.DAY_1) 12.dp else 8.dp))
                                     .background(
                                         if (isToday) accentColor
                                         else Color.Transparent
@@ -332,7 +402,9 @@ fun CalendarScreen(
                             ) {
                                 Text(
                                     text = date.dayOfMonth.toString(),
-                                    fontSize = if (isMonthView) 12.sp else 16.sp,
+                                    fontSize = if (viewMode == ScheduleViewMode.DAY_1) 22.sp
+                                              else if (isMonthView) 12.sp
+                                              else 16.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = if (isToday) Color.White else textColor
                                 )
@@ -374,38 +446,38 @@ fun CalendarScreen(
                         textColor = textColor,
                         backgroundColor = backgroundColor,
                         isMonthView = isMonthView,
+                        viewMode = viewMode,
                         horizontalScrollState = horizontalScrollState,
+                        isSelectionMode = isSelectionMode,
+                        selectedScheduleIds = selectedScheduleIds,
                         onCellClick = { date, clickedHour ->
-                            selectedDate = date
-                            selectedHour = clickedHour
-                            showEventDialog = true
+                            if (!isSelectionMode) {
+                                selectedDate = date
+                                selectedHour = clickedHour
+                                showEventDialog = true
+                            }
+                        },
+                        onScheduleLongPress = { scheduleId ->
+                            isSelectionMode = true
+                            selectedScheduleIds = selectedScheduleIds + scheduleId
+                        },
+                        onScheduleClick = { scheduleId ->
+                            if (isSelectionMode) {
+                                selectedScheduleIds = if (scheduleId in selectedScheduleIds) {
+                                    selectedScheduleIds - scheduleId
+                                } else {
+                                    selectedScheduleIds + scheduleId
+                                }
+                                if (selectedScheduleIds.isEmpty()) {
+                                    isSelectionMode = false
+                                }
+                            }
                         }
                     )
                 }
             }
         }
 
-        // FAB
-        FloatingActionButton(
-            onClick = {
-                selectedDate = today
-                selectedHour = kotlinx.datetime.Clock.System.now()
-                    .toLocalDateTime(kotlinx.datetime.TimeZone.currentSystemDefault()).hour
-                showEventDialog = true
-            },
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(24.dp),
-            containerColor = accentColor,
-            contentColor = Color.White,
-            shape = CircleShape
-        ) {
-            Icon(
-                imageVector = Icons.Default.Add,
-                contentDescription = "Add Event",
-                modifier = Modifier.size(28.dp)
-            )
-        }
     }
 
     // Event Creation Dialog
@@ -421,21 +493,43 @@ fun CalendarScreen(
             },
             onSave = { habitId, startTime, endTime, hasReminder, repeatType ->
                 scope.launch {
-                    val schedule = HabitSchedule(
-                        id = "",
-                        habitId = habitId,
-                        habitName = "",
-                        habitIcon = "",
-                        habitColor = "",
-                        date = formatDate(selectedDate!!),
-                        startTime = startTime,
-                        endTime = endTime,
-                        hasReminder = hasReminder,
-                        repeatType = repeatType,
-                        notes = null,
-                        createdAt = currentTimestamp()
-                    )
-                    habitRepository.createSchedule(schedule)
+                    val baseDate = selectedDate!!
+
+                    // Calculate dates based on repeat type
+                    val datesToCreate = when (repeatType) {
+                        RepeatType.NEVER -> listOf(baseDate)
+                        RepeatType.DAILY -> (0 until 30).map { baseDate.plus(it, DateTimeUnit.DAY) }
+                        RepeatType.WEEKLY -> (0 until 12).map { baseDate.plus(it * 7, DateTimeUnit.DAY) }
+                        RepeatType.MONTHLY -> (0 until 12).map {
+                            try {
+                                LocalDate(baseDate.year + (baseDate.monthNumber + it - 1) / 12,
+                                         ((baseDate.monthNumber + it - 1) % 12) + 1,
+                                         baseDate.dayOfMonth.coerceAtMost(28))
+                            } catch (e: Exception) {
+                                baseDate.plus(it * 30, DateTimeUnit.DAY)
+                            }
+                        }
+                    }
+
+                    // Create schedule for each date
+                    datesToCreate.forEach { date ->
+                        val schedule = HabitSchedule(
+                            id = "",
+                            habitId = habitId,
+                            habitName = "",
+                            habitIcon = "",
+                            habitColor = "",
+                            date = formatDate(date),
+                            startTime = startTime,
+                            endTime = endTime,
+                            hasReminder = hasReminder,
+                            repeatType = repeatType,
+                            notes = null,
+                            createdAt = currentTimestamp()
+                        )
+                        habitRepository.createSchedule(schedule)
+                    }
+
                     showEventDialog = false
                     selectedDate = null
                 }
@@ -490,15 +584,22 @@ private fun TimeRow(
     textColor: Color,
     backgroundColor: Color,
     isMonthView: Boolean,
+    viewMode: ScheduleViewMode,
     horizontalScrollState: ScrollState,
-    onCellClick: (LocalDate, Int) -> Unit
+    isSelectionMode: Boolean,
+    selectedScheduleIds: Set<String>,
+    onCellClick: (LocalDate, Int) -> Unit,
+    onScheduleLongPress: (String) -> Unit,
+    onScheduleClick: (String) -> Unit
 ) {
     val hourString = String.format("%02d:00", hour)
+    val useWeight = viewMode == ScheduleViewMode.DAY_1 || viewMode == ScheduleViewMode.DAY_3
+    val rowHeight = if (viewMode == ScheduleViewMode.DAY_1) 80.dp else 60.dp
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(60.dp)
+            .height(rowHeight)
     ) {
         // Time Label
         Box(
@@ -521,29 +622,38 @@ private fun TimeRow(
             )
         }
 
-        // Day Cells - with synchronized horizontal scroll
+        // Day Cells - with synchronized horizontal scroll (only for week/month)
         Row(
             modifier = Modifier
                 .weight(1f)
-                .horizontalScroll(horizontalScrollState)
+                .then(
+                    if (isMonthView || viewMode == ScheduleViewMode.WEEK)
+                        Modifier.horizontalScroll(horizontalScrollState)
+                    else
+                        Modifier
+                )
         ) {
             days.forEach { date ->
                 val isToday = date == today
+                val isWeekend = date.dayOfWeek == DayOfWeek.SATURDAY || date.dayOfWeek == DayOfWeek.SUNDAY
                 val dateStr = formatDate(date)
                 val cellSchedules = schedules.filter {
                     it.date == dateStr && it.startTime.startsWith(String.format("%02d", hour))
                 }
 
-                // Calculate cell width based on view mode
-                val cellWidth = if (isMonthView) 48.dp else 60.dp
-
                 Box(
                     modifier = Modifier
-                        .width(cellWidth)
+                        .then(
+                            if (useWeight) Modifier.weight(1f)
+                            else Modifier.width(if (isMonthView) 48.dp else 60.dp)
+                        )
                         .fillMaxHeight()
                         .background(
-                            if (isToday) textColor.copy(alpha = 0.03f)
-                            else Color.Transparent
+                            when {
+                                isToday -> textColor.copy(alpha = 0.05f)
+                                isWeekend -> textColor.copy(alpha = 0.03f)
+                                else -> Color.Transparent
+                            }
                         )
                         .border(
                             width = 0.5.dp,
@@ -556,7 +666,11 @@ private fun TimeRow(
                         ScheduleItem(
                             schedule = schedule,
                             backgroundColor = backgroundColor,
-                            isMonthView = isMonthView
+                            isMonthView = isMonthView,
+                            isSelected = schedule.id in selectedScheduleIds,
+                            isSelectionMode = isSelectionMode,
+                            onLongPress = { onScheduleLongPress(schedule.id) },
+                            onClick = { onScheduleClick(schedule.id) }
                         )
                     }
                 }
@@ -569,7 +683,11 @@ private fun TimeRow(
 private fun ScheduleItem(
     schedule: HabitSchedule,
     backgroundColor: Color,
-    isMonthView: Boolean = false
+    isMonthView: Boolean = false,
+    isSelected: Boolean = false,
+    isSelectionMode: Boolean = false,
+    onLongPress: () -> Unit = {},
+    onClick: () -> Unit = {}
 ) {
     val habitColor = try {
         val colorString = schedule.habitColor.removePrefix("#")
@@ -588,24 +706,47 @@ private fun ScheduleItem(
             .fillMaxSize()
             .padding(2.dp)
             .clip(RoundedCornerShape(4.dp))
-            .background(habitColor.copy(alpha = 0.8f))
+            .background(habitColor.copy(alpha = if (isSelected) 1f else 0.8f))
+            .then(
+                if (isSelected) Modifier.border(2.dp, Color.White, RoundedCornerShape(4.dp))
+                else Modifier
+            )
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onLongPress = { onLongPress() },
+                    onTap = { onClick() }
+                )
+            }
             .padding(4.dp)
     ) {
         Column {
-            Text(
-                text = schedule.habitName,
-                fontSize = 10.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                if (isSelectionMode) {
+                    Icon(
+                        imageVector = if (isSelected) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
+                        contentDescription = null,
+                        modifier = Modifier.size(12.dp),
+                        tint = Color.White
+                    )
+                }
+                Text(
+                    text = schedule.habitName,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
             Text(
                 text = "${schedule.startTime} - ${schedule.endTime}",
                 fontSize = 8.sp,
                 color = Color.White.copy(alpha = 0.8f)
             )
-            if (schedule.hasReminder) {
+            if (schedule.hasReminder && !isSelectionMode) {
                 Icon(
                     imageVector = Icons.Default.Notifications,
                     contentDescription = null,
@@ -810,6 +951,7 @@ private fun EventCreationDialog(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    val displayDate = formatDateForDisplay(selectedDate, currentLanguage)
                     Column {
                         Text(
                             text = "Start:",
@@ -817,7 +959,7 @@ private fun EventCreationDialog(
                             color = textColor.copy(alpha = 0.6f)
                         )
                         Text(
-                            text = "${formatDate(selectedDate)} $startTime",
+                            text = "$displayDate $startTime",
                             fontWeight = FontWeight.Medium,
                             color = textColor
                         )
@@ -829,7 +971,7 @@ private fun EventCreationDialog(
                             color = textColor.copy(alpha = 0.6f)
                         )
                         Text(
-                            text = "${formatDate(selectedDate)} $endTime",
+                            text = "$displayDate $endTime",
                             fontWeight = FontWeight.Medium,
                             color = textColor
                         )
@@ -917,6 +1059,11 @@ private fun EventCreationDialog(
 // Helper functions
 private fun formatDate(date: LocalDate): String {
     return "${date.year}-${date.monthNumber.toString().padStart(2, '0')}-${date.dayOfMonth.toString().padStart(2, '0')}"
+}
+
+private fun formatDateForDisplay(date: LocalDate, language: Language): String {
+    val monthName = LocalizationHelpers.getMonthName(date.monthNumber, language)
+    return "${date.dayOfMonth} $monthName"
 }
 
 private fun getMonthYearText(startDate: LocalDate, endDate: LocalDate, language: Language): String {

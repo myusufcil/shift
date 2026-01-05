@@ -39,6 +39,8 @@ fun NotificationsScreen(
     val currentLanguage by localizationManager.currentLanguage.collectAsState()
     val state by viewModel.state.collectAsState()
 
+    val colorScheme = MaterialTheme.colorScheme
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -46,7 +48,7 @@ fun NotificationsScreen(
                     Text(
                         text = StringResources.notifications.get(currentLanguage),
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = colorScheme.onBackground
                     )
                 },
                 navigationIcon = {
@@ -54,7 +56,7 @@ fun NotificationsScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = StringResources.back.get(currentLanguage),
-                            tint = Color.White
+                            tint = colorScheme.onBackground
                         )
                     }
                 },
@@ -66,24 +68,24 @@ fun NotificationsScreen(
                             Icon(
                                 imageVector = Icons.Default.DoneAll,
                                 contentDescription = null,
-                                tint = Color(0xFF4E7CFF),
+                                tint = colorScheme.primary,
                                 modifier = Modifier.size(20.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
                                 text = StringResources.markAllAsRead.get(currentLanguage),
-                                color = Color(0xFF4E7CFF),
+                                color = colorScheme.primary,
                                 fontSize = 14.sp
                             )
                         }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF0A1628)
+                    containerColor = colorScheme.background
                 )
             )
         },
-        containerColor = Color(0xFF0A1628),
+        containerColor = colorScheme.background,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         modifier = modifier.fillMaxSize()
     ) { paddingValues ->
@@ -94,7 +96,7 @@ fun NotificationsScreen(
                     .padding(paddingValues),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator(color = Color(0xFF4E7CFF))
+                CircularProgressIndicator(color = colorScheme.primary)
             }
         } else if (state.notifications.isEmpty()) {
             Box(
@@ -112,7 +114,7 @@ fun NotificationsScreen(
                         modifier = Modifier
                             .size(80.dp)
                             .background(
-                                color = Color(0xFF4E7CFF).copy(alpha = 0.1f),
+                                color = colorScheme.primary.copy(alpha = 0.1f),
                                 shape = CircleShape
                             ),
                         contentAlignment = Alignment.Center
@@ -121,19 +123,19 @@ fun NotificationsScreen(
                             imageVector = Icons.Default.Notifications,
                             contentDescription = null,
                             modifier = Modifier.size(40.dp),
-                            tint = Color(0xFF4E7CFF).copy(alpha = 0.5f)
+                            tint = colorScheme.primary.copy(alpha = 0.5f)
                         )
                     }
                     Text(
                         text = StringResources.noNotifications.get(currentLanguage),
                         fontSize = 18.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = Color.White
+                        color = colorScheme.onBackground
                     )
                     Text(
                         text = StringResources.notificationHistoryDescription.get(currentLanguage),
                         fontSize = 14.sp,
-                        color = Color.White.copy(alpha = 0.6f),
+                        color = colorScheme.onBackground.copy(alpha = 0.6f),
                         modifier = Modifier.widthIn(max = 280.dp)
                     )
                 }
@@ -170,15 +172,17 @@ private fun NotificationCard(
     onMarkAsRead: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val colorScheme = MaterialTheme.colorScheme
+
     Row(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
             .background(
                 if (notification.isRead)
-                    Color(0xFF1A2942).copy(alpha = 0.5f)
+                    colorScheme.surfaceVariant.copy(alpha = 0.5f)
                 else
-                    Color(0xFF1A2942)
+                    colorScheme.surfaceVariant
             )
             .clickable(enabled = !notification.isRead) {
                 onMarkAsRead()
@@ -194,7 +198,7 @@ private fun NotificationCard(
                 .clip(CircleShape)
                 .background(
                     if (notification.isRead) Color.Transparent
-                    else Color(0xFF4E7CFF)
+                    else colorScheme.primary
                 )
         )
 
@@ -212,15 +216,15 @@ private fun NotificationCard(
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = if (notification.isRead)
-                        Color.White.copy(alpha = 0.6f)
+                        colorScheme.onSurface.copy(alpha = 0.6f)
                     else
-                        Color.White,
+                        colorScheme.onSurface,
                     modifier = Modifier.weight(1f)
                 )
                 Text(
                     text = formatTimestamp(notification.timestamp, currentLanguage),
                     fontSize = 11.sp,
-                    color = Color.White.copy(alpha = 0.5f)
+                    color = colorScheme.onSurface.copy(alpha = 0.5f)
                 )
             }
 
@@ -228,9 +232,9 @@ private fun NotificationCard(
                 text = notification.message,
                 fontSize = 13.sp,
                 color = if (notification.isRead)
-                    Color.White.copy(alpha = 0.5f)
+                    colorScheme.onSurface.copy(alpha = 0.5f)
                 else
-                    Color.White.copy(alpha = 0.7f),
+                    colorScheme.onSurface.copy(alpha = 0.7f),
                 lineHeight = 18.sp
             )
 
@@ -238,13 +242,13 @@ private fun NotificationCard(
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(8.dp))
-                    .background(Color(0xFF4E7CFF).copy(alpha = 0.2f))
+                    .background(colorScheme.primary.copy(alpha = 0.2f))
                     .padding(horizontal = 8.dp, vertical = 4.dp)
             ) {
                 Text(
                     text = notification.habitName,
                     fontSize = 11.sp,
-                    color = Color(0xFF4E7CFF),
+                    color = colorScheme.primary,
                     fontWeight = FontWeight.Medium
                 )
             }

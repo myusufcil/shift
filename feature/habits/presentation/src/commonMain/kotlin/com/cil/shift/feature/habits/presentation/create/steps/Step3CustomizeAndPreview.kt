@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -42,6 +43,10 @@ fun Step3CustomizeAndPreview(
     onNotesChange: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val textColor = MaterialTheme.colorScheme.onBackground
+    val cardColor = MaterialTheme.colorScheme.surface
+    val accentColor = Color(0xFF4E7CFF)
+
     androidx.compose.foundation.lazy.LazyColumn(
         modifier = modifier
             .fillMaxSize()
@@ -57,13 +62,13 @@ fun Step3CustomizeAndPreview(
             text = "Make it yours",
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.White
+            color = textColor
         )
 
         Text(
             text = "Choose a color to identify your habit and set a goal type.",
             fontSize = 14.sp,
-            color = Color.White.copy(alpha = 0.7f),
+            color = textColor.copy(alpha = 0.7f),
             lineHeight = 20.sp
         )
 
@@ -75,7 +80,7 @@ fun Step3CustomizeAndPreview(
                 text = "PREVIEW",
                 fontSize = 11.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = Color.White.copy(alpha = 0.5f),
+                color = textColor.copy(alpha = 0.5f),
                 letterSpacing = 1.sp
             )
 
@@ -83,7 +88,7 @@ fun Step3CustomizeAndPreview(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(16.dp))
-                    .background(Color(0xFF1A2942))
+                    .background(cardColor)
                     .padding(16.dp)
             ) {
                 Row(
@@ -108,7 +113,7 @@ fun Step3CustomizeAndPreview(
                         text = name.ifBlank { "Morning Meditation" },
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = Color.White
+                        color = textColor
                     )
                 }
             }
@@ -122,7 +127,7 @@ fun Step3CustomizeAndPreview(
                 text = "COLOR PALETTE",
                 fontSize = 11.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = Color.White.copy(alpha = 0.5f),
+                color = textColor.copy(alpha = 0.5f),
                 letterSpacing = 1.sp
             )
 
@@ -153,7 +158,7 @@ fun Step3CustomizeAndPreview(
                 text = "HABIT TYPE",
                 fontSize = 11.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = Color.White.copy(alpha = 0.5f),
+                color = textColor.copy(alpha = 0.5f),
                 letterSpacing = 1.sp
             )
 
@@ -165,14 +170,20 @@ fun Step3CustomizeAndPreview(
                     text = "Simple",
                     isSelected = habitType == HabitType.SIMPLE,
                     onClick = { onHabitTypeSelect(HabitType.SIMPLE) },
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    textColor = textColor,
+                    cardColor = cardColor,
+                    accentColor = accentColor
                 )
 
                 HabitTypeChip(
                     text = "Measurable",
                     isSelected = habitType == HabitType.MEASURABLE,
                     onClick = { onHabitTypeSelect(HabitType.MEASURABLE) },
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    textColor = textColor,
+                    cardColor = cardColor,
+                    accentColor = accentColor
                 )
             }
 
@@ -184,14 +195,20 @@ fun Step3CustomizeAndPreview(
                     text = "Timer",
                     isSelected = habitType == HabitType.TIMER,
                     onClick = { onHabitTypeSelect(HabitType.TIMER) },
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    textColor = textColor,
+                    cardColor = cardColor,
+                    accentColor = accentColor
                 )
 
                 HabitTypeChip(
                     text = "Session",
                     isSelected = habitType == HabitType.SESSION,
                     onClick = { onHabitTypeSelect(HabitType.SESSION) },
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    textColor = textColor,
+                    cardColor = cardColor,
+                    accentColor = accentColor
                 )
             }
         }
@@ -201,7 +218,7 @@ fun Step3CustomizeAndPreview(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(12.dp))
-                .background(Color(0xFF4E7CFF).copy(alpha = 0.1f))
+                .background(accentColor.copy(alpha = 0.1f))
                 .padding(12.dp)
         ) {
             Text(
@@ -212,7 +229,7 @@ fun Step3CustomizeAndPreview(
                     HabitType.SESSION -> "Start/stop sessions (e.g., meditation, workout)"
                 },
                 fontSize = 12.sp,
-                color = Color.White.copy(alpha = 0.7f),
+                color = textColor.copy(alpha = 0.7f),
                 lineHeight = 16.sp
             )
         }
@@ -226,7 +243,7 @@ fun Step3CustomizeAndPreview(
                     text = "TARGET & UNIT",
                     fontSize = 11.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color.White.copy(alpha = 0.5f),
+                    color = textColor.copy(alpha = 0.5f),
                     letterSpacing = 1.sp
                 )
 
@@ -251,14 +268,14 @@ fun Step3CustomizeAndPreview(
                                     HabitType.SESSION -> "15"
                                     else -> "0"
                                 },
-                                color = Color.White.copy(alpha = 0.3f)
+                                color = textColor.copy(alpha = 0.3f)
                             )
                         },
                         colors = TextFieldDefaults.colors(
-                            focusedContainerColor = Color(0xFF1A2942),
-                            unfocusedContainerColor = Color(0xFF1A2942),
-                            focusedTextColor = Color.White,
-                            unfocusedTextColor = Color.White,
+                            focusedContainerColor = cardColor,
+                            unfocusedContainerColor = cardColor,
+                            focusedTextColor = textColor,
+                            unfocusedTextColor = textColor,
                             cursorColor = Color(0xFF00D9FF),
                             focusedIndicatorColor = Color.Transparent,
                             unfocusedIndicatorColor = Color.Transparent
@@ -288,8 +305,8 @@ fun Step3CustomizeAndPreview(
                                         .height(32.dp)
                                         .clip(RoundedCornerShape(8.dp))
                                         .background(
-                                            if (targetUnit == unit) Color(0xFF4E7CFF)
-                                            else Color(0xFF1A2942)
+                                            if (targetUnit == unit) accentColor
+                                            else cardColor
                                         )
                                         .clickable { onTargetUnitChange(unit) },
                                     contentAlignment = Alignment.Center
@@ -298,7 +315,7 @@ fun Step3CustomizeAndPreview(
                                         text = label,
                                         fontSize = 12.sp,
                                         fontWeight = if (targetUnit == unit) FontWeight.SemiBold else FontWeight.Normal,
-                                        color = Color.White
+                                        color = if (targetUnit == unit) Color.White else textColor
                                     )
                                 }
                             }
@@ -321,8 +338,8 @@ fun Step3CustomizeAndPreview(
                                         .height(32.dp)
                                         .clip(RoundedCornerShape(8.dp))
                                         .background(
-                                            if (targetUnit == unit) Color(0xFF4E7CFF)
-                                            else Color(0xFF1A2942)
+                                            if (targetUnit == unit) accentColor
+                                            else cardColor
                                         )
                                         .clickable { onTargetUnitChange(unit) },
                                     contentAlignment = Alignment.Center
@@ -331,7 +348,7 @@ fun Step3CustomizeAndPreview(
                                         text = unit,
                                         fontSize = 12.sp,
                                         fontWeight = if (targetUnit == unit) FontWeight.SemiBold else FontWeight.Normal,
-                                        color = Color.White
+                                        color = if (targetUnit == unit) Color.White else textColor
                                     )
                                 }
                             }
@@ -356,8 +373,8 @@ fun Step3CustomizeAndPreview(
                                         .height(32.dp)
                                         .clip(RoundedCornerShape(8.dp))
                                         .background(
-                                            if (targetUnit == unit) Color(0xFF4E7CFF)
-                                            else Color(0xFF1A2942)
+                                            if (targetUnit == unit) accentColor
+                                            else cardColor
                                         )
                                         .clickable { onTargetUnitChange(unit) },
                                     contentAlignment = Alignment.Center
@@ -366,7 +383,7 @@ fun Step3CustomizeAndPreview(
                                         text = unit,
                                         fontSize = 12.sp,
                                         fontWeight = if (targetUnit == unit) FontWeight.SemiBold else FontWeight.Normal,
-                                        color = Color.White
+                                        color = if (targetUnit == unit) Color.White else textColor
                                     )
                                 }
                             }
@@ -391,8 +408,8 @@ fun Step3CustomizeAndPreview(
                                         .height(32.dp)
                                         .clip(RoundedCornerShape(8.dp))
                                         .background(
-                                            if (targetUnit == unit) Color(0xFF4E7CFF)
-                                            else Color(0xFF1A2942)
+                                            if (targetUnit == unit) accentColor
+                                            else cardColor
                                         )
                                         .clickable { onTargetUnitChange(unit) },
                                     contentAlignment = Alignment.Center
@@ -401,7 +418,7 @@ fun Step3CustomizeAndPreview(
                                         text = unit,
                                         fontSize = 12.sp,
                                         fontWeight = if (targetUnit == unit) FontWeight.SemiBold else FontWeight.Normal,
-                                        color = Color.White
+                                        color = if (targetUnit == unit) Color.White else textColor
                                     )
                                 }
                             }
@@ -423,7 +440,7 @@ fun Step3CustomizeAndPreview(
                 text = "NOTES (OPTIONAL)",
                 fontSize = 11.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = Color.White.copy(alpha = 0.5f),
+                color = textColor.copy(alpha = 0.5f),
                 letterSpacing = 1.sp
             )
 
@@ -437,14 +454,14 @@ fun Step3CustomizeAndPreview(
                     Text(
                         text = "Add notes or motivation for this habit...",
                         fontSize = 14.sp,
-                        color = Color.White.copy(alpha = 0.4f)
+                        color = textColor.copy(alpha = 0.4f)
                     )
                 },
                 colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color(0xFF1A2942),
-                    unfocusedContainerColor = Color(0xFF1A2942),
-                    focusedTextColor = Color.White,
-                    unfocusedTextColor = Color.White,
+                    focusedContainerColor = cardColor,
+                    unfocusedContainerColor = cardColor,
+                    focusedTextColor = textColor,
+                    unfocusedTextColor = textColor,
                     cursorColor = Color(0xFF00D9FF),
                     focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent
@@ -465,14 +482,15 @@ private fun ColorCircle(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val textColor = MaterialTheme.colorScheme.onBackground
     Box(
         modifier = modifier
             .size(48.dp)
             .clip(CircleShape)
             .background(color)
             .border(
-                width = if (isSelected) 3.dp else 0.dp,
-                color = if (isSelected) Color.White else Color.Transparent,
+                width = if (isSelected) 3.dp else 1.dp,
+                color = if (isSelected) Color.White else textColor.copy(alpha = 0.1f),
                 shape = CircleShape
             )
             .clickable(onClick = onClick)
@@ -484,20 +502,23 @@ private fun HabitTypeChip(
     text: String,
     isSelected: Boolean,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    textColor: Color = Color.White,
+    cardColor: Color = Color(0xFF1A2942),
+    accentColor: Color = Color(0xFF4E7CFF)
 ) {
     Box(
         modifier = modifier
             .height(44.dp)
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(22.dp))
             .background(
-                if (isSelected) Color(0xFF4E7CFF)
-                else Color(0xFF1A2942)
+                if (isSelected) accentColor
+                else cardColor
             )
             .border(
-                width = if (isSelected) 2.dp else 0.dp,
-                color = if (isSelected) Color(0xFF00D9FF) else Color.Transparent,
-                shape = RoundedCornerShape(12.dp)
+                width = if (isSelected) 0.dp else 1.dp,
+                color = if (isSelected) Color.Transparent else textColor.copy(alpha = 0.15f),
+                shape = RoundedCornerShape(22.dp)
             )
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
@@ -506,7 +527,7 @@ private fun HabitTypeChip(
             text = text,
             fontSize = 13.sp,
             fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-            color = Color.White
+            color = if (isSelected) Color.White else textColor
         )
     }
 }
