@@ -713,60 +713,69 @@ private fun ChartTypeSelectorButton(
 private fun WeeklyLineChart(weeklyData: List<DayCompletion>) {
     val textColor = MaterialTheme.colorScheme.onBackground
 
-    androidx.compose.foundation.Canvas(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(120.dp)
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        val width = size.width
-        val height = size.height
-        val padding = 20f
-        val chartWidth = width - padding * 2
-        val chartHeight = height - padding * 2
+        androidx.compose.foundation.Canvas(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(100.dp)
+        ) {
+            val width = size.width
+            val height = size.height
+            val paddingHorizontal = 20f
+            val paddingTop = 15f
+            val paddingBottom = 15f
+            val chartWidth = width - paddingHorizontal * 2
+            val chartHeight = height - paddingTop - paddingBottom
 
-        if (weeklyData.size > 1) {
-            val path = androidx.compose.ui.graphics.Path()
-            val stepX = chartWidth / (weeklyData.size - 1)
+            if (weeklyData.size > 1) {
+                val path = androidx.compose.ui.graphics.Path()
+                val stepX = chartWidth / (weeklyData.size - 1)
 
-            weeklyData.forEachIndexed { index, data ->
-                val x = padding + (stepX * index)
-                val y = padding + chartHeight - (data.completionRate * chartHeight)
+                weeklyData.forEachIndexed { index, data ->
+                    val x = paddingHorizontal + (stepX * index)
+                    val y = paddingTop + chartHeight - (data.completionRate.coerceIn(0f, 1f) * chartHeight)
 
-                if (index == 0) {
-                    path.moveTo(x, y)
-                } else {
-                    path.lineTo(x, y)
+                    if (index == 0) {
+                        path.moveTo(x, y)
+                    } else {
+                        path.lineTo(x, y)
+                    }
+
+                    // Draw points
+                    drawCircle(
+                        color = Color(0xFF00D9FF),
+                        radius = 5f,
+                        center = androidx.compose.ui.geometry.Offset(x, y)
+                    )
                 }
 
-                // Draw points
-                drawCircle(
+                drawPath(
+                    path = path,
                     color = Color(0xFF00D9FF),
-                    radius = 5f,
-                    center = androidx.compose.ui.geometry.Offset(x, y)
+                    style = androidx.compose.ui.graphics.drawscope.Stroke(
+                        width = 2.5f,
+                        cap = androidx.compose.ui.graphics.StrokeCap.Round
+                    )
                 )
             }
-
-            drawPath(
-                path = path,
-                color = Color(0xFF00D9FF),
-                style = androidx.compose.ui.graphics.drawscope.Stroke(
-                    width = 2.5f,
-                    cap = androidx.compose.ui.graphics.StrokeCap.Round
-                )
-            )
         }
-    }
 
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        weeklyData.forEach { data ->
-            Text(
-                text = data.dayName,
-                fontSize = 10.sp,
-                color = textColor.copy(alpha = 0.5f)
-            )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            weeklyData.forEach { data ->
+                Text(
+                    text = data.dayName,
+                    fontSize = 10.sp,
+                    color = textColor.copy(alpha = 0.5f)
+                )
+            }
         }
     }
 }

@@ -33,6 +33,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.cil.shift.core.common.auth.AuthManager
 import com.cil.shift.core.common.auth.AuthResult
+import com.cil.shift.core.common.auth.SocialSignInProvider
+import com.cil.shift.core.common.auth.SocialSignInResult
 import com.cil.shift.core.common.localization.Language
 import com.cil.shift.core.common.localization.LocalizationManager
 import com.cil.shift.core.common.purchase.PurchaseManager
@@ -293,6 +295,135 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
+            // Social Sign-In Buttons
+            val socialSignInProvider = koinInject<SocialSignInProvider>()
+            var isGoogleLoading by remember { mutableStateOf(false) }
+            var isAppleLoading by remember { mutableStateOf(false) }
+
+            // Google Sign-In Button
+            OutlinedButton(
+                onClick = {
+                    scope.launch {
+                        isGoogleLoading = true
+                        errorMessage = null
+
+                        when (val result = socialSignInProvider.signInWithGoogle()) {
+                            is SocialSignInResult.Success -> {
+                                when (val authResult = authManager.signInWithGoogle(result.idToken)) {
+                                    is AuthResult.Success -> {
+                                        purchaseManager.login(authResult.user.uid)
+                                        onLoginSuccess()
+                                    }
+                                    is AuthResult.Error -> {
+                                        errorMessage = authResult.message
+                                    }
+                                }
+                            }
+                            is SocialSignInResult.Error -> {
+                                errorMessage = result.message
+                            }
+                            SocialSignInResult.Cancelled -> {
+                                // User cancelled, do nothing
+                            }
+                        }
+
+                        isGoogleLoading = false
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                shape = RoundedCornerShape(12.dp),
+                border = ButtonDefaults.outlinedButtonBorder(enabled = !isGoogleLoading),
+                enabled = !isGoogleLoading && !isAppleLoading && !isLoading
+            ) {
+                if (isGoogleLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = textColor,
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text(
+                        text = "G",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFFDB4437)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = strings.continueWithGoogle,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = textColor
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Apple Sign-In Button
+            Button(
+                onClick = {
+                    scope.launch {
+                        isAppleLoading = true
+                        errorMessage = null
+
+                        when (val result = socialSignInProvider.signInWithApple()) {
+                            is SocialSignInResult.Success -> {
+                                when (val authResult = authManager.signInWithApple(result.idToken)) {
+                                    is AuthResult.Success -> {
+                                        purchaseManager.login(authResult.user.uid)
+                                        onLoginSuccess()
+                                    }
+                                    is AuthResult.Error -> {
+                                        errorMessage = authResult.message
+                                    }
+                                }
+                            }
+                            is SocialSignInResult.Error -> {
+                                errorMessage = result.message
+                            }
+                            SocialSignInResult.Cancelled -> {
+                                // User cancelled, do nothing
+                            }
+                        }
+
+                        isAppleLoading = false
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = textColor,
+                    contentColor = backgroundColor
+                ),
+                enabled = !isAppleLoading && !isGoogleLoading && !isLoading
+            ) {
+                if (isAppleLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = backgroundColor,
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text(
+                        text = "",
+                        fontSize = 20.sp
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = strings.continueWithApple,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
             // Sign up prompt
             Row(
                 horizontalArrangement = Arrangement.Center
@@ -324,7 +455,9 @@ private data class LoginStrings(
     val or: String,
     val noAccount: String,
     val signUp: String,
-    val fillAllFields: String
+    val fillAllFields: String,
+    val continueWithGoogle: String,
+    val continueWithApple: String
 ) {
     companion object {
         fun get(language: Language): LoginStrings {
@@ -338,7 +471,9 @@ private data class LoginStrings(
                     or = "veya",
                     noAccount = "Hesabınız yok mu?",
                     signUp = "Kayıt Ol",
-                    fillAllFields = "Lütfen tüm alanları doldurun"
+                    fillAllFields = "Lütfen tüm alanları doldurun",
+                    continueWithGoogle = "Google ile devam et",
+                    continueWithApple = "Apple ile devam et"
                 )
                 Language.SPANISH -> LoginStrings(
                     welcomeBack = "¡Bienvenido de nuevo!",
@@ -349,7 +484,9 @@ private data class LoginStrings(
                     or = "o",
                     noAccount = "¿No tienes cuenta?",
                     signUp = "Regístrate",
-                    fillAllFields = "Por favor completa todos los campos"
+                    fillAllFields = "Por favor completa todos los campos",
+                    continueWithGoogle = "Continuar con Google",
+                    continueWithApple = "Continuar con Apple"
                 )
                 else -> LoginStrings(
                     welcomeBack = "Welcome back!",
@@ -360,7 +497,9 @@ private data class LoginStrings(
                     or = "or",
                     noAccount = "Don't have an account?",
                     signUp = "Sign Up",
-                    fillAllFields = "Please fill in all fields"
+                    fillAllFields = "Please fill in all fields",
+                    continueWithGoogle = "Continue with Google",
+                    continueWithApple = "Continue with Apple"
                 )
             }
         }

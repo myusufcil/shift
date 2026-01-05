@@ -44,6 +44,11 @@ kotlin {
             implementation(libs.androidx.core.ktx)
             implementation(libs.androidx.work.runtime)
             implementation(libs.koin.core)
+
+            // Google Sign-In
+            implementation(libs.googleid)
+            implementation(libs.androidx.credentials)
+            implementation(libs.androidx.credentials.play.services)
         }
     }
 }

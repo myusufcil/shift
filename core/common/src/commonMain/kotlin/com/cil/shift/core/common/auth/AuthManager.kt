@@ -3,6 +3,8 @@ package com.cil.shift.core.common.auth
 import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.auth.FirebaseAuth
 import dev.gitlive.firebase.auth.FirebaseUser
+import dev.gitlive.firebase.auth.GoogleAuthProvider
+import dev.gitlive.firebase.auth.OAuthProvider
 import dev.gitlive.firebase.auth.auth
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -115,6 +117,50 @@ class AuthManager {
                 e.message?.contains("USER_NOT_FOUND") == true -> "No account found with this email"
                 e.message?.contains("INVALID_EMAIL") == true -> "Invalid email address"
                 else -> e.message ?: "Failed to send reset email"
+            }
+            AuthResult.Error(errorMessage)
+        }
+    }
+
+    /**
+     * Sign in with Google credential
+     */
+    suspend fun signInWithGoogle(idToken: String): AuthResult {
+        return try {
+            val credential = GoogleAuthProvider.credential(idToken, null)
+            val result = auth.signInWithCredential(credential)
+            result.user?.let { user ->
+                _authState.value = AuthState.Authenticated(user.toAuthUser())
+                AuthResult.Success(user.toAuthUser())
+            } ?: AuthResult.Error("Google Sign-In failed")
+        } catch (e: Exception) {
+            val errorMessage = when {
+                e.message?.contains("INVALID_CREDENTIAL") == true -> "Invalid Google credential"
+                e.message?.contains("ACCOUNT_EXISTS_WITH_DIFFERENT_CREDENTIAL") == true ->
+                    "An account already exists with this email using a different sign-in method"
+                else -> e.message ?: "Google Sign-In failed"
+            }
+            AuthResult.Error(errorMessage)
+        }
+    }
+
+    /**
+     * Sign in with Apple credential
+     */
+    suspend fun signInWithApple(idToken: String): AuthResult {
+        return try {
+            val credential = OAuthProvider.credential("apple.com", idToken, null)
+            val result = auth.signInWithCredential(credential)
+            result.user?.let { user ->
+                _authState.value = AuthState.Authenticated(user.toAuthUser())
+                AuthResult.Success(user.toAuthUser())
+            } ?: AuthResult.Error("Apple Sign-In failed")
+        } catch (e: Exception) {
+            val errorMessage = when {
+                e.message?.contains("INVALID_CREDENTIAL") == true -> "Invalid Apple credential"
+                e.message?.contains("ACCOUNT_EXISTS_WITH_DIFFERENT_CREDENTIAL") == true ->
+                    "An account already exists with this email using a different sign-in method"
+                else -> e.message ?: "Apple Sign-In failed"
             }
             AuthResult.Error(errorMessage)
         }

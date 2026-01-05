@@ -83,6 +83,11 @@ kotlin {
             implementation(libs.koin.android)
             implementation(libs.androidx.work.runtime)
             implementation(libs.androidx.splashscreen)
+
+            // Google Sign-In
+            implementation(libs.googleid)
+            implementation(libs.androidx.credentials)
+            implementation(libs.androidx.credentials.play.services)
         }
     }
 }

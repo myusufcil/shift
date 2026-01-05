@@ -398,6 +398,40 @@ fun ProfileScreen(
                 }
             }
 
+            // Account section
+            item {
+                Text(
+                    text = (if (currentLanguage == Language.TURKISH) "Hesap" else if (currentLanguage == Language.SPANISH) "Cuenta" else "Account").uppercase(),
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = textColor.copy(alpha = 0.5f),
+                    letterSpacing = 1.sp,
+                    modifier = Modifier.padding(top = 16.dp)
+                )
+            }
+
+            item {
+                val isLoggedIn = authState is AuthState.Authenticated
+
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    if (isLoggedIn) {
+                        ProfileMenuItem(
+                            icon = Icons.Default.ExitToApp,
+                            title = StringResources.signOut.localized(),
+                            onClick = { showSignOutDialog = true },
+                            isDanger = true
+                        )
+                    } else {
+                        ProfileMenuItem(
+                            icon = Icons.Default.Login,
+                            title = if (currentLanguage == Language.TURKISH) "Giriş Yap" else if (currentLanguage == Language.SPANISH) "Iniciar Sesión" else "Sign In",
+                            onClick = onNavigateToLogin
+                        )
+                    }
+                }
+            }
 
             // Version info
             item {

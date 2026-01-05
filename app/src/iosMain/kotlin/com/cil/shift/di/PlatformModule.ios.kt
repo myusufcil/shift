@@ -4,6 +4,7 @@ import com.cil.shift.core.common.achievement.AchievementManager
 import com.cil.shift.core.common.achievement.AchievementPreferences
 import com.cil.shift.core.common.achievement.IOSAchievementPreferences
 import com.cil.shift.core.common.auth.AuthManager
+import com.cil.shift.core.common.auth.SocialSignInProvider
 import com.cil.shift.core.common.purchase.PurchaseManager
 import com.cil.shift.core.common.localization.IOSLanguagePreferences
 import com.cil.shift.core.common.localization.LanguagePreferences
@@ -29,4 +30,5 @@ actual fun platformModule(): Module = module {
     single { AchievementManager(get()) }
     single { AuthManager() }
     single { PurchaseManager() }
+    single { SocialSignInProvider() }
 }
