@@ -6,7 +6,13 @@ plugins {
 }
 
 kotlin {
-    androidTarget()
+    androidTarget {
+        compilations.all {
+            kotlinOptions {
+                jvmTarget = "11"
+            }
+        }
+    }
 
     listOf(
         iosArm64(),
@@ -39,6 +45,7 @@ kotlin {
             implementation(libs.kotlinx.datetime)
             implementation(libs.koin.compose)
             implementation(libs.sqldelight.coroutines)
+            implementation(libs.revenuecat.purchases)
         }
 
         androidMain.dependencies {

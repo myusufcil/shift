@@ -2,6 +2,8 @@ package com.cil.shift.feature.habits.presentation.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.cil.shift.core.common.achievement.AchievementManager
+import com.cil.shift.core.common.onboarding.OnboardingPreferences
 import com.cil.shift.feature.habits.domain.usecase.GetHabitsUseCase
 import com.cil.shift.feature.habits.domain.usecase.ToggleHabitCompletionUseCase
 import kotlinx.coroutines.flow.*
@@ -11,7 +13,9 @@ import kotlinx.datetime.*
 class HomeViewModel(
     private val getHabitsUseCase: GetHabitsUseCase,
     private val toggleHabitCompletionUseCase: ToggleHabitCompletionUseCase,
-    private val habitRepository: com.cil.shift.feature.habits.domain.repository.HabitRepository
+    private val habitRepository: com.cil.shift.feature.habits.domain.repository.HabitRepository,
+    private val achievementManager: AchievementManager,
+    private val onboardingPreferences: OnboardingPreferences
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(HomeState())
@@ -21,6 +25,16 @@ class HomeViewModel(
         loadHabits()
         updateCurrentDate()
         loadWeeklyChartData()
+        loadUserPreferences()
+    }
+
+    private fun loadUserPreferences() {
+        val lastConfettiDate = onboardingPreferences.getLastConfettiDate()
+        val userName = onboardingPreferences.getUserName().ifBlank { "User" }
+        _state.update { it.copy(
+            confettiShownForDate = lastConfettiDate,
+            userName = userName
+        ) }
     }
 
     fun refresh() {
@@ -53,13 +67,15 @@ class HomeViewModel(
                         shouldShowHabitOnDate(habit, targetLocalDate)
                     }
 
-                    // For each habit, get completion and combine
+                    // For each habit, get completion and calculate streak
                     val habitsWithCompletion = scheduledHabits.map { habit ->
                         val completion = habitRepository.getCompletion(habit.id, targetDate)
+                        val streak = calculateStreak(habit, targetLocalDate)
                         HabitWithCompletion(
                             habit = habit,
                             isCompletedToday = completion?.isCompleted ?: false,
-                            currentValue = completion?.currentValue ?: 0
+                            currentValue = completion?.currentValue ?: 0,
+                            currentStreak = streak
                         )
                     }
 
@@ -108,20 +124,36 @@ class HomeViewModel(
                 viewModelScope.launch {
                     // Use selected date if available, otherwise use today
                     val targetDate = _state.value.selectedDate?.toString() ?: getTodayDateString()
+                    val habitWithCompletion = _state.value.habits.find { it.habit.id == event.habitId }
+                    val wasCompleted = habitWithCompletion?.isCompletedToday ?: false
+
                     toggleHabitCompletionUseCase(event.habitId, targetDate)
 
                     // Update UI optimistically
                     _state.update { currentState ->
-                        val updatedHabits = currentState.habits.map { habitWithCompletion ->
-                            if (habitWithCompletion.habit.id == event.habitId) {
-                                habitWithCompletion.copy(
-                                    isCompletedToday = !habitWithCompletion.isCompletedToday
+                        val updatedHabits = currentState.habits.map { hwc ->
+                            if (hwc.habit.id == event.habitId) {
+                                hwc.copy(
+                                    isCompletedToday = !hwc.isCompletedToday
                                 )
                             } else {
-                                habitWithCompletion
+                                hwc
                             }
                         }
                         currentState.copy(habits = updatedHabits)
+                    }
+
+                    // Track achievement if habit was just completed (not uncompleted)
+                    if (!wasCompleted && habitWithCompletion != null) {
+                        val currentHour = com.cil.shift.core.common.currentDateTime().hour
+                        achievementManager.recordCompletion(currentHour)
+
+                        // Also check streak achievements with the updated streak
+                        val targetLocalDate = _state.value.selectedDate ?: com.cil.shift.core.common.currentDate()
+                        val newStreak = calculateStreak(habitWithCompletion.habit, targetLocalDate)
+                        if (newStreak > 0) {
+                            achievementManager.checkStreakAchievements(newStreak)
+                        }
                     }
 
                     // Refresh weekly chart data
@@ -238,12 +270,49 @@ class HomeViewModel(
                 // Just reload chart without affecting selected date or habits
                 loadWeeklyChartData()
             }
+            is HomeEvent.ConfettiShown -> {
+                _state.update { it.copy(confettiShownForDate = event.date) }
+                onboardingPreferences.setLastConfettiDate(event.date)
+            }
         }
     }
 
     private fun getTodayDateString(): String {
         val today = com.cil.shift.core.common.currentDateTime()
         return "${today.year}-${today.monthNumber.toString().padStart(2, '0')}-${today.dayOfMonth.toString().padStart(2, '0')}"
+    }
+
+    /**
+     * Calculate the current streak for a habit by counting consecutive completed days
+     * going backwards from the given date.
+     */
+    private suspend fun calculateStreak(habit: com.cil.shift.feature.habits.domain.model.Habit, fromDate: LocalDate): Int {
+        var streak = 0
+        var currentDate = fromDate
+
+        // Check up to 365 days back (or until we find an incomplete day)
+        for (i in 0 until 365) {
+            // Check if habit should be active on this date based on frequency
+            if (shouldShowHabitOnDate(habit, currentDate)) {
+                val dateString = "${currentDate.year}-${currentDate.monthNumber.toString().padStart(2, '0')}-${currentDate.dayOfMonth.toString().padStart(2, '0')}"
+                val completion = habitRepository.getCompletion(habit.id, dateString)
+
+                if (completion?.isCompleted == true) {
+                    streak++
+                } else {
+                    // If today is not completed yet, continue checking previous days
+                    if (i == 0) {
+                        currentDate = currentDate.minus(1, DateTimeUnit.DAY)
+                        continue
+                    }
+                    // Break on first non-completed scheduled day
+                    break
+                }
+            }
+            currentDate = currentDate.minus(1, DateTimeUnit.DAY)
+        }
+
+        return streak
     }
 
     fun loadCompletionsForDate(date: LocalDate) {
@@ -307,4 +376,5 @@ sealed interface HomeEvent {
     data class ReorderHabits(val habitIds: List<String>) : HomeEvent
     data class ChangeWeeklyChartType(val chartType: WeeklyChartType) : HomeEvent
     data object RefreshChartOnly : HomeEvent
+    data class ConfettiShown(val date: String) : HomeEvent
 }

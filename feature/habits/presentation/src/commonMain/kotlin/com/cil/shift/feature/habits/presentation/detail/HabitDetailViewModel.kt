@@ -234,10 +234,6 @@ class HabitDetailViewModel(
     private fun calculateStats(
         completions: List<com.cil.shift.feature.habits.domain.model.HabitCompletion>
     ): HabitStats {
-        if (completions.isEmpty()) {
-            return HabitStats(0, 0, 0f)
-        }
-
         // Filter only completed entries
         val completed = completions.filter { it.isCompleted }
 
@@ -289,13 +285,23 @@ class HabitDetailViewModel(
             bestStreak = 0
         }
 
-        // Calculate completion rate (completed days / total days since creation)
-        val completionRate = if (completions.isNotEmpty()) {
-            val totalDays = completions.size
-            val completedDays = completed.size
-            (completedDays.toFloat() / totalDays.toFloat()).coerceIn(0f, 1f)
-        } else {
-            0f
+        // Calculate completion rate based on days since first completion
+        val completionRate = try {
+            val completedDates = completed.map { kotlinx.datetime.LocalDate.parse(it.date) }
+            val firstDate = completedDates.minOrNull()
+            val today = currentDate()
+
+            if (firstDate != null) {
+                // Days from first completion to today (inclusive)
+                val totalDays = (today.toEpochDays() - firstDate.toEpochDays() + 1).toInt().coerceAtLeast(1)
+                val completedDays = completed.size
+                (completedDays.toFloat() / totalDays.toFloat()).coerceIn(0f, 1f)
+            } else {
+                0f
+            }
+        } catch (e: Exception) {
+            // Fallback: use simple ratio of completed entries
+            if (completed.isNotEmpty()) 1f else 0f
         }
 
         return HabitStats(

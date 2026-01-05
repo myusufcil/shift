@@ -9,6 +9,7 @@ import androidx.compose.ui.graphics.Color
  */
 @Composable
 actual fun ConfigureSystemBars(
+    isDarkTheme: Boolean,
     statusBarColor: Color,
     navigationBarColor: Color,
     isLightStatusBar: Boolean,

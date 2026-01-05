@@ -21,12 +21,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.cil.shift.core.common.achievement.Achievement
+import com.cil.shift.core.common.achievement.AchievementManager
+import com.cil.shift.core.common.haptic.HapticType
+import com.cil.shift.core.common.haptic.getHapticFeedbackManager
 import com.cil.shift.core.common.localization.LocalizationHelpers
 import com.cil.shift.core.common.localization.LocalizationManager
 import com.cil.shift.core.common.localization.StringResources
 import com.cil.shift.core.common.localization.localized
 import com.cil.shift.feature.habits.domain.model.HabitType
 import com.cil.shift.feature.habits.presentation.home.components.*
+import com.cil.shift.feature.settings.presentation.achievements.AchievementUnlockPopup
 import org.koin.compose.koinInject
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
@@ -46,6 +51,44 @@ fun NewHomeScreen(
     val state by viewModel.state.collectAsState()
     val localizationManager = koinInject<LocalizationManager>()
     val currentLanguage by localizationManager.currentLanguage.collectAsState()
+
+    // Haptic feedback manager
+    val hapticManager = remember { getHapticFeedbackManager() }
+
+    // Achievement manager
+    val achievementManager = koinInject<AchievementManager>()
+    val newlyUnlockedAchievement by achievementManager.newlyUnlocked.collectAsState()
+    var displayedAchievement by remember { mutableStateOf<Achievement?>(null) }
+
+    // When a new achievement is unlocked, show it
+    LaunchedEffect(newlyUnlockedAchievement) {
+        if (newlyUnlockedAchievement != null) {
+            displayedAchievement = newlyUnlockedAchievement
+            hapticManager.performHaptic(HapticType.SUCCESS)
+        }
+    }
+
+    // Confetti animation state
+    var showConfetti by remember { mutableStateOf(false) }
+
+    // Track all habits completion
+    val completedHabits = state.habits.count { it.isCompletedToday }
+    val totalHabits = state.habits.size
+    val allHabitsCompleted = totalHabits > 0 && completedHabits == totalHabits
+
+    // Get today's date string for confetti tracking
+    val todayDateString = remember {
+        val today = com.cil.shift.core.common.currentDate()
+        "${today.year}-${today.monthNumber.toString().padStart(2, '0')}-${today.dayOfMonth.toString().padStart(2, '0')}"
+    }
+
+    // Trigger confetti when all habits are completed (only once per day)
+    LaunchedEffect(allHabitsCompleted, state.confettiShownForDate) {
+        if (allHabitsCompleted && state.confettiShownForDate != todayDateString) {
+            showConfetti = true
+            viewModel.onEvent(HomeEvent.ConfettiShown(todayDateString))
+        }
+    }
 
     // Refresh data when screen becomes visible, preserving selected date
     androidx.compose.runtime.LaunchedEffect(Unit) {
@@ -82,10 +125,14 @@ fun NewHomeScreen(
         }
     }
 
+    val backgroundColor = MaterialTheme.colorScheme.background
+    val textColor = MaterialTheme.colorScheme.onBackground
+    val cardColor = MaterialTheme.colorScheme.surface
+
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFF0A1628))
+            .background(backgroundColor)
     ) {
         LazyColumn(
             state = lazyListState,
@@ -119,7 +166,7 @@ fun NewHomeScreen(
                             text = "${StringResources.hello.localized()}, ${state.userName}",
                             fontSize = 28.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color.White
+                            color = textColor
                         )
                     }
 
@@ -128,12 +175,12 @@ fun NewHomeScreen(
                         modifier = Modifier
                             .size(40.dp)
                             .clip(CircleShape)
-                            .background(Color(0xFF1A2942))
+                            .background(cardColor)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Notifications,
                             contentDescription = StringResources.notifications.localized(),
-                            tint = Color.White,
+                            tint = textColor,
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -195,7 +242,7 @@ fun NewHomeScreen(
                         text = StringResources.todaysHabits.localized(),
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = textColor
                     )
 
                     TextButton(onClick = { viewModel.onEvent(HomeEvent.ToggleShowAll) }) {
@@ -203,7 +250,7 @@ fun NewHomeScreen(
                             text = if (state.showAllHabits) StringResources.showLess.localized() else StringResources.viewAll.localized(),
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Medium,
-                            color = Color.White.copy(alpha = 0.5f)
+                            color = textColor.copy(alpha = 0.5f)
                         )
                     }
                 }
@@ -236,6 +283,7 @@ fun NewHomeScreen(
                                     color = habitColor,
                                     statusLabel = StringResources.focus.localized(),
                                     isCompleted = habitWithCompletion.isCompleted,
+                                    streak = habitWithCompletion.currentStreak,
                                     onClick = { onNavigateToHabitDetail(habit.id, state.selectedDate?.toString()) },
                                     modifier = Modifier.longPressDraggableHandle()
                                 )
@@ -249,10 +297,13 @@ fun NewHomeScreen(
                                     unit = habit.targetUnit ?: "",
                                     icon = habit.icon,
                                     color = habitColor,
+                                    streak = habitWithCompletion.currentStreak,
                                     onIncrement = {
+                                        hapticManager.performHaptic(HapticType.LIGHT)
                                         viewModel.onEvent(HomeEvent.IncrementHabit(habit.id, 250))
                                     },
                                     onDecrement = {
+                                        hapticManager.performHaptic(HapticType.LIGHT)
                                         viewModel.onEvent(HomeEvent.DecrementHabit(habit.id, 250))
                                     },
                                     onClick = { onNavigateToHabitDetail(habit.id, state.selectedDate?.toString()) },
@@ -267,9 +318,7 @@ fun NewHomeScreen(
                                     icon = habit.icon,
                                     color = habitColor,
                                     isCompleted = habitWithCompletion.isCompleted,
-                                    onStart = {
-                                        // TODO: Start session
-                                    },
+                                    streak = habitWithCompletion.currentStreak,
                                     onClick = { onNavigateToHabitDetail(habit.id, state.selectedDate?.toString()) },
                                     modifier = Modifier.longPressDraggableHandle()
                                 )
@@ -282,7 +331,11 @@ fun NewHomeScreen(
                                     icon = habit.icon,
                                     color = habitColor,
                                     isCompleted = habitWithCompletion.isCompleted,
+                                    streak = habitWithCompletion.currentStreak,
                                     onToggle = {
+                                        // Haptic feedback - success when completing, light when uncompleting
+                                        val hapticType = if (habitWithCompletion.isCompleted) HapticType.LIGHT else HapticType.SUCCESS
+                                        hapticManager.performHaptic(hapticType)
                                         viewModel.onEvent(HomeEvent.ToggleHabit(habit.id))
                                     },
                                     onClick = { onNavigateToHabitDetail(habit.id, state.selectedDate?.toString()) },
@@ -295,6 +348,25 @@ fun NewHomeScreen(
             }
 
         }
+
+        // Confetti animation overlay
+        ConfettiAnimation(
+            isPlaying = showConfetti,
+            onAnimationEnd = { showConfetti = false }
+        )
+
+        // Achievement unlock popup
+        AchievementUnlockPopup(
+            achievement = displayedAchievement,
+            currentLanguage = currentLanguage,
+            onDismiss = {
+                displayedAchievement = null
+                achievementManager.clearNewlyUnlocked()
+            },
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .statusBarsPadding()
+        )
     }
 }
 

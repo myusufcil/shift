@@ -1,7 +1,9 @@
 package com.cil.shift.feature.statistics.presentation
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -36,10 +38,14 @@ fun StatisticsScreen(
     val state by viewModel.state.collectAsState()
     val scrollState = rememberScrollState()
 
+    val backgroundColor = MaterialTheme.colorScheme.background
+    val textColor = MaterialTheme.colorScheme.onBackground
+    val cardColor = MaterialTheme.colorScheme.surface
+
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFF0A1628))
+            .background(backgroundColor)
     ) {
         when {
             state.isLoading -> {
@@ -65,19 +71,37 @@ fun StatisticsScreen(
                         .padding(24.dp),
                     verticalArrangement = Arrangement.spacedBy(24.dp)
                 ) {
-                    // Header
-                    Text(
-                        text = StringResources.statistics.localized(),
-                        fontSize = 28.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
+                    // Header with greeting
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        if (state.userName.isNotBlank()) {
+                            Text(
+                                text = "Hello, ${state.userName}",
+                                fontSize = 28.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = textColor
+                            )
+                            Text(
+                                text = StringResources.statistics.localized(),
+                                fontSize = 16.sp,
+                                color = textColor.copy(alpha = 0.6f)
+                            )
+                        } else {
+                            Text(
+                                text = StringResources.statistics.localized(),
+                                fontSize = 28.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = textColor
+                            )
+                        }
+                    }
 
-                    // Completion Rate Card
-                    CompletionRateCard(
-                        completionRate = state.completionRate,
-                        completedToday = state.completedToday,
-                        totalHabits = state.totalHabits
+                    // Streak Calendar
+                    StreakCalendarCard(
+                        completedDates = state.completedDates,
+                        currentStreak = state.currentStreak,
+                        longestStreak = state.longestStreak
                     )
 
                     // Weekly Distribution
@@ -92,9 +116,15 @@ fun StatisticsScreen(
 
                     // Monthly Chart
                     Card(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .border(
+                                width = 1.dp,
+                                color = textColor.copy(alpha = 0.1f),
+                                shape = RoundedCornerShape(16.dp)
+                            ),
                         colors = CardDefaults.cardColors(
-                            containerColor = Color(0xFF1A2942)
+                            containerColor = cardColor
                         ),
                         shape = RoundedCornerShape(16.dp)
                     ) {
@@ -108,15 +138,15 @@ fun StatisticsScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 IconButton(onClick = { viewModel.onEvent(StatisticsEvent.PreviousMonth) }) {
-                                    Text("←", fontSize = 20.sp, color = Color.White)
+                                    Text("←", fontSize = 20.sp, color = textColor)
                                 }
                                 Column(
                                     horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
                                     Text(
-                                        text = "Monthly Progress",
+                                        text = StringResources.monthlyProgress.localized(),
                                         fontSize = 12.sp,
-                                        color = Color.White.copy(alpha = 0.6f)
+                                        color = textColor.copy(alpha = 0.6f)
                                     )
                                     Text(
                                         text = state.selectedMonthStart?.let {
@@ -124,11 +154,11 @@ fun StatisticsScreen(
                                         } ?: "",
                                         fontSize = 16.sp,
                                         fontWeight = FontWeight.SemiBold,
-                                        color = Color.White
+                                        color = textColor
                                     )
                                 }
                                 IconButton(onClick = { viewModel.onEvent(StatisticsEvent.NextMonth) }) {
-                                    Text("→", fontSize = 20.sp, color = Color.White)
+                                    Text("→", fontSize = 20.sp, color = textColor)
                                 }
                             }
 
@@ -178,14 +208,6 @@ fun StatisticsScreen(
                         }
                     }
 
-                    // Pie Chart - Completion Distribution
-                    PieChart(
-                        data = listOf(
-                            PieChartData("Completed", state.completedToday.toFloat() * 100f / maxOf(state.totalHabits, 1), Color(0xFF4ECDC4)),
-                            PieChartData("Pending", (state.totalHabits - state.completedToday).toFloat() * 100f / maxOf(state.totalHabits, 1), Color(0xFFFF6B6B))
-                        ),
-                        title = "Today's Completion"
-                    )
 
                     // Streak Card
                     StreakCard(currentStreak = state.currentStreak)
@@ -198,72 +220,195 @@ fun StatisticsScreen(
 }
 
 @Composable
-private fun CompletionRateCard(
-    completionRate: Float,
-    completedToday: Int,
-    totalHabits: Int
+private fun StreakCalendarCard(
+    completedDates: Set<kotlinx.datetime.LocalDate>,
+    currentStreak: Int,
+    longestStreak: Int
 ) {
-    val animatedRate = androidx.compose.animation.core.animateFloatAsState(
-        targetValue = completionRate,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMediumLow
-        ),
-        label = "completion_rate"
-    )
-
-    val animatedCompletedToday = androidx.compose.animation.core.animateIntAsState(
-        targetValue = completedToday,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMediumLow
-        ),
-        label = "completed_today"
-    )
+    val today = com.cil.shift.core.common.currentDate()
+    val cardColor = MaterialTheme.colorScheme.surface
+    val textColor = MaterialTheme.colorScheme.onBackground
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(
+                width = 1.dp,
+                color = textColor.copy(alpha = 0.1f),
+                shape = RoundedCornerShape(16.dp)
+            ),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF1A2942)
+            containerColor = cardColor
         ),
         shape = RoundedCornerShape(16.dp)
     ) {
         Column(
-            modifier = Modifier.padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            // Title
             Text(
-                text = StringResources.todaysProgress.localized(),
-                fontSize = 16.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = Color.White.copy(alpha = 0.7f)
+                text = StringResources.activityCalendar.localized(),
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = textColor
             )
 
-            Box(
-                contentAlignment = Alignment.Center
+            // Streak stats header
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                CircularProgressIndicator(
-                    progress = { animatedRate.value },
-                    modifier = Modifier.size(120.dp),
-                    color = Color(0xFF00D9FF),
-                    strokeWidth = 12.dp,
-                    trackColor = Color.White.copy(alpha = 0.1f)
+                StreakStat(
+                    value = currentStreak,
+                    label = StringResources.current.localized(),
+                    emoji = "🔥"
                 )
-                Text(
-                    text = "${(animatedRate.value * 100).toInt()}%",
-                    fontSize = 32.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
+                StreakStat(
+                    value = longestStreak,
+                    label = StringResources.best.localized(),
+                    emoji = "🏆"
+                )
+                StreakStat(
+                    value = completedDates.size,
+                    label = StringResources.total.localized(),
+                    emoji = "✅"
                 )
             }
 
-            Text(
-                text = "${animatedCompletedToday.value} ${StringResources.of.localized()} $totalHabits ${StringResources.habitsCompleted.localized()}",
-                fontSize = 14.sp,
-                color = Color.White.copy(alpha = 0.6f)
-            )
+            // 4 months grid (1x4)
+            val months = (0..3).map { offset ->
+                val date = today.minus(3 - offset, DateTimeUnit.MONTH)
+                date.year to date.month
+            }
+
+            // Single row with all 4 months
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                months.forEach { (year, month) ->
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "${month.name.take(3).lowercase().replaceFirstChar { it.uppercase() }} ${year}",
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = textColor.copy(alpha = 0.8f)
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        MiniMonthCalendarGrid(
+                            year = year,
+                            month = month,
+                            completedDates = completedDates,
+                            today = today
+                        )
+                    }
+                }
+            }
         }
+    }
+}
+
+@Composable
+private fun MiniMonthCalendarGrid(
+    year: Int,
+    month: kotlinx.datetime.Month,
+    completedDates: Set<kotlinx.datetime.LocalDate>,
+    today: kotlinx.datetime.LocalDate
+) {
+    val firstDayOfMonth = kotlinx.datetime.LocalDate(year, month, 1)
+    val daysInMonth = firstDayOfMonth.plus(1, DateTimeUnit.MONTH).minus(1, DateTimeUnit.DAY).dayOfMonth
+    val firstDayOfWeek = firstDayOfMonth.dayOfWeek.ordinal // Monday = 0
+
+    val textColor = MaterialTheme.colorScheme.onBackground
+
+    Column(
+        verticalArrangement = Arrangement.spacedBy(1.dp)
+    ) {
+        // Days grid
+        val weeksNeeded = ((daysInMonth + firstDayOfWeek + 6) / 7)
+
+        repeat(weeksNeeded) { week ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(1.dp)
+            ) {
+                repeat(7) { dayOfWeek ->
+                    val dayPosition = week * 7 + dayOfWeek
+                    val dayNum = dayPosition - firstDayOfWeek + 1
+
+                    Box(
+                        modifier = Modifier.weight(1f),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (dayNum in 1..daysInMonth) {
+                            val date = kotlinx.datetime.LocalDate(year, month, dayNum)
+                            val isCompleted = completedDates.contains(date)
+                            val isToday = date == today
+                            val isFuture = date > today
+
+                            Box(
+                                modifier = Modifier
+                                    .size(10.dp)
+                                    .background(
+                                        color = when {
+                                            isCompleted -> Color(0xFF4ECDC4)
+                                            isFuture -> Color.Transparent
+                                            else -> textColor.copy(alpha = 0.1f)
+                                        },
+                                        shape = RoundedCornerShape(2.dp)
+                                    )
+                                    .then(
+                                        if (isToday) Modifier.border(
+                                            width = 1.dp,
+                                            color = Color(0xFF00D9FF),
+                                            shape = RoundedCornerShape(2.dp)
+                                        ) else Modifier
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                // No text - just colored boxes for mini view
+                            }
+                        } else {
+                            Spacer(modifier = Modifier.size(10.dp))
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun StreakStat(
+    value: Int,
+    label: String,
+    emoji: String
+) {
+    val textColor = MaterialTheme.colorScheme.onBackground
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Text(
+            text = emoji,
+            fontSize = 24.sp
+        )
+        Text(
+            text = "$value",
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFF00D9FF)
+        )
+        Text(
+            text = label,
+            fontSize = 12.sp,
+            color = textColor.copy(alpha = 0.6f)
+        )
     }
 }
 
@@ -276,10 +421,19 @@ private fun WeeklyDistributionCard(
     onNextWeek: () -> Unit,
     onChartTypeChange: (ChartType) -> Unit
 ) {
+    val cardColor = MaterialTheme.colorScheme.surface
+    val textColor = MaterialTheme.colorScheme.onBackground
+
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(
+                width = 1.dp,
+                color = textColor.copy(alpha = 0.1f),
+                shape = RoundedCornerShape(16.dp)
+            ),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF1A2942)
+            containerColor = cardColor
         ),
         shape = RoundedCornerShape(16.dp)
     ) {
@@ -293,7 +447,7 @@ private fun WeeklyDistributionCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = onPreviousWeek) {
-                    Text("←", fontSize = 20.sp, color = Color.White)
+                    Text("←", fontSize = 20.sp, color = textColor)
                 }
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally
@@ -301,7 +455,7 @@ private fun WeeklyDistributionCard(
                     Text(
                         text = StringResources.weeklyDistribution.localized(),
                         fontSize = 12.sp,
-                        color = Color.White.copy(alpha = 0.6f)
+                        color = textColor.copy(alpha = 0.6f)
                     )
                     Text(
                         text = selectedWeekStart?.let { weekStart ->
@@ -317,11 +471,11 @@ private fun WeeklyDistributionCard(
                         } ?: StringResources.weeklyDistribution.localized(),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = Color.White
+                        color = textColor
                     )
                 }
                 IconButton(onClick = onNextWeek) {
-                    Text("→", fontSize = 20.sp, color = Color.White)
+                    Text("→", fontSize = 20.sp, color = textColor)
                 }
             }
 
@@ -384,11 +538,12 @@ private fun DayBar(
     dayName: String,
     completionRate: Float
 ) {
+    val textColor = MaterialTheme.colorScheme.onBackground
     val animatedRate = androidx.compose.animation.core.animateFloatAsState(
-        targetValue = completionRate,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMediumLow
+        targetValue = completionRate.coerceIn(0f, 1f),
+        animationSpec = tween(
+            durationMillis = 600,
+            easing = FastOutSlowInEasing
         ),
         label = "day_bar_height"
     )
@@ -406,7 +561,7 @@ private fun DayBar(
             Box(
                 modifier = Modifier
                     .width(32.dp)
-                    .fillMaxHeight(animatedRate.value)
+                    .fillMaxHeight(animatedRate.value.coerceIn(0f, 1f))
                     .background(
                         Color(0xFF00D9FF),
                         shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp)
@@ -416,26 +571,34 @@ private fun DayBar(
         Text(
             text = dayName.take(1),
             fontSize = 12.sp,
-            color = Color.White.copy(alpha = 0.6f)
+            color = textColor.copy(alpha = 0.6f)
         )
     }
 }
 
 @Composable
 private fun StreakCard(currentStreak: Int) {
+    val cardColor = MaterialTheme.colorScheme.surface
+    val textColor = MaterialTheme.colorScheme.onBackground
     val animatedStreak = androidx.compose.animation.core.animateIntAsState(
-        targetValue = currentStreak,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMediumLow
+        targetValue = currentStreak.coerceAtLeast(0),
+        animationSpec = tween(
+            durationMillis = 800,
+            easing = FastOutSlowInEasing
         ),
         label = "streak_count"
     )
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(
+                width = 1.dp,
+                color = textColor.copy(alpha = 0.1f),
+                shape = RoundedCornerShape(16.dp)
+            ),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF1A2942)
+            containerColor = cardColor
         ),
         shape = RoundedCornerShape(16.dp)
     ) {
@@ -452,10 +615,10 @@ private fun StreakCard(currentStreak: Int) {
                 Text(
                     text = StringResources.currentStreak.localized(),
                     fontSize = 14.sp,
-                    color = Color.White.copy(alpha = 0.6f)
+                    color = textColor.copy(alpha = 0.6f)
                 )
                 Text(
-                    text = "${animatedStreak.value} ${StringResources.daysStreak.localized()}",
+                    text = "${animatedStreak.value.coerceAtLeast(0)} ${StringResources.daysStreak.localized()}",
                     fontSize = 28.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF00D9FF)
@@ -502,6 +665,7 @@ private fun ChartTypeSelectorButton(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
+    val textColor = MaterialTheme.colorScheme.onBackground
     val scale = androidx.compose.runtime.remember { Animatable(1f) }
 
     androidx.compose.runtime.LaunchedEffect(isSelected) {
@@ -527,7 +691,7 @@ private fun ChartTypeSelectorButton(
         onClick = onClick,
         colors = ButtonDefaults.textButtonColors(
             containerColor = if (isSelected) Color(0xFF4E7CFF) else Color.Transparent,
-            contentColor = if (isSelected) Color.White else Color.White.copy(alpha = 0.6f)
+            contentColor = if (isSelected) textColor else textColor.copy(alpha = 0.6f)
         ),
         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
         modifier = Modifier
@@ -547,6 +711,8 @@ private fun ChartTypeSelectorButton(
 
 @Composable
 private fun WeeklyLineChart(weeklyData: List<DayCompletion>) {
+    val textColor = MaterialTheme.colorScheme.onBackground
+
     androidx.compose.foundation.Canvas(
         modifier = Modifier
             .fillMaxWidth()
@@ -578,11 +744,6 @@ private fun WeeklyLineChart(weeklyData: List<DayCompletion>) {
                     radius = 5f,
                     center = androidx.compose.ui.geometry.Offset(x, y)
                 )
-                drawCircle(
-                    color = Color.White,
-                    radius = 2f,
-                    center = androidx.compose.ui.geometry.Offset(x, y)
-                )
             }
 
             drawPath(
@@ -604,7 +765,7 @@ private fun WeeklyLineChart(weeklyData: List<DayCompletion>) {
             Text(
                 text = data.dayName,
                 fontSize = 10.sp,
-                color = Color.White.copy(alpha = 0.5f)
+                color = textColor.copy(alpha = 0.5f)
             )
         }
     }
@@ -680,16 +841,45 @@ private fun MonthlyBarChart(monthlyData: List<DayCompletion>) {
         val padding = 20f
         val chartWidth = width - padding * 2
         val chartHeight = height - padding * 2
-        val barWidth = chartWidth / monthlyData.size * 0.8f
+        val barWidth = chartWidth / monthlyData.size * 0.6f
+        val barSpacing = chartWidth / monthlyData.size
 
+        // Draw gradient background fill
+        val gradientBrush = androidx.compose.ui.graphics.Brush.verticalGradient(
+            colors = listOf(
+                Color(0xFF4ECDC4).copy(alpha = 0.3f),
+                Color(0xFF4ECDC4).copy(alpha = 0.05f)
+            ),
+            startY = padding,
+            endY = padding + chartHeight
+        )
+        drawRect(
+            brush = gradientBrush,
+            topLeft = androidx.compose.ui.geometry.Offset(padding, padding),
+            size = androidx.compose.ui.geometry.Size(chartWidth, chartHeight)
+        )
+
+        // Draw bars with rounded tops
         monthlyData.forEachIndexed { index, data ->
-            val x = padding + (chartWidth / monthlyData.size * index) + (chartWidth / monthlyData.size - barWidth) / 2
-            val barHeight = data.completionRate * chartHeight
+            val x = padding + (barSpacing * index) + (barSpacing - barWidth) / 2
+            val barHeight = (data.completionRate * chartHeight).coerceAtLeast(4f)
+            val cornerRadius = androidx.compose.ui.geometry.CornerRadius(barWidth / 3, barWidth / 3)
 
-            drawRect(
-                color = Color(0xFF00D9FF),
+            // Draw bar with gradient
+            val barGradient = androidx.compose.ui.graphics.Brush.verticalGradient(
+                colors = listOf(
+                    Color(0xFF4ECDC4),
+                    Color(0xFF4ECDC4).copy(alpha = 0.7f)
+                ),
+                startY = padding + chartHeight - barHeight,
+                endY = padding + chartHeight
+            )
+
+            drawRoundRect(
+                brush = barGradient,
                 topLeft = androidx.compose.ui.geometry.Offset(x, padding + chartHeight - barHeight),
-                size = androidx.compose.ui.geometry.Size(barWidth, barHeight)
+                size = androidx.compose.ui.geometry.Size(barWidth, barHeight),
+                cornerRadius = cornerRadius
             )
         }
     }
@@ -702,6 +892,9 @@ private fun MonthlyPieChart(monthlyData: List<DayCompletion>) {
     val weeklyAverages = weeklyGroups.mapIndexed { index, week ->
         "Week ${index + 1}" to week.map { it.completionRate }.average().toFloat()
     }
+
+    val cardColor = MaterialTheme.colorScheme.surface
+    val textColor = MaterialTheme.colorScheme.onBackground
 
     androidx.compose.foundation.Canvas(
         modifier = Modifier
@@ -717,11 +910,11 @@ private fun MonthlyPieChart(monthlyData: List<DayCompletion>) {
         var startAngle = -90f
 
         val colors = listOf(
-            Color(0xFF4E7CFF),
-            Color(0xFF00D9FF),
             Color(0xFF4ECDC4),
-            Color(0xFFFF6B6B),
-            Color(0xFFFFA07A)
+            Color(0xFF98D8C8),
+            Color(0xFFB4A7D6),
+            Color(0xFFFFA07A),
+            Color(0xFF7FB3D5)
         )
 
         weeklyAverages.forEachIndexed { index, (_, value) ->
@@ -737,7 +930,7 @@ private fun MonthlyPieChart(monthlyData: List<DayCompletion>) {
             )
 
             drawArc(
-                color = Color(0xFF1A2942),
+                color = cardColor,
                 startAngle = startAngle,
                 sweepAngle = sweepAngle,
                 useCenter = true,
@@ -750,7 +943,7 @@ private fun MonthlyPieChart(monthlyData: List<DayCompletion>) {
         }
 
         drawCircle(
-            color = Color(0xFF1A2942),
+            color = cardColor,
             radius = radius * 0.5f,
             center = center
         )
@@ -773,11 +966,11 @@ private fun MonthlyPieChart(monthlyData: List<DayCompletion>) {
                         .size(8.dp)
                         .background(
                             when (index) {
-                                0 -> Color(0xFF4E7CFF)
-                                1 -> Color(0xFF00D9FF)
-                                2 -> Color(0xFF4ECDC4)
-                                3 -> Color(0xFFFF6B6B)
-                                else -> Color(0xFFFFA07A)
+                                0 -> Color(0xFF4ECDC4)
+                                1 -> Color(0xFF98D8C8)
+                                2 -> Color(0xFFB4A7D6)
+                                3 -> Color(0xFFFFA07A)
+                                else -> Color(0xFF7FB3D5)
                             },
                             androidx.compose.foundation.shape.CircleShape
                         )
@@ -785,7 +978,7 @@ private fun MonthlyPieChart(monthlyData: List<DayCompletion>) {
                 Text(
                     text = label,
                     fontSize = 10.sp,
-                    color = Color.White.copy(alpha = 0.6f)
+                    color = textColor.copy(alpha = 0.6f)
                 )
             }
         }

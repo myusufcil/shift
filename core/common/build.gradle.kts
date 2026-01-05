@@ -7,7 +7,13 @@ plugins {
 }
 
 kotlin {
-    androidTarget()
+    androidTarget {
+        compilations.all {
+            kotlinOptions {
+                jvmTarget = "11"
+            }
+        }
+    }
 
     listOf(
         iosArm64(),
@@ -25,6 +31,13 @@ kotlin {
             implementation(libs.kotlinx.datetime)
             implementation(libs.kotlinx.serialization.json)
             implementation(compose.runtime)
+
+            // Firebase
+            implementation(libs.firebase.auth)
+            implementation(libs.firebase.common)
+
+            // RevenueCat
+            implementation(libs.revenuecat.purchases)
         }
 
         androidMain.dependencies {

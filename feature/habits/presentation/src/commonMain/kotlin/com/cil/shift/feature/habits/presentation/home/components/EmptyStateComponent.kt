@@ -3,6 +3,7 @@ package com.cil.shift.feature.habits.presentation.home.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -19,6 +20,8 @@ import com.cil.shift.core.common.localization.localized
 fun EmptyStateComponent(
     modifier: Modifier = Modifier
 ) {
+    val textColor = MaterialTheme.colorScheme.onBackground
+
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -40,7 +43,7 @@ fun EmptyStateComponent(
                 text = StringResources.noHabitsForThisDay.localized(),
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.White,
+                color = textColor,
                 textAlign = TextAlign.Center
             )
 
@@ -48,7 +51,7 @@ fun EmptyStateComponent(
                 text = StringResources.addYourFirstHabit.localized(),
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Normal,
-                color = Color.White.copy(alpha = 0.6f),
+                color = textColor.copy(alpha = 0.6f),
                 textAlign = TextAlign.Center
             )
         }

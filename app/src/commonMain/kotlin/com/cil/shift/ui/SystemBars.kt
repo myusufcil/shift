@@ -10,8 +10,9 @@ import androidx.compose.ui.graphics.Color
  */
 @Composable
 expect fun ConfigureSystemBars(
-    statusBarColor: Color = Color(0xFF0A1628),
-    navigationBarColor: Color = Color(0xFF0A1628),
-    isLightStatusBar: Boolean = false,
-    isLightNavigationBar: Boolean = false
+    isDarkTheme: Boolean = true,
+    statusBarColor: Color = if (isDarkTheme) DarkBackgroundColor else LightBackgroundColor,
+    navigationBarColor: Color = if (isDarkTheme) DarkBackgroundColor else LightBackgroundColor,
+    isLightStatusBar: Boolean = !isDarkTheme,
+    isLightNavigationBar: Boolean = !isDarkTheme
 )

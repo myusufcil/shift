@@ -1,6 +1,7 @@
 package com.cil.shift.feature.habits.presentation.home.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -8,6 +9,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -25,15 +27,24 @@ fun HabitItemSimple(
     icon: String,
     color: Color,
     isCompleted: Boolean,
+    streak: Int = 0,
     onToggle: () -> Unit,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val textColor = MaterialTheme.colorScheme.onBackground
+    val cardColor = MaterialTheme.colorScheme.surface
+
     Row(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(Color(0xFF1A2942))
+            .background(cardColor)
+            .border(
+                width = 1.dp,
+                color = textColor.copy(alpha = 0.1f),
+                shape = RoundedCornerShape(16.dp)
+            )
             .clickable(onClick = onClick)
             .padding(16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -61,20 +72,28 @@ fun HabitItemSimple(
             Column(
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                Text(
-                    text = name,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color.White,
-                    maxLines = 1
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = name,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = textColor,
+                        maxLines = 1
+                    )
+
+                    // Streak badge
+                    StreakBadge(streak = streak)
+                }
 
                 if (subtitle != null) {
                     Text(
                         text = subtitle,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Normal,
-                        color = if (isCompleted) Color(0xFF4ECDC4) else Color.White.copy(alpha = 0.5f)
+                        color = if (isCompleted) Color(0xFF4ECDC4) else textColor.copy(alpha = 0.5f)
                     )
                 }
             }
@@ -86,7 +105,7 @@ fun HabitItemSimple(
                 .clip(CircleShape)
                 .background(
                     if (isCompleted) Color(0xFF4ECDC4)
-                    else Color.White.copy(alpha = 0.1f)
+                    else textColor.copy(alpha = 0.1f)
                 )
                 .clickable(onClick = onToggle),
             contentAlignment = Alignment.Center

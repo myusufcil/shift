@@ -3,6 +3,7 @@ package com.cil.shift.di
 import com.cil.shift.core.common.localization.LocalizationManager
 import com.cil.shift.core.common.notification.NotificationHistoryRepository
 import com.cil.shift.core.common.premium.PremiumManager
+import com.cil.shift.core.common.theme.ThemeManager
 import com.cil.shift.feature.habits.data.repository.HabitRepositoryImpl
 import com.cil.shift.feature.habits.data.repository.NotificationHistoryRepositoryImpl
 import com.cil.shift.feature.habits.domain.repository.HabitRepository
@@ -55,6 +56,9 @@ val domainModule = module {
 
     // Localization
     single { LocalizationManager(get()) }
+
+    // Theme
+    single { ThemeManager(get()) }
 
     // Premium
     single { PremiumManager(get()) }

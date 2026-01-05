@@ -17,12 +17,12 @@ val viewModelModule = module {
     factory { HabitSuggestionsViewModel(get()) }
 
     // Habits
-    factory { HomeViewModel(get(), get(), get()) }
-    factory { (habitId: String?) -> CreateEditHabitViewModel(habitId, get(), get()) }
+    factory { HomeViewModel(get(), get(), get(), get(), get()) }
+    factory { (habitId: String?) -> CreateEditHabitViewModel(habitId, get(), get(), get()) }
     factory { (habitId: String, selectedDate: String?) -> HabitDetailViewModel(habitId, selectedDate, get(), get(), get()) }
 
     // Statistics
-    factory { StatisticsViewModel(get()) }
+    factory { StatisticsViewModel(get(), get()) }
 
     // Settings
     factoryOf(::SettingsViewModel)

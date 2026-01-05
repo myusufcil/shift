@@ -2,13 +2,15 @@ package com.cil.shift.feature.statistics.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.cil.shift.core.common.onboarding.OnboardingPreferences
 import com.cil.shift.feature.habits.domain.repository.HabitRepository
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.datetime.*
 
 class StatisticsViewModel(
-    private val habitRepository: HabitRepository
+    private val habitRepository: HabitRepository,
+    private val onboardingPreferences: OnboardingPreferences
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(StatisticsState())
@@ -16,9 +18,12 @@ class StatisticsViewModel(
 
     init {
         val today = com.cil.shift.core.common.currentDate()
+        val userName = onboardingPreferences.getUserName()
         _state.update { it.copy(
+            userName = userName,
             selectedWeekStart = today.minus(today.dayOfWeek.ordinal, DateTimeUnit.DAY),
-            selectedMonthStart = LocalDate(today.year, today.month, 1)
+            selectedMonthStart = LocalDate(today.year, today.month, 1),
+            selectedStreakMonth = LocalDate(today.year, today.month, 1)
         )}
         loadStatistics()
     }
@@ -37,8 +42,8 @@ class StatisticsViewModel(
                 val nextWeek = currentWeek.plus(7, DateTimeUnit.DAY)
                 val today = com.cil.shift.core.common.currentDate()
                 val todayWeekStart = today.minus(today.dayOfWeek.ordinal, DateTimeUnit.DAY)
-                // Only allow navigation if next week is before current week
-                if (nextWeek < todayWeekStart) {
+                // Allow navigation up to and including current week
+                if (nextWeek <= todayWeekStart) {
                     _state.update { it.copy(
                         selectedWeekStart = nextWeek
                     )}
@@ -58,8 +63,8 @@ class StatisticsViewModel(
                 val nextMonth = currentMonth.plus(1, DateTimeUnit.MONTH)
                 val today = com.cil.shift.core.common.currentDate()
                 val todayMonthStart = LocalDate(today.year, today.month, 1)
-                // Only allow navigation if next month is before current month
-                if (LocalDate(nextMonth.year, nextMonth.month, 1) < todayMonthStart) {
+                // Allow navigation up to and including current month
+                if (LocalDate(nextMonth.year, nextMonth.month, 1) <= todayMonthStart) {
                     _state.update { it.copy(
                         selectedMonthStart = LocalDate(nextMonth.year, nextMonth.month, 1)
                     )}
@@ -71,6 +76,24 @@ class StatisticsViewModel(
             }
             is StatisticsEvent.ChangeMonthlyChartType -> {
                 _state.update { it.copy(monthlyChartType = event.chartType) }
+            }
+            is StatisticsEvent.PreviousStreakMonth -> {
+                val currentMonth = _state.value.selectedStreakMonth ?: com.cil.shift.core.common.currentDate()
+                val prevMonth = currentMonth.minus(1, DateTimeUnit.MONTH)
+                _state.update { it.copy(
+                    selectedStreakMonth = LocalDate(prevMonth.year, prevMonth.month, 1)
+                )}
+            }
+            is StatisticsEvent.NextStreakMonth -> {
+                val currentMonth = _state.value.selectedStreakMonth ?: com.cil.shift.core.common.currentDate()
+                val nextMonth = currentMonth.plus(1, DateTimeUnit.MONTH)
+                val today = com.cil.shift.core.common.currentDate()
+                val todayMonthStart = LocalDate(today.year, today.month, 1)
+                if (LocalDate(nextMonth.year, nextMonth.month, 1) <= todayMonthStart) {
+                    _state.update { it.copy(
+                        selectedStreakMonth = LocalDate(nextMonth.year, nextMonth.month, 1)
+                    )}
+                }
             }
         }
     }
@@ -98,8 +121,8 @@ class StatisticsViewModel(
                 // Calculate monthly data (last 30 days)
                 val monthlyData = calculateMonthlyData(habits)
 
-                // Calculate current streak (simplified)
-                val currentStreak = calculateCurrentStreak(habits)
+                // Calculate current streak and completed dates
+                val (currentStreak, longestStreak, completedDates) = calculateStreakData(habits)
 
                 _state.update { currentState ->
                     currentState.copy(
@@ -107,6 +130,8 @@ class StatisticsViewModel(
                         totalHabits = totalHabits,
                         completedToday = completedToday,
                         currentStreak = currentStreak,
+                        longestStreak = longestStreak,
+                        completedDates = completedDates,
                         weeklyData = weeklyData,
                         monthlyData = monthlyData,
                         weeklyChartType = currentState.weeklyChartType,
@@ -172,16 +197,18 @@ class StatisticsViewModel(
         return monthData
     }
 
-    private suspend fun calculateCurrentStreak(habits: List<com.cil.shift.feature.habits.domain.model.Habit>): Int {
-        if (habits.isEmpty()) return 0
+    private suspend fun calculateStreakData(habits: List<com.cil.shift.feature.habits.domain.model.Habit>): Triple<Int, Int, Set<LocalDate>> {
+        if (habits.isEmpty()) return Triple(0, 0, emptySet())
 
         val today = com.cil.shift.core.common.currentDate()
-        var streak = 0
-        var currentDate = today
+        val completedDates = mutableSetOf<LocalDate>()
 
-        // Check consecutive days where at least one habit was completed
-        while (true) {
-            val dateString = currentDate.toString()
+        // Scan last 6 months to find all completed dates
+        val sixMonthsAgo = today.minus(180, DateTimeUnit.DAY)
+        var scanDate = sixMonthsAgo
+
+        while (scanDate <= today) {
+            val dateString = scanDate.toString()
             var anyCompleted = false
 
             habits.forEach { habit ->
@@ -193,17 +220,51 @@ class StatisticsViewModel(
             }
 
             if (anyCompleted) {
-                streak++
-                currentDate = currentDate.minus(1, DateTimeUnit.DAY)
-            } else {
-                break
+                completedDates.add(scanDate)
             }
 
-            // Limit to prevent infinite loop
-            if (streak > 365) break
+            scanDate = scanDate.plus(1, DateTimeUnit.DAY)
         }
 
-        return streak
+        // Calculate current streak (consecutive days ending today or yesterday)
+        var currentStreak = 0
+        var checkDate = today
+
+        // First check if today has completion, if not start from yesterday
+        if (!completedDates.contains(today)) {
+            checkDate = today.minus(1, DateTimeUnit.DAY)
+        }
+
+        while (completedDates.contains(checkDate)) {
+            currentStreak++
+            checkDate = checkDate.minus(1, DateTimeUnit.DAY)
+            if (currentStreak > 365) break
+        }
+
+        // Calculate longest streak
+        var longestStreak = 0
+        var tempStreak = 0
+        val sortedDates = completedDates.sorted()
+
+        for (i in sortedDates.indices) {
+            if (i == 0) {
+                tempStreak = 1
+            } else {
+                val prevDate = sortedDates[i - 1]
+                val currDate = sortedDates[i]
+                val daysDiff = currDate.toEpochDays() - prevDate.toEpochDays()
+
+                if (daysDiff == 1) {
+                    tempStreak++
+                } else {
+                    longestStreak = maxOf(longestStreak, tempStreak)
+                    tempStreak = 1
+                }
+            }
+        }
+        longestStreak = maxOf(longestStreak, tempStreak)
+
+        return Triple(currentStreak, longestStreak, completedDates)
     }
 }
 
@@ -212,6 +273,8 @@ sealed interface StatisticsEvent {
     data object NextWeek : StatisticsEvent
     data object PreviousMonth : StatisticsEvent
     data object NextMonth : StatisticsEvent
+    data object PreviousStreakMonth : StatisticsEvent
+    data object NextStreakMonth : StatisticsEvent
     data class ChangeWeeklyChartType(val chartType: ChartType) : StatisticsEvent
     data class ChangeMonthlyChartType(val chartType: ChartType) : StatisticsEvent
 }

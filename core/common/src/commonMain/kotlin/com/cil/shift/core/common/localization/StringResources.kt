@@ -494,6 +494,12 @@ object StringResources {
         es = "Acerca de"
     )
 
+    val achievements = StringResource(
+        en = "Achievements",
+        tr = "Başarılar",
+        es = "Logros"
+    )
+
     val privacyPolicy = StringResource(
         en = "Privacy Policy",
         tr = "Gizlilik Politikası",
@@ -540,6 +546,67 @@ object StringResources {
         en = "Select Language",
         tr = "Dil Seçin",
         es = "Seleccionar Idioma"
+    )
+
+    // Theme
+    val theme = StringResource(
+        en = "Theme",
+        tr = "Tema",
+        es = "Tema"
+    )
+
+    val dark = StringResource(
+        en = "Dark",
+        tr = "Koyu",
+        es = "Oscuro"
+    )
+
+    val light = StringResource(
+        en = "Light",
+        tr = "Açık",
+        es = "Claro"
+    )
+
+    val systemDefault = StringResource(
+        en = "System Default",
+        tr = "Sistem Varsayılanı",
+        es = "Predeterminado del Sistema"
+    )
+
+    val selectTheme = StringResource(
+        en = "Select Theme",
+        tr = "Tema Seçin",
+        es = "Seleccionar Tema"
+    )
+
+    val darkThemeDescription = StringResource(
+        en = "Always use dark mode",
+        tr = "Her zaman koyu mod kullan",
+        es = "Siempre usar modo oscuro"
+    )
+
+    val lightThemeDescription = StringResource(
+        en = "Always use light mode",
+        tr = "Her zaman açık mod kullan",
+        es = "Siempre usar modo claro"
+    )
+
+    val systemThemeDescription = StringResource(
+        en = "Follow system settings",
+        tr = "Sistem ayarlarını takip et",
+        es = "Seguir la configuración del sistema"
+    )
+
+    val themeChanged = StringResource(
+        en = "Theme Changed",
+        tr = "Tema Değiştirildi",
+        es = "Tema Cambiado"
+    )
+
+    val themeRestartMessage = StringResource(
+        en = "Please restart the app for the theme change to take full effect.",
+        tr = "Tema değişikliğinin tam olarak uygulanması için lütfen uygulamayı yeniden başlatın.",
+        es = "Por favor, reinicie la aplicación para que el cambio de tema se aplique por completo."
     )
 
     // Home Screen Specific
@@ -638,6 +705,36 @@ object StringResources {
         en = "days",
         tr = "gün",
         es = "días"
+    )
+
+    val activityCalendar = StringResource(
+        en = "Activity Calendar",
+        tr = "Aktivite Takvimi",
+        es = "Calendario"
+    )
+
+    val monthlyProgress = StringResource(
+        en = "Monthly Progress",
+        tr = "Aylık İlerleme",
+        es = "Progreso"
+    )
+
+    val current = StringResource(
+        en = "Current",
+        tr = "Mevcut",
+        es = "Actual"
+    )
+
+    val best = StringResource(
+        en = "Best",
+        tr = "En İyi",
+        es = "Mejor"
+    )
+
+    val total = StringResource(
+        en = "Total",
+        tr = "Toplam",
+        es = "Total"
     )
 
     // Calendar Screen

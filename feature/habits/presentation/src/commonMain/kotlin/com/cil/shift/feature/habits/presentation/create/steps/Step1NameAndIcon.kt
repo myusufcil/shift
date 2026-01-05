@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -28,6 +29,9 @@ fun Step1NameAndIcon(
     onIconSelect: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val textColor = MaterialTheme.colorScheme.onBackground
+    val cardColor = MaterialTheme.colorScheme.surface
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -39,7 +43,7 @@ fun Step1NameAndIcon(
             text = "Name your habit",
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.White
+            color = textColor
         )
 
         // Habit name input
@@ -56,14 +60,14 @@ fun Step1NameAndIcon(
                     Text(
                         text = "e.g., Read 10 pages...",
                         fontSize = 15.sp,
-                        color = Color.White.copy(alpha = 0.4f)
+                        color = textColor.copy(alpha = 0.4f)
                     )
                 },
                 colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color(0xFF1A2942),
-                    unfocusedContainerColor = Color(0xFF1A2942),
-                    focusedTextColor = Color.White,
-                    unfocusedTextColor = Color.White,
+                    focusedContainerColor = cardColor,
+                    unfocusedContainerColor = cardColor,
+                    focusedTextColor = textColor,
+                    unfocusedTextColor = textColor,
                     cursorColor = Color(0xFF00D9FF),
                     focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent
@@ -75,7 +79,7 @@ fun Step1NameAndIcon(
             Text(
                 text = "Be specific, it helps stick to the plan.",
                 fontSize = 12.sp,
-                color = Color.White.copy(alpha = 0.5f)
+                color = textColor.copy(alpha = 0.5f)
             )
         }
 
@@ -92,7 +96,7 @@ fun Step1NameAndIcon(
                     text = "Choose an icon",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color.White
+                    color = textColor
                 )
 
                 // Preview of selected icon
@@ -142,7 +146,8 @@ fun Step1NameAndIcon(
                     IconItem(
                         icon = icon.emoji,
                         isSelected = selectedIcon == icon.id,
-                        onClick = { onIconSelect(icon.id) }
+                        onClick = { onIconSelect(icon.id) },
+                        cardColor = cardColor
                     )
                 }
             }
@@ -155,6 +160,7 @@ private fun IconItem(
     icon: String,
     isSelected: Boolean,
     onClick: () -> Unit,
+    cardColor: Color,
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -163,7 +169,7 @@ private fun IconItem(
             .clip(RoundedCornerShape(12.dp))
             .background(
                 if (isSelected) Color(0xFF4E7CFF).copy(alpha = 0.2f)
-                else Color(0xFF1A2942)
+                else cardColor
             )
             .border(
                 width = 2.dp,

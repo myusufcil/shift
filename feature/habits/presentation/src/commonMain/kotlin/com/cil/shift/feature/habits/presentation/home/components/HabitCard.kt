@@ -1,6 +1,7 @@
 package com.cil.shift.feature.habits.presentation.home.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -31,11 +32,19 @@ fun HabitCard(
     val isCompleted = habitWithCompletion.isCompletedToday
     val habitColor = habit.color.toComposeColor()
 
+    val textColor = MaterialTheme.colorScheme.onBackground
+    val cardColor = MaterialTheme.colorScheme.surface
+
     Row(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(Color(0xFF1A2942))
+            .background(cardColor)
+            .border(
+                width = 1.dp,
+                color = textColor.copy(alpha = 0.1f),
+                shape = RoundedCornerShape(16.dp)
+            )
             .clickable(onClick = onClick)
             .padding(16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -66,14 +75,14 @@ fun HabitCard(
                     text = habit.name,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color.White
+                    color = textColor
                 )
 
                 habit.reminderTime?.let { time ->
                     Text(
                         text = time,
                         fontSize = 12.sp,
-                        color = Color.White.copy(alpha = 0.5f)
+                        color = textColor.copy(alpha = 0.5f)
                     )
                 }
             }
@@ -85,7 +94,7 @@ fun HabitCard(
                 .clip(CircleShape)
                 .background(
                     if (isCompleted) habitColor
-                    else Color.White.copy(alpha = 0.1f)
+                    else textColor.copy(alpha = 0.1f)
                 )
                 .clickable(onClick = onToggle),
             contentAlignment = Alignment.Center

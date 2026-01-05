@@ -2,6 +2,7 @@ package com.cil.shift.feature.habits.presentation.detail
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -51,6 +52,10 @@ fun HabitDetailScreen(
     val state by viewModel.state.collectAsState()
     val scrollState = rememberScrollState()
 
+    val backgroundColor = MaterialTheme.colorScheme.background
+    val textColor = MaterialTheme.colorScheme.onBackground
+    val cardColor = MaterialTheme.colorScheme.surface
+
     LaunchedEffect(state.isDeleted) {
         if (state.isDeleted) {
             onNavigateBack()
@@ -65,7 +70,7 @@ fun HabitDetailScreen(
                         text = state.habit?.let {
                             LocalizationHelpers.getLocalizedHabitName(it.name, currentLanguage)
                         } ?: StringResources.habitDetails.localized(),
-                        color = Color.White
+                        color = textColor
                     )
                 },
                 navigationIcon = {
@@ -73,7 +78,7 @@ fun HabitDetailScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = StringResources.back.localized(),
-                            tint = Color.White
+                            tint = textColor
                         )
                     }
                 },
@@ -83,13 +88,13 @@ fun HabitDetailScreen(
                             Icon(
                                 imageVector = Icons.Default.Delete,
                                 contentDescription = StringResources.delete.localized(),
-                                tint = Color.White
+                                tint = textColor
                             )
                         }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF0A1628)
+                    containerColor = backgroundColor
                 )
             )
         }
@@ -97,7 +102,7 @@ fun HabitDetailScreen(
         Box(
             modifier = modifier
                 .fillMaxSize()
-                .background(Color(0xFF0A1628))
+                .background(backgroundColor)
                 .padding(paddingValues)
         ) {
             when {
@@ -130,7 +135,9 @@ fun HabitDetailScreen(
                             currentLanguage = currentLanguage,
                             isEditingName = state.isEditingName,
                             editedName = state.editedName,
-                            onEvent = viewModel::onEvent
+                            onEvent = viewModel::onEvent,
+                            textColor = textColor,
+                            cardColor = cardColor
                         )
 
                         // Today's Progress Controls
@@ -144,7 +151,10 @@ fun HabitDetailScreen(
                             onToggleCompletion = { viewModel.onEvent(HabitDetailEvent.ToggleCompletion) },
                             onIncrementValue = { amount -> viewModel.onEvent(HabitDetailEvent.IncrementValue(amount)) },
                             onDecrementValue = { amount -> viewModel.onEvent(HabitDetailEvent.DecrementValue(amount)) },
-                            onEvent = viewModel::onEvent
+                            onEvent = viewModel::onEvent,
+                            textColor = textColor,
+                            cardColor = cardColor,
+                            backgroundColor = backgroundColor
                         )
 
                         // Statistics Cards
@@ -152,20 +162,27 @@ fun HabitDetailScreen(
                             currentStreak = state.currentStreak,
                             bestStreak = state.bestStreak,
                             completionRate = state.completionRate,
-                            currentLanguage = currentLanguage
+                            currentLanguage = currentLanguage,
+                            textColor = textColor,
+                            cardColor = cardColor
                         )
 
                         // Notes Section
                         if (!state.habit!!.notes.isNullOrBlank()) {
                             NotesSection(
-                                notes = state.habit!!.notes!!
+                                notes = state.habit!!.notes!!,
+                                textColor = textColor,
+                                cardColor = cardColor
                             )
                         }
 
                         // Completions Calendar (Placeholder)
                         CompletionsCalendar(
                             completions = state.completions,
-                            currentLanguage = currentLanguage
+                            currentLanguage = currentLanguage,
+                            textColor = textColor,
+                            cardColor = cardColor,
+                            backgroundColor = backgroundColor
                         )
                     }
                 }
@@ -203,7 +220,9 @@ private fun HabitHeader(
     currentLanguage: com.cil.shift.core.common.localization.Language,
     isEditingName: Boolean,
     editedName: String,
-    onEvent: (HabitDetailEvent) -> Unit
+    onEvent: (HabitDetailEvent) -> Unit,
+    textColor: Color,
+    cardColor: Color
 ) {
     val habitColor = habit.color.toComposeColor()
 
@@ -239,15 +258,15 @@ private fun HabitHeader(
                     textStyle = androidx.compose.ui.text.TextStyle(
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White,
+                        color = textColor,
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center
                     ),
                     colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = Color(0xFF4E7CFF),
-                        unfocusedBorderColor = Color.White.copy(alpha = 0.3f),
+                        unfocusedBorderColor = textColor.copy(alpha = 0.3f),
                         cursorColor = Color(0xFF4E7CFF),
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White
+                        focusedTextColor = textColor,
+                        unfocusedTextColor = textColor
                     ),
                     singleLine = true
                 )
@@ -279,7 +298,7 @@ private fun HabitHeader(
                     text = LocalizationHelpers.getLocalizedHabitName(habit.name, currentLanguage),
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White
+                    color = textColor
                 )
                 androidx.compose.material3.IconButton(
                     onClick = { onEvent(HabitDetailEvent.StartEditingName) },
@@ -288,7 +307,7 @@ private fun HabitHeader(
                     androidx.compose.material3.Icon(
                         imageVector = androidx.compose.material.icons.Icons.Default.Edit,
                         contentDescription = "Edit name",
-                        tint = Color.White.copy(alpha = 0.6f),
+                        tint = textColor.copy(alpha = 0.6f),
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -326,7 +345,7 @@ private fun HabitHeader(
             Text(
                 text = formatFrequency(habit.frequency, currentLanguage),
                 fontSize = 14.sp,
-                color = Color.White.copy(alpha = 0.7f)
+                color = textColor.copy(alpha = 0.7f)
             )
         }
     }
@@ -337,7 +356,9 @@ private fun StatisticsSection(
     currentStreak: Int,
     bestStreak: Int,
     completionRate: Float,
-    currentLanguage: com.cil.shift.core.common.localization.Language
+    currentLanguage: com.cil.shift.core.common.localization.Language,
+    textColor: Color,
+    cardColor: Color
 ) {
     // Animate values
     val animatedCurrentStreak by animateIntAsState(
@@ -376,13 +397,17 @@ private fun StatisticsSection(
                 emoji = "🔥",
                 title = StringResources.currentStreak.get(currentLanguage),
                 value = "$animatedCurrentStreak ${StringResources.days.get(currentLanguage)}",
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                textColor = textColor,
+                cardColor = cardColor
         )
             StatCard(
                 emoji = "⭐",
                 title = StringResources.bestStreak.get(currentLanguage),
                 value = "$animatedBestStreak ${StringResources.days.get(currentLanguage)}",
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                textColor = textColor,
+                cardColor = cardColor
             )
         }
 
@@ -390,7 +415,9 @@ private fun StatisticsSection(
             emoji = "✅",
             title = StringResources.completionRate.get(currentLanguage),
             value = "${(animatedCompletionRate * 100).toInt()}%",
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            textColor = textColor,
+            cardColor = cardColor
         )
     }
 }
@@ -400,12 +427,19 @@ private fun StatCard(
     emoji: String = "",
     title: String,
     value: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    textColor: Color,
+    cardColor: Color
 ) {
     Card(
-        modifier = modifier,
+        modifier = modifier
+            .border(
+                width = 1.dp,
+                color = textColor.copy(alpha = 0.1f),
+                shape = RoundedCornerShape(16.dp)
+            ),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF1A2942)
+            containerColor = cardColor
         ),
         shape = RoundedCornerShape(16.dp)
     ) {
@@ -425,7 +459,7 @@ private fun StatCard(
             Text(
                 text = title,
                 fontSize = 12.sp,
-                color = Color.White.copy(alpha = 0.6f)
+                color = textColor.copy(alpha = 0.6f)
             )
             Text(
                 text = value,
@@ -440,12 +474,21 @@ private fun StatCard(
 @Composable
 private fun CompletionsCalendar(
     completions: List<com.cil.shift.feature.habits.domain.model.HabitCompletion>,
-    currentLanguage: com.cil.shift.core.common.localization.Language
+    currentLanguage: com.cil.shift.core.common.localization.Language,
+    textColor: Color,
+    cardColor: Color,
+    backgroundColor: Color
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(
+                width = 1.dp,
+                color = textColor.copy(alpha = 0.1f),
+                shape = RoundedCornerShape(16.dp)
+            ),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF1A2942)
+            containerColor = cardColor
         ),
         shape = RoundedCornerShape(16.dp)
     ) {
@@ -465,30 +508,30 @@ private fun CompletionsCalendar(
                     text = StringResources.completionHistory.get(currentLanguage),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color.White
+                    color = textColor
                 )
             }
 
-            if (completions.isEmpty()) {
+            // Filter only completed entries
+            val completedWithDetails = completions
+                .filter { it.isCompleted }
+                .sortedByDescending { it.date }
+                .take(10) // Show last 10 completions
+
+            if (completedWithDetails.isEmpty()) {
                 Text(
                     text = StringResources.noCompletionsYet.get(currentLanguage),
                     fontSize = 14.sp,
-                    color = Color.White.copy(alpha = 0.5f),
+                    color = textColor.copy(alpha = 0.5f),
                     modifier = Modifier.padding(vertical = 16.dp)
                 )
             } else {
                 Text(
-                    text = "${completions.size} ${StringResources.completions.get(currentLanguage)}",
+                    text = "${completedWithDetails.size} ${StringResources.completions.get(currentLanguage)}",
                     fontSize = 14.sp,
-                    color = Color.White.copy(alpha = 0.7f),
+                    color = textColor.copy(alpha = 0.7f),
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
-
-                // Display completed entries with notes
-                val completedWithDetails = completions
-                    .filter { it.isCompleted }
-                    .sortedByDescending { it.date }
-                    .take(10) // Show last 10 completions
 
                 if (completedWithDetails.isNotEmpty()) {
                     Column(
@@ -497,7 +540,9 @@ private fun CompletionsCalendar(
                         completedWithDetails.forEach { completion ->
                             CompletionHistoryItem(
                                 completion = completion,
-                                currentLanguage = currentLanguage
+                                currentLanguage = currentLanguage,
+                                textColor = textColor,
+                                backgroundColor = backgroundColor
                             )
                         }
                     }
@@ -510,12 +555,19 @@ private fun CompletionsCalendar(
 @Composable
 private fun CompletionHistoryItem(
     completion: com.cil.shift.feature.habits.domain.model.HabitCompletion,
-    currentLanguage: com.cil.shift.core.common.localization.Language
+    currentLanguage: com.cil.shift.core.common.localization.Language,
+    textColor: Color,
+    backgroundColor: Color
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color(0xFF0D1929), RoundedCornerShape(12.dp))
+            .background(backgroundColor, RoundedCornerShape(12.dp))
+            .border(
+                width = 1.dp,
+                color = textColor.copy(alpha = 0.1f),
+                shape = RoundedCornerShape(12.dp)
+            )
             .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
@@ -529,7 +581,7 @@ private fun CompletionHistoryItem(
                 text = formatCompletionDate(completion.date, currentLanguage),
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
-                color = Color.White
+                color = textColor
             )
 
             // Completion indicator
@@ -568,7 +620,7 @@ private fun CompletionHistoryItem(
                 Text(
                     text = completion.note!!,
                     fontSize = 13.sp,
-                    color = Color.White.copy(alpha = 0.7f),
+                    color = textColor.copy(alpha = 0.7f),
                     lineHeight = 18.sp
                 )
             }
@@ -611,7 +663,10 @@ private fun TodayProgressSection(
     onToggleCompletion: () -> Unit,
     onIncrementValue: (Int) -> Unit,
     onDecrementValue: (Int) -> Unit,
-    onEvent: (HabitDetailEvent) -> Unit
+    onEvent: (HabitDetailEvent) -> Unit,
+    textColor: Color,
+    cardColor: Color,
+    backgroundColor: Color
 ) {
     val habitColor = habit.color.toComposeColor()
     val isCompleted = todayCompletion?.isCompleted ?: false
@@ -627,9 +682,15 @@ private fun TodayProgressSection(
     )
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(
+                width = 1.dp,
+                color = textColor.copy(alpha = 0.1f),
+                shape = RoundedCornerShape(16.dp)
+            ),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF1A2942)
+            containerColor = cardColor
         ),
         shape = RoundedCornerShape(16.dp)
     ) {
@@ -671,7 +732,7 @@ private fun TodayProgressSection(
                     text = progressTitle,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White
+                    color = textColor
                 )
             }
 
@@ -783,7 +844,7 @@ private fun TodayProgressSection(
                                     Text(
                                         text = "/ ${habit.targetValue}${habit.targetUnit ?: ""}",
                                         fontSize = 18.sp,
-                                        color = Color.White.copy(alpha = 0.6f)
+                                        color = textColor.copy(alpha = 0.6f)
                                     )
                                     Text(
                                         text = "$animatedPercentage%",
@@ -796,7 +857,7 @@ private fun TodayProgressSection(
                                 Text(
                                     text = "",
                                     fontSize = 18.sp,
-                                    color = Color.White.copy(alpha = 0.6f)
+                                    color = textColor.copy(alpha = 0.6f)
                                 )
                             }
                         }
@@ -809,7 +870,7 @@ private fun TodayProgressSection(
                                 .height(8.dp)
                                 .clip(RoundedCornerShape(4.dp)),
                             color = habitColor,
-                            trackColor = Color.White.copy(alpha = 0.1f)
+                            trackColor = textColor.copy(alpha = 0.1f)
                         )
 
                         // Increment/Decrement buttons
@@ -831,11 +892,11 @@ private fun TodayProgressSection(
                                     .height(48.dp),
                                 enabled = currentValue > 0,
                                 colors = ButtonDefaults.outlinedButtonColors(
-                                    contentColor = Color.White
+                                    contentColor = textColor
                                 ),
                                 border = androidx.compose.foundation.BorderStroke(
                                     width = 1.dp,
-                                    color = Color.White.copy(alpha = 0.3f)
+                                    color = textColor.copy(alpha = 0.3f)
                                 ),
                                 shape = RoundedCornerShape(12.dp)
                             ) {
@@ -878,7 +939,7 @@ private fun TodayProgressSection(
                                 StringResources.startYourSession.get(currentLanguage)
                             },
                             fontSize = 14.sp,
-                            color = Color.White.copy(alpha = 0.7f)
+                            color = textColor.copy(alpha = 0.7f)
                         )
 
                         Button(
@@ -922,7 +983,12 @@ private fun TodayProgressSection(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color(0xFF0D1929), RoundedCornerShape(12.dp))
+                    .background(backgroundColor, RoundedCornerShape(12.dp))
+                    .border(
+                        width = 1.dp,
+                        color = textColor.copy(alpha = 0.1f),
+                        shape = RoundedCornerShape(12.dp)
+                    )
                     .padding(12.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
@@ -935,7 +1001,7 @@ private fun TodayProgressSection(
                         text = "📝 ${StringResources.note.get(currentLanguage)}",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
-                        color = Color.White.copy(alpha = 0.7f)
+                        color = textColor.copy(alpha = 0.7f)
                     )
                     if (!isEditingNote) {
                         androidx.compose.material3.IconButton(
@@ -945,7 +1011,7 @@ private fun TodayProgressSection(
                             androidx.compose.material3.Icon(
                                 imageVector = androidx.compose.material.icons.Icons.Default.Edit,
                                 contentDescription = "Edit note",
-                                tint = Color.White.copy(alpha = 0.5f),
+                                tint = textColor.copy(alpha = 0.5f),
                                 modifier = Modifier.size(16.dp)
                             )
                         }
@@ -964,20 +1030,20 @@ private fun TodayProgressSection(
                             placeholder = {
                                 Text(
                                     text = "Add a note for today...",
-                                    color = Color.White.copy(alpha = 0.4f),
+                                    color = textColor.copy(alpha = 0.4f),
                                     fontSize = 14.sp
                                 )
                             },
                             textStyle = androidx.compose.ui.text.TextStyle(
                                 fontSize = 14.sp,
-                                color = Color.White
+                                color = textColor
                             ),
                             colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = Color(0xFF4E7CFF),
-                                unfocusedBorderColor = Color.White.copy(alpha = 0.2f),
+                                unfocusedBorderColor = textColor.copy(alpha = 0.2f),
                                 cursorColor = Color(0xFF4E7CFF),
-                                focusedTextColor = Color.White,
-                                unfocusedTextColor = Color.White
+                                focusedTextColor = textColor,
+                                unfocusedTextColor = textColor
                             ),
                             minLines = 2,
                             maxLines = 4,
@@ -991,11 +1057,11 @@ private fun TodayProgressSection(
                                 onClick = { onEvent(HabitDetailEvent.CancelEditingNote) },
                                 modifier = Modifier.weight(1f),
                                 colors = ButtonDefaults.outlinedButtonColors(
-                                    contentColor = Color.White
+                                    contentColor = textColor
                                 ),
                                 border = androidx.compose.foundation.BorderStroke(
                                     width = 1.dp,
-                                    color = Color.White.copy(alpha = 0.3f)
+                                    color = textColor.copy(alpha = 0.3f)
                                 ),
                                 shape = RoundedCornerShape(8.dp)
                             ) {
@@ -1038,7 +1104,7 @@ private fun TodayProgressSection(
                         Text(
                             text = noteText,
                             fontSize = 14.sp,
-                            color = Color.White.copy(alpha = 0.8f),
+                            color = textColor.copy(alpha = 0.8f),
                             lineHeight = 18.sp
                         )
                     } else {
@@ -1064,7 +1130,7 @@ private fun TodayProgressSection(
                         Text(
                             text = notePlaceholder,
                             fontSize = 13.sp,
-                            color = Color.White.copy(alpha = 0.4f),
+                            color = textColor.copy(alpha = 0.4f),
                             fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
                         )
                     }
@@ -1075,11 +1141,20 @@ private fun TodayProgressSection(
 }
 
 @Composable
-private fun NotesSection(notes: String) {
+private fun NotesSection(
+    notes: String,
+    textColor: Color,
+    cardColor: Color
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color(0xFF1A2942), RoundedCornerShape(16.dp))
+            .background(cardColor, RoundedCornerShape(16.dp))
+            .border(
+                width = 1.dp,
+                color = textColor.copy(alpha = 0.1f),
+                shape = RoundedCornerShape(16.dp)
+            )
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -1087,30 +1162,83 @@ private fun NotesSection(notes: String) {
             text = "📝 Notes",
             fontSize = 14.sp,
             fontWeight = FontWeight.SemiBold,
-            color = Color.White.copy(alpha = 0.8f)
+            color = textColor.copy(alpha = 0.8f)
         )
         Text(
             text = notes,
             fontSize = 14.sp,
-            color = Color.White.copy(alpha = 0.7f),
+            color = textColor.copy(alpha = 0.7f),
             lineHeight = 20.sp
         )
     }
 }
 
 private fun getIconEmoji(icon: String): String {
-    return when (icon) {
-        "work", "briefcase" -> "💼"
-        "fitness", "workout" -> "🏋️"
-        "book", "read" -> "📚"
-        "meditation", "mindfulness" -> "🧘"
-        "water", "hydration" -> "💧"
-        "sleep" -> "😴"
+    return when (icon.lowercase()) {
+        // Health
+        "water", "wat", "hydration" -> "💧"
+        "vegetables", "veg" -> "🥦"
+        "fruit", "fru" -> "🍉"
+        "cooking", "coo" -> "🍳"
+        "sunrise", "sun" -> "🌅"
+        "sunset" -> "🌇"
+        "pill", "med" -> "💊"
         "nutrition", "food" -> "🥗"
-        "study" -> "📖"
-        "music" -> "🎵"
-        "art" -> "🎨"
-        else -> "✓"
+        // Mindfulness
+        "journal", "jou" -> "✍️"
+        "pray", "pra" -> "🙏"
+        "meditation", "me", "mindfulness" -> "🧘"
+        "relaxed", "rel" -> "😌"
+        "detox", "det" -> "🚫"
+        // Learning
+        "books", "book", "boo", "read" -> "📚"
+        "course", "cou" -> "📝"
+        "instrument", "ins" -> "🎷"
+        "study", "stu" -> "🧑‍🎓"
+        "flute", "flu", "ute" -> "🎺"
+        // Active
+        "running", "run" -> "🏃"
+        "walking", "wal" -> "🚶"
+        "dance", "dan" -> "💃"
+        "pilates", "pil" -> "🤸"
+        "gym", "dumbbell", "dum", "fitness", "workout" -> "🏋️"
+        "sports", "spo" -> "⚽"
+        "stretching", "str" -> "🤾"
+        "yoga", "yog" -> "🧘"
+        // Self-care
+        "shower", "sho" -> "🚿"
+        "skincare", "ski" -> "🧴"
+        "haircare", "hai" -> "💆"
+        // Social
+        "couple", "heart", "hea" -> "💕"
+        "party", "par" -> "🥳"
+        "family", "fam" -> "👨‍👩‍👧"
+        // Financial
+        "budget", "bud" -> "💰"
+        "invest", "inv" -> "📊"
+        "expenses", "exp" -> "💸"
+        // Home
+        "clean", "cle" -> "🧹"
+        "bed" -> "🛏️"
+        "laundry", "lau" -> "🧺"
+        "dishes", "dis" -> "🪣"
+        "bills", "bil" -> "🧾"
+        // Additional
+        "leaf", "lea" -> "🍃"
+        "brain", "bra" -> "🧠"
+        "fire", "fir" -> "🔥"
+        "moon", "mo" -> "🌙"
+        "bulb", "bul" -> "💡"
+        "smile", "smi" -> "😊"
+        "check", "che" -> "✅"
+        "coffee", "cof" -> "☕"
+        "sleep", "sle" -> "😴"
+        "music", "mus" -> "🎵"
+        "art", "palette", "pale", "pal" -> "🎨"
+        "briefcase", "bri", "work" -> "💼"
+        else -> {
+            if (icon.any { it.code >= 0x1F300 }) icon else "✓"
+        }
     }
 }
 

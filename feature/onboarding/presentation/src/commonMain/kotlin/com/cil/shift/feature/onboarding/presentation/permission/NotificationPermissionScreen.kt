@@ -32,10 +32,13 @@ fun NotificationPermissionScreen(
     val notificationManager = koin.get<NotificationManager>()
     val scope = rememberCoroutineScope()
 
+    val backgroundColor = MaterialTheme.colorScheme.background
+    val textColor = MaterialTheme.colorScheme.onBackground
+
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFF0A1628))
+            .background(backgroundColor)
             .padding(24.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -69,7 +72,7 @@ fun NotificationPermissionScreen(
                 text = StringResources.notificationPermissionTitle.get(currentLanguage),
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.White,
+                color = textColor,
                 textAlign = TextAlign.Center
             )
 
@@ -79,7 +82,7 @@ fun NotificationPermissionScreen(
             Text(
                 text = StringResources.notificationPermissionDescription.get(currentLanguage),
                 fontSize = 16.sp,
-                color = Color.White.copy(alpha = 0.7f),
+                color = textColor.copy(alpha = 0.7f),
                 textAlign = TextAlign.Center,
                 lineHeight = 24.sp,
                 modifier = Modifier.padding(horizontal = 16.dp)
@@ -122,7 +125,7 @@ fun NotificationPermissionScreen(
                 Text(
                     text = StringResources.skipForNow.get(currentLanguage),
                     fontSize = 14.sp,
-                    color = Color.White.copy(alpha = 0.6f)
+                    color = textColor.copy(alpha = 0.6f)
                 )
             }
         }

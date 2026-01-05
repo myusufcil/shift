@@ -7,6 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import com.cil.shift.core.common.haptic.initHapticFeedback
 import com.cil.shift.di.initKoin
 import org.koin.android.ext.koin.androidContext
 
@@ -23,6 +24,9 @@ class MainActivity : ComponentActivity() {
         initKoin {
             androidContext(this@MainActivity)
         }
+
+        // Initialize haptic feedback
+        initHapticFeedback(this)
 
         setContent {
             App()

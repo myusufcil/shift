@@ -14,6 +14,7 @@ import androidx.core.view.WindowCompat
  */
 @Composable
 actual fun ConfigureSystemBars(
+    isDarkTheme: Boolean,
     statusBarColor: Color,
     navigationBarColor: Color,
     isLightStatusBar: Boolean,
@@ -21,7 +22,7 @@ actual fun ConfigureSystemBars(
 ) {
     val view = LocalView.current
 
-    LaunchedEffect(statusBarColor, navigationBarColor, isLightStatusBar, isLightNavigationBar) {
+    LaunchedEffect(isDarkTheme, statusBarColor, navigationBarColor, isLightStatusBar, isLightNavigationBar) {
         val window = (view.context as? Activity)?.window ?: return@LaunchedEffect
 
         // Set status bar color

@@ -310,7 +310,7 @@ fun Step3CustomizeAndPreview(
                             verticalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             val measurableUnits = listOf(
-                                "ml", "L", "g", "kg", "steps", "pages", "reps", "mins"
+                                "ml", "L", "g", "kg", "steps", "pages", "reps", "cal"
                             )
 
                             // Show first 3 units
@@ -345,7 +345,7 @@ fun Step3CustomizeAndPreview(
                             verticalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             val measurableUnits = listOf(
-                                "ml", "L", "g", "kg", "steps", "pages", "reps", "mins"
+                                "ml", "L", "g", "kg", "steps", "pages", "reps", "cal"
                             )
 
                             // Show units 4-6
@@ -380,7 +380,7 @@ fun Step3CustomizeAndPreview(
                             verticalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             val measurableUnits = listOf(
-                                "ml", "L", "g", "kg", "steps", "pages", "reps", "mins"
+                                "ml", "L", "g", "kg", "steps", "pages", "reps", "cal"
                             )
 
                             // Show remaining units

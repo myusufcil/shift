@@ -3,6 +3,7 @@ package com.cil.shift.feature.habits.presentation.create
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cil.shift.core.common.Result
+import com.cil.shift.core.common.achievement.AchievementManager
 import com.cil.shift.feature.habits.domain.model.Frequency
 import com.cil.shift.feature.habits.domain.model.Habit
 import com.cil.shift.feature.habits.domain.usecase.CreateHabitUseCase
@@ -16,7 +17,8 @@ import kotlinx.datetime.DayOfWeek
 class CreateEditHabitViewModel(
     private val habitId: String? = null,
     private val createHabitUseCase: CreateHabitUseCase,
-    private val habitRepository: com.cil.shift.feature.habits.domain.repository.HabitRepository? = null
+    private val habitRepository: com.cil.shift.feature.habits.domain.repository.HabitRepository? = null,
+    private val achievementManager: AchievementManager? = null
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(CreateEditHabitState(habitId = habitId))
@@ -139,6 +141,10 @@ class CreateEditHabitViewModel(
 
             when (val result = createHabitUseCase(habit)) {
                 is Result.Success -> {
+                    // Track habit creation achievement only for new habits
+                    if (currentState.habitId == null) {
+                        achievementManager?.recordHabitCreated()
+                    }
                     _state.update { it.copy(isLoading = false, isSaved = true) }
                 }
                 is Result.Error -> {

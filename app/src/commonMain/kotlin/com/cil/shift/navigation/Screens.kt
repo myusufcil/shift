@@ -14,6 +14,11 @@ import com.cil.shift.feature.habits.presentation.create.CreateEditHabitViewModel
 import com.cil.shift.feature.habits.presentation.detail.HabitDetailScreen
 import com.cil.shift.feature.habits.presentation.detail.HabitDetailViewModel
 import com.cil.shift.feature.settings.presentation.*
+import com.cil.shift.feature.settings.presentation.achievements.AchievementsScreen
+import com.cil.shift.feature.settings.presentation.auth.LoginScreen
+import com.cil.shift.feature.settings.presentation.auth.SignUpScreen
+import com.cil.shift.feature.settings.presentation.auth.ForgotPasswordScreen
+import com.cil.shift.feature.settings.presentation.premium.PremiumScreen
 import org.koin.compose.koinInject
 import org.koin.core.parameter.parametersOf
 
@@ -88,7 +93,10 @@ object ProfileScreenNav : Screen {
             onNavigateBack = { navigator.pop() },
             onNavigateToAbout = { navigator.push(AboutScreenNav) },
             onNavigateToPrivacy = { navigator.push(PrivacyPolicyScreenNav) },
-            onNavigateToTerms = { navigator.push(TermsOfServiceScreenNav) }
+            onNavigateToTerms = { navigator.push(TermsOfServiceScreenNav) },
+            onNavigateToAchievements = { navigator.push(AchievementsScreenNav) },
+            onNavigateToLogin = { navigator.push(LoginScreenNav) },
+            onNavigateToPremium = { navigator.push(PremiumScreenNav) }
         )
     }
 }
@@ -142,6 +150,103 @@ object TermsOfServiceScreenNav : Screen {
         }
 
         TermsOfServiceScreen(
+            onNavigateBack = { navigator.pop() }
+        )
+    }
+}
+
+object AchievementsScreenNav : Screen {
+    @Composable
+    override fun Content() {
+        val navigator = LocalNavigator.currentOrThrow
+
+        DisposableEffect(Unit) {
+            GlobalNavigationEvents.isFullScreenActive = true
+            onDispose {
+                GlobalNavigationEvents.isFullScreenActive = false
+            }
+        }
+
+        AchievementsScreen(
+            onNavigateBack = { navigator.pop() }
+        )
+    }
+}
+
+object LoginScreenNav : Screen {
+    @Composable
+    override fun Content() {
+        val navigator = LocalNavigator.currentOrThrow
+
+        DisposableEffect(Unit) {
+            GlobalNavigationEvents.isFullScreenActive = true
+            onDispose {
+                GlobalNavigationEvents.isFullScreenActive = false
+            }
+        }
+
+        LoginScreen(
+            onNavigateBack = { navigator.pop() },
+            onNavigateToSignUp = { navigator.push(SignUpScreenNav) },
+            onNavigateToForgotPassword = { navigator.push(ForgotPasswordScreenNav) },
+            onLoginSuccess = { navigator.pop() }
+        )
+    }
+}
+
+object SignUpScreenNav : Screen {
+    @Composable
+    override fun Content() {
+        val navigator = LocalNavigator.currentOrThrow
+
+        DisposableEffect(Unit) {
+            GlobalNavigationEvents.isFullScreenActive = true
+            onDispose {
+                GlobalNavigationEvents.isFullScreenActive = false
+            }
+        }
+
+        SignUpScreen(
+            onNavigateBack = { navigator.pop() },
+            onSignUpSuccess = {
+                // Pop back to profile screen
+                navigator.popUntil { it is ProfileScreenNav }
+            }
+        )
+    }
+}
+
+object ForgotPasswordScreenNav : Screen {
+    @Composable
+    override fun Content() {
+        val navigator = LocalNavigator.currentOrThrow
+
+        DisposableEffect(Unit) {
+            GlobalNavigationEvents.isFullScreenActive = true
+            onDispose {
+                GlobalNavigationEvents.isFullScreenActive = false
+            }
+        }
+
+        ForgotPasswordScreen(
+            onNavigateBack = { navigator.pop() }
+        )
+    }
+}
+
+object PremiumScreenNav : Screen {
+    @Composable
+    override fun Content() {
+        val navigator = LocalNavigator.currentOrThrow
+
+        DisposableEffect(Unit) {
+            GlobalNavigationEvents.isFullScreenActive = true
+            onDispose {
+                GlobalNavigationEvents.isFullScreenActive = false
+            }
+        }
+
+        PremiumScreen(
             onNavigateBack = { navigator.pop() }
         )
     }

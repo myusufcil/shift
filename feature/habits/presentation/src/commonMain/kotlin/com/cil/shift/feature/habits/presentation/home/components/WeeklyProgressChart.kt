@@ -4,8 +4,10 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -28,10 +30,18 @@ fun WeeklyProgressChart(
     onChartTypeChange: (com.cil.shift.feature.habits.presentation.home.WeeklyChartType) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    val textColor = MaterialTheme.colorScheme.onBackground
+    val cardColor = MaterialTheme.colorScheme.surface
+
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .background(Color(0xFF1A2942), RoundedCornerShape(16.dp))
+            .background(cardColor, RoundedCornerShape(16.dp))
+            .border(
+                width = 1.dp,
+                color = textColor.copy(alpha = 0.1f),
+                shape = RoundedCornerShape(16.dp)
+            )
             .padding(16.dp)
     ) {
         Row(
@@ -43,7 +53,7 @@ fun WeeklyProgressChart(
                 text = "This Week",
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = Color.White.copy(alpha = 0.8f)
+                color = textColor.copy(alpha = 0.8f)
             )
 
             // Chart type selector
@@ -79,7 +89,7 @@ fun WeeklyProgressChart(
             ) {
                 Text(
                     text = "No data",
-                    color = Color.White.copy(alpha = 0.5f),
+                    color = textColor.copy(alpha = 0.5f),
                     fontSize = 12.sp
                 )
             }
@@ -124,7 +134,7 @@ fun WeeklyProgressChart(
                     Text(
                         text = data.first,
                         fontSize = 10.sp,
-                        color = Color.White.copy(alpha = 0.5f)
+                        color = textColor.copy(alpha = 0.5f)
                     )
                 }
             }
@@ -158,7 +168,7 @@ fun WeeklyProgressChart(
                         Text(
                             text = data.first,
                             fontSize = 10.sp,
-                            color = Color.White.copy(alpha = 0.6f)
+                            color = textColor.copy(alpha = 0.6f)
                         )
                     }
                 }
@@ -173,6 +183,7 @@ private fun ChartTypeButton(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
+    val textColor = MaterialTheme.colorScheme.onBackground
     val scale = remember { Animatable(1f) }
 
     androidx.compose.runtime.LaunchedEffect(isSelected) {
@@ -198,7 +209,7 @@ private fun ChartTypeButton(
         onClick = onClick,
         colors = androidx.compose.material3.ButtonDefaults.textButtonColors(
             containerColor = if (isSelected) Color(0xFF4E7CFF) else Color.Transparent,
-            contentColor = if (isSelected) Color.White else Color.White.copy(alpha = 0.6f)
+            contentColor = if (isSelected) Color.White else textColor.copy(alpha = 0.6f)
         ),
         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
         modifier = Modifier
@@ -240,9 +251,11 @@ private fun AnimatedLineChart(weeklyData: List<Pair<String, Float>>, selectedDay
     ) {
         val width = size.width
         val height = size.height
-        val padding = 20f
-        val chartWidth = width - padding * 2
-        val chartHeight = height - padding * 2
+        val paddingHorizontal = 20f
+        val paddingTop = 30f // More top padding for glow effects
+        val paddingBottom = 10f
+        val chartWidth = width - paddingHorizontal * 2
+        val chartHeight = height - paddingTop - paddingBottom
 
         // Draw line
         if (animatedValues.size > 1) {
@@ -250,8 +263,8 @@ private fun AnimatedLineChart(weeklyData: List<Pair<String, Float>>, selectedDay
             val stepX = chartWidth / (animatedValues.size - 1)
 
             animatedValues.forEachIndexed { index, value ->
-                val x = padding + (stepX * index)
-                val y = padding + chartHeight - (value * chartHeight)
+                val x = paddingHorizontal + (stepX * index)
+                val y = paddingTop + chartHeight - (value * chartHeight)
 
                 if (index == 0) {
                     path.moveTo(x, y)
@@ -364,6 +377,7 @@ private fun AnimatedBarChart(weeklyData: List<Pair<String, Float>>, selectedDayI
 
 @Composable
 private fun AnimatedPieChart(weeklyData: List<Pair<String, Float>>) {
+    val cardColor = MaterialTheme.colorScheme.surface
     val total = weeklyData.sumOf { it.second.toDouble() }.toFloat()
 
     // Animate each slice
@@ -380,6 +394,8 @@ private fun AnimatedPieChart(weeklyData: List<Pair<String, Float>>) {
         }
         animatedValue.value
     }
+
+    val centerColor = cardColor
 
     Canvas(
         modifier = Modifier
@@ -422,7 +438,7 @@ private fun AnimatedPieChart(weeklyData: List<Pair<String, Float>>) {
 
             // Draw border
             drawArc(
-                color = Color(0xFF1A2942),
+                color = centerColor,
                 startAngle = startAngle,
                 sweepAngle = sweepAngle,
                 useCenter = true,
@@ -436,7 +452,7 @@ private fun AnimatedPieChart(weeklyData: List<Pair<String, Float>>) {
 
         // Center circle (donut effect)
         drawCircle(
-            color = Color(0xFF1A2942),
+            color = centerColor,
             radius = radius * 0.5f,
             center = center
         )

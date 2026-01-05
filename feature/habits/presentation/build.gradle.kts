@@ -6,7 +6,13 @@ plugins {
 }
 
 kotlin {
-    androidTarget()
+    androidTarget {
+        compilations.all {
+            kotlinOptions {
+                jvmTarget = "11"
+            }
+        }
+    }
 
     listOf(
         iosArm64(),
@@ -23,6 +29,7 @@ kotlin {
             implementation(project(":core:common"))
             implementation(project(":core:designsystem"))
             implementation(project(":feature:habits:domain"))
+            implementation(project(":feature:settings:presentation"))
 
             implementation(compose.runtime)
             implementation(compose.foundation)

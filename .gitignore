@@ -17,3 +17,7 @@ captures
 !*.xcworkspace/contents.xcworkspacedata
 **/xcshareddata/WorkspaceSettings.xcsettings
 node_modules/
+# Sensitive files
+app/google-services.json
+iosApp/iosApp/GoogleService-Info.plist
+iosApp/Pods/

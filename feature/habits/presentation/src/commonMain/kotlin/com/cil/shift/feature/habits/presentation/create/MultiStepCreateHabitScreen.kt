@@ -32,6 +32,9 @@ fun MultiStepCreateHabitScreen(
     val state by viewModel.state.collectAsState()
     var currentStep by remember { mutableStateOf(0) }
 
+    val backgroundColor = MaterialTheme.colorScheme.background
+    val textColor = MaterialTheme.colorScheme.onBackground
+
     // Navigate back when saved
     LaunchedEffect(state.isSaved) {
         if (state.isSaved) {
@@ -42,7 +45,7 @@ fun MultiStepCreateHabitScreen(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFF0A1628))
+            .background(backgroundColor)
     ) {
         Column(
             modifier = Modifier.fillMaxSize()
@@ -67,7 +70,7 @@ fun MultiStepCreateHabitScreen(
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Back",
-                        tint = Color.White
+                        tint = textColor
                     )
                 }
 
@@ -84,7 +87,7 @@ fun MultiStepCreateHabitScreen(
                                 .background(
                                     if (index == currentStep) Color(0xFF4E7CFF)
                                     else if (index < currentStep) Color(0xFF00D9FF)
-                                    else Color.White.copy(alpha = 0.2f)
+                                    else textColor.copy(alpha = 0.2f)
                                 )
                         )
                     }

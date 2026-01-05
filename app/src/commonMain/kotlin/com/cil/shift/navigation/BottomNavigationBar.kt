@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -25,14 +26,16 @@ fun BottomNavigationBar(
     onAddClick: () -> Unit
 ) {
     val tabs = listOf(HomeTab, StatisticsTab, CalendarTab, ProfileTab)
+    val navBarColor = MaterialTheme.colorScheme.surface
+    val textColor = MaterialTheme.colorScheme.onBackground
 
     Box(
         modifier = Modifier.fillMaxWidth()
     ) {
         // Navigation Bar
         NavigationBar(
-            containerColor = Color(0xFF1A2942),
-            contentColor = Color.White,
+            containerColor = navBarColor,
+            contentColor = textColor,
             tonalElevation = 8.dp,
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -50,13 +53,17 @@ fun BottomNavigationBar(
                         }
                     },
                     label = {
-                        Text(text = tab.options.title)
+                        Text(
+                            text = tab.options.title,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
                     },
                     colors = NavigationBarItemDefaults.colors(
                         selectedIconColor = Color(0xFF4E7CFF),
                         selectedTextColor = Color(0xFF4E7CFF),
-                        unselectedIconColor = Color.White.copy(alpha = 0.5f),
-                        unselectedTextColor = Color.White.copy(alpha = 0.5f),
+                        unselectedIconColor = textColor.copy(alpha = 0.5f),
+                        unselectedTextColor = textColor.copy(alpha = 0.5f),
                         indicatorColor = Color(0xFF4E7CFF).copy(alpha = 0.15f)
                     )
                 )
@@ -79,13 +86,17 @@ fun BottomNavigationBar(
                         }
                     },
                     label = {
-                        Text(text = tab.options.title)
+                        Text(
+                            text = tab.options.title,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
                     },
                     colors = NavigationBarItemDefaults.colors(
                         selectedIconColor = Color(0xFF4E7CFF),
                         selectedTextColor = Color(0xFF4E7CFF),
-                        unselectedIconColor = Color.White.copy(alpha = 0.5f),
-                        unselectedTextColor = Color.White.copy(alpha = 0.5f),
+                        unselectedIconColor = textColor.copy(alpha = 0.5f),
+                        unselectedTextColor = textColor.copy(alpha = 0.5f),
                         indicatorColor = Color(0xFF4E7CFF).copy(alpha = 0.15f)
                     )
                 )

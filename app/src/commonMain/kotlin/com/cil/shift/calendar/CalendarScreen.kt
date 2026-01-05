@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -73,19 +74,23 @@ fun CalendarScreen(
         }
     }
 
+    val backgroundColor = MaterialTheme.colorScheme.background
+    val textColor = MaterialTheme.colorScheme.onBackground
+    val cardColor = MaterialTheme.colorScheme.surface
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
                     Text(
                         text = StringResources.calendar.localized(),
-                        color = Color.White,
+                        color = textColor,
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF0A1628)
+                    containerColor = backgroundColor
                 )
             )
         }
@@ -93,7 +98,7 @@ fun CalendarScreen(
         Column(
             modifier = modifier
                 .fillMaxSize()
-                .background(Color(0xFF0A1628))
+                .background(backgroundColor)
                 .padding(paddingValues)
                 .padding(horizontal = 20.dp)
         ) {
@@ -147,12 +152,12 @@ fun CalendarScreen(
 
         ModalBottomSheet(
             onDismissRequest = {
-                // Empty to prevent swipe/gesture dismissal
-                // Sheet can only be closed via Cancel button
+                // Allow swipe-down dismissal - same behavior as Cancel button
+                showBottomSheet = false
+                selectedDate = null
             },
-            containerColor = Color(0xFF0A1628),
-            sheetState = sheetState,
-            modifier = Modifier.fillMaxHeight(0.95f)
+            containerColor = backgroundColor,
+            sheetState = sheetState
         ) {
             HabitSelectionBottomSheet(
                 selectedDate = selectedDate!!,
@@ -193,6 +198,8 @@ private fun MonthNavigationHeader(
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit
 ) {
+    val textColor = MaterialTheme.colorScheme.onBackground
+
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -202,7 +209,7 @@ private fun MonthNavigationHeader(
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
                 contentDescription = "Previous month",
-                tint = Color.White,
+                tint = textColor,
                 modifier = Modifier.size(32.dp)
             )
         }
@@ -211,14 +218,14 @@ private fun MonthNavigationHeader(
             text = "${LocalizationHelpers.getMonthName(currentMonth.month.number, currentLanguage)} ${currentMonth.year}",
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.White
+            color = textColor
         )
 
         IconButton(onClick = onNextMonth) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                 contentDescription = "Next month",
-                tint = Color.White,
+                tint = textColor,
                 modifier = Modifier.size(32.dp)
             )
         }
@@ -227,6 +234,7 @@ private fun MonthNavigationHeader(
 
 @Composable
 private fun DayOfWeekHeaders(currentLanguage: com.cil.shift.core.common.localization.Language) {
+    val textColor = MaterialTheme.colorScheme.onBackground
     val daysOfWeek = listOf(1, 2, 3, 4, 5, 6, 7)
 
     Row(
@@ -238,7 +246,7 @@ private fun DayOfWeekHeaders(currentLanguage: com.cil.shift.core.common.localiza
                 text = LocalizationHelpers.getDayNameShort(dayOfWeek, currentLanguage),
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Medium,
-                color = Color.White.copy(alpha = 0.6f),
+                color = textColor.copy(alpha = 0.6f),
                 modifier = Modifier.weight(1f),
                 textAlign = TextAlign.Center
             )
@@ -257,24 +265,42 @@ private fun CalendarGrid(
         buildCalendarDates(month)
     }
 
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(7),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+    // Calculate cell size based on available width
+    BoxWithConstraints(
         modifier = Modifier.fillMaxWidth()
     ) {
-        items(dates) { dateOrNull ->
-            if (dateOrNull != null) {
-                DateCell(
-                    date = dateOrNull,
-                    isSelected = dateOrNull == selectedDate,
-                    isToday = dateOrNull == today,
-                    isDisabled = dateOrNull < today,
-                    onClick = { onDateSelected(dateOrNull) }
-                )
-            } else {
-                // Empty cell for alignment
-                Spacer(modifier = Modifier.size(40.dp))
+        val cellSize = ((maxWidth - 48.dp) / 7) // Account for spacing
+        val spacing = 6.dp
+
+        Column(
+            verticalArrangement = Arrangement.spacedBy(spacing)
+        ) {
+            val rows = dates.chunked(7)
+            rows.forEach { weekDates ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(spacing)
+                ) {
+                    weekDates.forEach { dateOrNull ->
+                        if (dateOrNull != null) {
+                            DateCell(
+                                date = dateOrNull,
+                                isSelected = dateOrNull == selectedDate,
+                                isToday = dateOrNull == today,
+                                isDisabled = dateOrNull < today,
+                                cellSize = cellSize,
+                                onClick = { onDateSelected(dateOrNull) }
+                            )
+                        } else {
+                            // Empty cell for alignment
+                            Spacer(modifier = Modifier.size(cellSize))
+                        }
+                    }
+                    // Fill remaining cells if week is incomplete
+                    repeat(7 - weekDates.size) {
+                        Spacer(modifier = Modifier.size(cellSize))
+                    }
+                }
             }
         }
     }
@@ -286,18 +312,31 @@ private fun DateCell(
     isSelected: Boolean,
     isToday: Boolean,
     isDisabled: Boolean,
+    cellSize: androidx.compose.ui.unit.Dp,
     onClick: () -> Unit
 ) {
+    val textColor = MaterialTheme.colorScheme.onBackground
+    val cardColor = MaterialTheme.colorScheme.surface
+
     Box(
         modifier = Modifier
-            .size(40.dp)
-            .clip(CircleShape)
+            .size(cellSize)
+            .clip(RoundedCornerShape(12.dp))
             .background(
                 when {
                     isSelected -> Color(0xFF4E7CFF)
-                    isToday -> Color(0xFF00D9FF).copy(alpha = 0.3f)
-                    else -> Color.Transparent
+                    isToday -> Color(0xFF00D9FF).copy(alpha = 0.2f)
+                    else -> cardColor.copy(alpha = 0.5f)
                 }
+            )
+            .border(
+                width = 1.dp,
+                color = when {
+                    isSelected -> Color.Transparent
+                    isToday -> Color(0xFF00D9FF)
+                    else -> textColor.copy(alpha = 0.1f)
+                },
+                shape = RoundedCornerShape(12.dp)
             )
             .then(
                 if (!isDisabled) {
@@ -310,13 +349,13 @@ private fun DateCell(
     ) {
         Text(
             text = date.dayOfMonth.toString(),
-            fontSize = 14.sp,
-            fontWeight = if (isSelected || isToday) FontWeight.Bold else FontWeight.Normal,
+            fontSize = 16.sp,
+            fontWeight = if (isSelected || isToday) FontWeight.Bold else FontWeight.Medium,
             color = when {
-                isDisabled -> Color.White.copy(alpha = 0.3f)
-                isSelected -> Color.White
+                isDisabled -> textColor.copy(alpha = 0.3f)
+                isSelected -> Color.White // Keep white for selected state
                 isToday -> Color(0xFF00D9FF)
-                else -> Color.White.copy(alpha = 0.8f)
+                else -> textColor.copy(alpha = 0.8f)
             }
         )
     }
@@ -332,11 +371,17 @@ private fun HabitSelectionBottomSheet(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
 ) {
+    val backgroundColor = MaterialTheme.colorScheme.background
+    val textColor = MaterialTheme.colorScheme.onBackground
+    val cardColor = MaterialTheme.colorScheme.surface
+
     Column(
         modifier = Modifier
-            .fillMaxWidth()
-            .background(Color(0xFF0A1628))
+            .fillMaxSize()
+            .background(backgroundColor)
+            .navigationBarsPadding()
             .padding(horizontal = 20.dp)
+            .padding(top = 8.dp)
     ) {
         // Date Display
         Column(
@@ -346,6 +391,11 @@ private fun HabitSelectionBottomSheet(
                 .background(
                     Color(0xFF4E7CFF).copy(alpha = 0.2f)
                 )
+                .border(
+                    width = 1.dp,
+                    color = textColor.copy(alpha = 0.1f),
+                    shape = RoundedCornerShape(16.dp)
+                )
                 .padding(24.dp),
             horizontalAlignment = Alignment.Start,
             verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -354,13 +404,13 @@ private fun HabitSelectionBottomSheet(
                 text = "${selectedDate.dayOfMonth} ${LocalizationHelpers.getMonthName(selectedDate.monthNumber, currentLanguage).take(3)}",
                 fontSize = 40.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.White
+                color = textColor
             )
             Text(
                 text = selectedDate.year.toString(),
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Medium,
-                color = Color.White.copy(alpha = 0.7f)
+                color = textColor.copy(alpha = 0.7f)
             )
         }
 
@@ -372,13 +422,13 @@ private fun HabitSelectionBottomSheet(
                 text = StringResources.youHaveHabits.get(currentLanguage).replace("%d", allHabits.size.toString()),
                 fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = Color.White
+                color = textColor
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = StringResources.letsSeeThem.get(currentLanguage),
                 fontSize = 14.sp,
-                color = Color.White.copy(alpha = 0.7f)
+                color = textColor.copy(alpha = 0.7f)
             )
         }
 
@@ -389,20 +439,21 @@ private fun HabitSelectionBottomSheet(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 40.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .weight(1f),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
                 Text(
                     text = StringResources.noHabitsAvailable.get(currentLanguage),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color.White
+                    color = textColor
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = StringResources.createYourFirstHabit.get(currentLanguage),
                     fontSize = 14.sp,
-                    color = Color.White.copy(alpha = 0.6f),
+                    color = textColor.copy(alpha = 0.6f),
                     textAlign = TextAlign.Center
                 )
             }
@@ -411,15 +462,13 @@ private fun HabitSelectionBottomSheet(
                 text = StringResources.timeSlot.get(currentLanguage),
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = Color.White.copy(alpha = 0.6f)
+                color = textColor.copy(alpha = 0.6f)
             )
 
             Spacer(modifier = Modifier.height(12.dp))
 
             LazyColumn(
-                modifier = Modifier
-                    .weight(1f, fill = false)
-                    .heightIn(max = 300.dp),
+                modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 items(allHabits) { habit ->
@@ -437,7 +486,7 @@ private fun HabitSelectionBottomSheet(
                         text = StringResources.endOfList.get(currentLanguage),
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Medium,
-                        color = Color.White.copy(alpha = 0.4f),
+                        color = textColor.copy(alpha = 0.4f),
                         modifier = Modifier.fillMaxWidth(),
                         textAlign = TextAlign.Center
                     )
@@ -445,13 +494,13 @@ private fun HabitSelectionBottomSheet(
             }
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         // Action Buttons
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 24.dp),
+                .padding(bottom = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             OutlinedButton(
@@ -460,11 +509,11 @@ private fun HabitSelectionBottomSheet(
                     .weight(1f)
                     .height(56.dp),
                 colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = Color.White
+                    contentColor = textColor
                 ),
                 border = androidx.compose.foundation.BorderStroke(
                     width = 1.dp,
-                    color = Color.White.copy(alpha = 0.3f)
+                    color = textColor.copy(alpha = 0.3f)
                 ),
                 shape = RoundedCornerShape(12.dp)
             ) {
@@ -504,6 +553,9 @@ private fun HabitSelectionCard(
     currentLanguage: com.cil.shift.core.common.localization.Language,
     onClick: () -> Unit
 ) {
+    val textColor = MaterialTheme.colorScheme.onBackground
+    val cardColor = MaterialTheme.colorScheme.surface
+
     val habitColor = try {
         val colorString = habit.color.removePrefix("#")
         val colorInt = colorString.toLong(16)
@@ -518,12 +570,18 @@ private fun HabitSelectionCard(
 
     Card(
         onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(
+                width = 1.dp,
+                color = if (isSelected) Color(0xFF4E7CFF).copy(alpha = 0.3f) else textColor.copy(alpha = 0.1f),
+                shape = RoundedCornerShape(12.dp)
+            ),
         colors = CardDefaults.cardColors(
             containerColor = if (isSelected) {
-                Color(0xFF1A2942).copy(alpha = 1f)
+                cardColor
             } else {
-                Color(0xFF1A2942).copy(alpha = 0.6f)
+                cardColor.copy(alpha = 0.6f)
             }
         ),
         shape = RoundedCornerShape(12.dp)
@@ -560,7 +618,7 @@ private fun HabitSelectionCard(
                         text = LocalizationHelpers.getLocalizedHabitName(habit.name, currentLanguage),
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = Color.White
+                        color = textColor
                     )
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -573,13 +631,13 @@ private fun HabitSelectionCard(
                                 is com.cil.shift.feature.habits.domain.model.Frequency.Custom -> StringResources.custom.get(currentLanguage)
                             },
                             fontSize = 12.sp,
-                            color = Color.White.copy(alpha = 0.6f)
+                            color = textColor.copy(alpha = 0.6f)
                         )
                         if (habit.reminderTime != null) {
                             Text(
                                 text = "• ${habit.reminderTime}",
                                 fontSize = 12.sp,
-                                color = Color.White.copy(alpha = 0.6f)
+                                color = textColor.copy(alpha = 0.6f)
                             )
                         }
                     }
@@ -593,7 +651,7 @@ private fun HabitSelectionCard(
                     .clip(CircleShape)
                     .border(
                         width = 2.dp,
-                        color = if (isSelected) Color(0xFF4E7CFF) else Color.White.copy(alpha = 0.3f),
+                        color = if (isSelected) Color(0xFF4E7CFF) else textColor.copy(alpha = 0.3f),
                         shape = CircleShape
                     )
                     .background(
@@ -615,18 +673,71 @@ private fun HabitSelectionCard(
 }
 
 private fun getIconEmoji(icon: String): String {
-    return when (icon) {
-        "work", "briefcase" -> "💼"
-        "fitness", "workout" -> "🏋️"
-        "book", "read" -> "📚"
-        "meditation", "mindfulness" -> "🧘"
-        "water", "hydration" -> "💧"
-        "sleep" -> "😴"
+    return when (icon.lowercase()) {
+        // Health
+        "water", "wat", "hydration" -> "💧"
+        "vegetables", "veg" -> "🥦"
+        "fruit", "fru" -> "🍉"
+        "cooking", "coo" -> "🍳"
+        "sunrise", "sun" -> "🌅"
+        "sunset" -> "🌇"
+        "pill", "med" -> "💊"
         "nutrition", "food" -> "🥗"
-        "study" -> "📖"
-        "music" -> "🎵"
-        "art" -> "🎨"
-        else -> "✓"
+        // Mindfulness
+        "journal", "jou" -> "✍️"
+        "pray", "pra" -> "🙏"
+        "meditation", "me", "mindfulness" -> "🧘"
+        "relaxed", "rel" -> "😌"
+        "detox", "det" -> "🚫"
+        // Learning
+        "books", "book", "boo", "read" -> "📚"
+        "course", "cou" -> "📝"
+        "instrument", "ins" -> "🎷"
+        "study", "stu" -> "🧑‍🎓"
+        "flute", "flu", "ute" -> "🎺"
+        // Active
+        "running", "run" -> "🏃"
+        "walking", "wal" -> "🚶"
+        "dance", "dan" -> "💃"
+        "pilates", "pil" -> "🤸"
+        "gym", "dumbbell", "dum", "fitness", "workout" -> "🏋️"
+        "sports", "spo" -> "⚽"
+        "stretching", "str" -> "🤾"
+        "yoga", "yog" -> "🧘"
+        // Self-care
+        "shower", "sho" -> "🚿"
+        "skincare", "ski" -> "🧴"
+        "haircare", "hai" -> "💆"
+        // Social
+        "couple", "heart", "hea" -> "💕"
+        "party", "par" -> "🥳"
+        "family", "fam" -> "👨‍👩‍👧"
+        // Financial
+        "budget", "bud" -> "💰"
+        "invest", "inv" -> "📊"
+        "expenses", "exp" -> "💸"
+        // Home
+        "clean", "cle" -> "🧹"
+        "bed" -> "🛏️"
+        "laundry", "lau" -> "🧺"
+        "dishes", "dis" -> "🪣"
+        "bills", "bil" -> "🧾"
+        // Additional
+        "leaf", "lea" -> "🍃"
+        "brain", "bra" -> "🧠"
+        "fire", "fir" -> "🔥"
+        "moon", "mo" -> "🌙"
+        "bulb", "bul" -> "💡"
+        "smile", "smi" -> "😊"
+        "check", "che" -> "✅"
+        "coffee", "cof" -> "☕"
+        "sleep", "sle" -> "😴"
+        "music", "mus" -> "🎵"
+        "art", "palette", "pale", "pal" -> "🎨"
+        "briefcase", "bri", "work" -> "💼"
+        else -> {
+            if (icon.any { it.code >= 0x1F300 }) icon else "✓"
+        }
     }
 }
 

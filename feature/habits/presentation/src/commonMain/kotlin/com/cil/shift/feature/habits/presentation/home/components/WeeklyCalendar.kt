@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -41,8 +42,8 @@ fun WeeklyCalendar(
 ) {
     val today = com.cil.shift.core.common.currentDate()
 
-    // Generate 9 days: 3 before today, today, 5 after today
-    val days = (-3..5).map { offset ->
+    // Generate 10 days: 6 before today, today, 3 after today
+    val days = (-6..3).map { offset ->
         val date = today.plus(offset, DateTimeUnit.DAY)
 
         // Get localized 3-letter day name
@@ -63,10 +64,13 @@ fun WeeklyCalendar(
 
     val listState = rememberLazyListState()
 
-    // Scroll to today (index 3) on first composition to center it
+    // Scroll to today (index 6) on first composition to center it
     LaunchedEffect(Unit) {
-        listState.scrollToItem(3)
+        listState.scrollToItem(6)
     }
+
+    val textColor = MaterialTheme.colorScheme.onBackground
+    val cardColor = MaterialTheme.colorScheme.surface
 
     LazyRow(
         state = listState,
@@ -84,7 +88,7 @@ fun WeeklyCalendar(
                     text = day.dayOfWeek,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Normal,
-                    color = Color.White.copy(alpha = 0.5f)
+                    color = textColor.copy(alpha = 0.5f)
                 )
 
                 Box(
@@ -95,7 +99,7 @@ fun WeeklyCalendar(
                             when {
                                 day.isSelected -> Color(0xFF00D9FF) // Cyan for selected
                                 day.isToday -> Color(0xFF4E7CFF)    // Blue for today
-                                else -> Color(0xFF1A2942)           // Dark for others
+                                else -> cardColor                    // Theme card color for others
                             }
                         )
                         .clickable { onDaySelected(day.date) },
@@ -105,7 +109,7 @@ fun WeeklyCalendar(
                         text = day.dayOfMonth.toString(),
                         fontSize = 14.sp,
                         fontWeight = if (day.isToday || day.isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                        color = Color.White
+                        color = if (day.isToday || day.isSelected) Color.White else textColor
                     )
                 }
             }

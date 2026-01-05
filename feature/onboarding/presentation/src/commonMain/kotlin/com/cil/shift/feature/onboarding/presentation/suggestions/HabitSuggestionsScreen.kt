@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -17,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -42,26 +44,32 @@ fun HabitSuggestionsScreen(
         }
     }
 
+    val backgroundColor = MaterialTheme.colorScheme.background
+    val textColor = MaterialTheme.colorScheme.onBackground
+    val cardColor = MaterialTheme.colorScheme.surface
+
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFF0A1628))
+            .background(backgroundColor)
+            .systemBarsPadding()
     ) {
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-            // Header
+            // Header with top padding for status bar safety
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(24.dp),
+                    .padding(horizontal = 24.dp)
+                    .padding(top = 32.dp, bottom = 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
                     text = "Start with Some Habits",
                     fontSize = 28.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White,
+                    color = textColor,
                     textAlign = TextAlign.Center
                 )
 
@@ -70,7 +78,7 @@ fun HabitSuggestionsScreen(
                 Text(
                     text = "Choose a few to get started. You can always add more later.",
                     fontSize = 14.sp,
-                    color = Color.White.copy(alpha = 0.7f),
+                    color = textColor.copy(alpha = 0.7f),
                     textAlign = TextAlign.Center,
                     lineHeight = 20.sp
                 )
@@ -122,11 +130,12 @@ fun HabitSuggestionsScreen(
                 )
             }
 
-            // Buttons
+            // Buttons with bottom padding for navigation bar safety
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(24.dp),
+                    .padding(horizontal = 24.dp)
+                    .padding(top = 16.dp, bottom = 32.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 // Skip button
@@ -139,11 +148,11 @@ fun HabitSuggestionsScreen(
                         .weight(1f)
                         .height(56.dp),
                     colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = Color.White
+                        contentColor = textColor
                     ),
                     border = androidx.compose.foundation.BorderStroke(
                         width = 1.dp,
-                        color = Color.White.copy(alpha = 0.3f)
+                        color = textColor.copy(alpha = 0.3f)
                     ),
                     shape = RoundedCornerShape(16.dp),
                     enabled = !state.isCreating
@@ -209,12 +218,15 @@ private fun CategoryChip(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val textColor = MaterialTheme.colorScheme.onBackground
+    val cardColor = MaterialTheme.colorScheme.surface
+
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(24.dp))
             .background(
                 if (isSelected) Color(0xFF4E7CFF)
-                else Color(0xFF1A2942)
+                else cardColor
             )
             .border(
                 width = if (isSelected) 2.dp else 0.dp,
@@ -236,7 +248,7 @@ private fun CategoryChip(
                 text = category.displayName,
                 fontSize = 14.sp,
                 fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                color = Color.White
+                color = if (isSelected) Color.White else textColor
             )
         }
     }
@@ -249,13 +261,16 @@ private fun HabitSuggestionCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val textColor = MaterialTheme.colorScheme.onBackground
+    val cardColor = MaterialTheme.colorScheme.surface
+    val backgroundColor = MaterialTheme.colorScheme.background
     val habitColor = suggestion.color.toComposeColor()
 
     Box(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(Color(0xFF1A2942))
+            .background(cardColor)
             .border(
                 width = if (isSelected) 2.dp else 0.dp,
                 color = if (isSelected) Color(0xFF4E7CFF) else Color.Transparent,
@@ -297,13 +312,13 @@ private fun HabitSuggestionCard(
                         text = suggestion.name,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = Color.White
+                        color = textColor
                     )
 
                     Text(
                         text = suggestion.description,
                         fontSize = 13.sp,
-                        color = Color.White.copy(alpha = 0.6f),
+                        color = textColor.copy(alpha = 0.6f),
                         lineHeight = 18.sp
                     )
 
@@ -341,11 +356,11 @@ private fun HabitSuggestionCard(
                     .clip(CircleShape)
                     .background(
                         if (isSelected) Color(0xFF4E7CFF)
-                        else Color(0xFF0A1628)
+                        else backgroundColor
                     )
                     .border(
                         width = 2.dp,
-                        color = if (isSelected) Color(0xFF00D9FF) else Color.White.copy(alpha = 0.3f),
+                        color = if (isSelected) Color(0xFF00D9FF) else textColor.copy(alpha = 0.3f),
                         shape = CircleShape
                     ),
                 contentAlignment = Alignment.Center

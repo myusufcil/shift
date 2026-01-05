@@ -1,5 +1,6 @@
 package com.cil.shift
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -11,6 +12,8 @@ import cafe.adriel.voyager.navigator.tab.TabNavigator
 import com.cil.shift.core.common.localization.LocalizationManager
 import com.cil.shift.core.common.localization.ProvideLocalization
 import com.cil.shift.core.common.onboarding.OnboardingPreferences
+import com.cil.shift.core.common.theme.ProvideTheme
+import com.cil.shift.core.common.theme.ThemeManager
 import com.cil.shift.core.designsystem.theme.ShiftTheme
 import com.cil.shift.navigation.BottomNavigationBar
 import com.cil.shift.navigation.GlobalNavigationEvents
@@ -26,23 +29,30 @@ fun App() {
     KoinContext {
         val localizationManager = koinInject<LocalizationManager>()
         val onboardingPreferences = koinInject<OnboardingPreferences>()
+        val themeManager = koinInject<ThemeManager>()
+
+        val currentTheme by themeManager.currentTheme.collectAsState()
+        val isSystemInDarkTheme = isSystemInDarkTheme()
+        val isDarkTheme = themeManager.isDarkTheme(isSystemInDarkTheme)
 
         ProvideLocalization(localizationManager = localizationManager) {
-            ShiftTheme {
-                // Configure system UI (status bar, navigation bar)
-                ConfigureSystemBars()
+            ProvideTheme(themeManager = themeManager) {
+                ShiftTheme(darkTheme = isDarkTheme) {
+                    // Configure system UI (status bar, navigation bar)
+                    ConfigureSystemBars(isDarkTheme = isDarkTheme)
 
-                var showOnboarding by remember { mutableStateOf(!onboardingPreferences.isOnboardingCompleted()) }
+                    var showOnboarding by remember { mutableStateOf(!onboardingPreferences.isOnboardingCompleted()) }
 
-                if (showOnboarding) {
-                    OnboardingFlow(
-                        onComplete = {
-                            onboardingPreferences.setOnboardingCompleted(true)
-                            showOnboarding = false
-                        }
-                    )
-                } else {
-                    MainApp()
+                    if (showOnboarding) {
+                        OnboardingFlow(
+                            onComplete = {
+                                onboardingPreferences.setOnboardingCompleted(true)
+                                showOnboarding = false
+                            }
+                        )
+                    } else {
+                        MainApp()
+                    }
                 }
             }
         }

@@ -21,13 +21,15 @@ data class HomeState(
     val weeklyChartData: List<Pair<String, Float>> = emptyList(),
     val weeklyChartType: WeeklyChartType = WeeklyChartType.LINE,
     val isLoading: Boolean = true,
-    val error: String? = null
+    val error: String? = null,
+    val confettiShownForDate: String? = null // Track which date confetti was shown to prevent repeating
 )
 
 data class HabitWithCompletion(
     val habit: Habit,
     val isCompletedToday: Boolean,
-    val currentValue: Int = 0 // For measurable/timer habits
+    val currentValue: Int = 0, // For measurable/timer habits
+    val currentStreak: Int = 0 // Consecutive days completed
 ) {
     val isCompleted: Boolean get() = isCompletedToday
 }

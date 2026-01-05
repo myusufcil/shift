@@ -1,10 +1,12 @@
 package com.cil.shift.feature.habits.presentation.home.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -25,17 +27,26 @@ fun HabitItemTimer(
     color: Color,
     statusLabel: String, // e.g., "FOCUS", "2h 15min left"
     isCompleted: Boolean = false,
+    streak: Int = 0,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val progress = (currentMinutes.toFloat() / targetMinutes).coerceIn(0f, 1f)
     val displayLabel = if (isCompleted) "DONE" else statusLabel
 
+    val textColor = MaterialTheme.colorScheme.onBackground
+    val cardColor = MaterialTheme.colorScheme.surface
+
     Column(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(Color(0xFF1A2942))
+            .background(cardColor)
+            .border(
+                width = 1.dp,
+                color = textColor.copy(alpha = 0.1f),
+                shape = RoundedCornerShape(16.dp)
+            )
             .clickable(onClick = onClick)
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -63,13 +74,21 @@ fun HabitItemTimer(
                     )
                 }
 
-                Text(
-                    text = name,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color.White,
-                    maxLines = 1
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = name,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = textColor,
+                        maxLines = 1
+                    )
+
+                    // Streak badge
+                    StreakBadge(streak = streak)
+                }
             }
 
             Box(
@@ -100,7 +119,7 @@ fun HabitItemTimer(
                     .height(8.dp)
                     .clip(RoundedCornerShape(4.dp)),
                 color = color,
-                trackColor = Color.White.copy(alpha = 0.1f),
+                trackColor = textColor.copy(alpha = 0.1f),
                 strokeCap = StrokeCap.Round
             )
 
@@ -108,7 +127,7 @@ fun HabitItemTimer(
                 text = "${targetMinutes - currentMinutes} min left",
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Normal,
-                color = Color.White.copy(alpha = 0.5f)
+                color = textColor.copy(alpha = 0.5f)
             )
         }
     }

@@ -2,8 +2,10 @@ package com.cil.shift.feature.statistics.presentation.components
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -26,22 +28,30 @@ data class ChartData(
 @Composable
 fun LineChart(
     data: List<ChartData>,
-    modifier: Modifier = Modifier,
-    lineColor: Color = Color(0xFF4E7CFF),
-    gridColor: Color = Color.White.copy(alpha = 0.1f),
-    labelColor: Color = Color.White.copy(alpha = 0.6f)
+    modifier: Modifier = Modifier
 ) {
+    val cardColor = MaterialTheme.colorScheme.surface
+    val textColor = MaterialTheme.colorScheme.onBackground
+    val lineColor = Color(0xFF4ECDC4)
+    val gridColor = textColor.copy(alpha = 0.1f)
+    val labelColor = textColor.copy(alpha = 0.6f)
+
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .background(Color(0xFF1A2942), RoundedCornerShape(16.dp))
+            .background(cardColor, RoundedCornerShape(16.dp))
+            .border(
+                width = 1.dp,
+                color = textColor.copy(alpha = 0.1f),
+                shape = RoundedCornerShape(16.dp)
+            )
             .padding(16.dp)
     ) {
         Text(
             text = "Monthly Progress",
             fontSize = 16.sp,
             fontWeight = FontWeight.SemiBold,
-            color = Color.White,
+            color = textColor,
             modifier = Modifier.padding(bottom = 16.dp)
         )
 
@@ -115,7 +125,7 @@ fun LineChart(
                         center = Offset(x, y)
                     )
                     drawCircle(
-                        color = Color.White,
+                        color = cardColor,
                         radius = 3f,
                         center = Offset(x, y)
                     )

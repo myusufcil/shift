@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.kotlinSerialization)
+    alias(libs.plugins.googleServices)
 }
 
 kotlin {
@@ -66,6 +67,14 @@ kotlin {
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.datetime)
             implementation(libs.kotlinx.serialization.json)
+
+            // Firebase
+            implementation(libs.firebase.auth)
+            implementation(libs.firebase.common)
+
+            // RevenueCat
+            implementation(libs.revenuecat.purchases)
+            implementation(libs.revenuecat.purchases.ui)
         }
 
         androidMain.dependencies {

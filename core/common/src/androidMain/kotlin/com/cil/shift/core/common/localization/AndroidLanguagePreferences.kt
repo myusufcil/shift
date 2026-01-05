@@ -14,7 +14,7 @@ class AndroidLanguagePreferences(context: Context) : LanguagePreferences {
     }
 
     override fun setLanguageCode(code: String) {
-        prefs.edit().putString(KEY_LANGUAGE, code).apply()
+        prefs.edit().putString(KEY_LANGUAGE, code).commit()
     }
 
     companion object {

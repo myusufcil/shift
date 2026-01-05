@@ -8,11 +8,11 @@ val PrimaryVariant = Color(0xFF5549E5)
 val Secondary = Color(0xFF03DAC6)
 val SecondaryVariant = Color(0xFF018786)
 
-// Background colors - Dark theme (as seen in screenshots)
-val BackgroundDark = Color(0xFF121212)
-val SurfaceDark = Color(0xFF1E1E1E)
-val Surface2Dark = Color(0xFF2A2A2A)
-val Surface3Dark = Color(0xFF353535)
+// Background colors - Dark theme (navy blue palette)
+val BackgroundDark = Color(0xFF0A1628)
+val SurfaceDark = Color(0xFF1A2942)
+val Surface2Dark = Color(0xFF243654)
+val Surface3Dark = Color(0xFF2E4466)
 
 // Text colors
 val OnBackgroundDark = Color(0xFFE0E0E0)

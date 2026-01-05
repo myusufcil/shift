@@ -13,7 +13,7 @@ androidx-work = "2.10.0"
 androidx-splashscreen = "1.0.1"
 composeMultiplatform = "1.7.1"
 junit = "4.13.2"
-kotlin = "2.0.21"
+kotlin = "2.1.20"
 
 # KMP Dependencies
 koin = "4.0.0"
@@ -72,6 +72,14 @@ kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-c
 # Reorderable
 reorderable = { module = "sh.calvin.reorderable:reorderable", version.ref = "reorderable" }
 
+# Firebase (GitLive KMP SDK)
+firebase-auth = { module = "dev.gitlive:firebase-auth", version = "2.1.0" }
+firebase-common = { module = "dev.gitlive:firebase-common", version = "2.1.0" }
+
+# RevenueCat
+revenuecat-purchases = { module = "com.revenuecat.purchases:purchases-kmp-core", version = "2.2.16+17.26.0" }
+revenuecat-purchases-ui = { module = "com.revenuecat.purchases:purchases-kmp-ui", version = "2.2.16+17.26.0" }
+
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
 androidLibrary = { id = "com.android.library", version.ref = "agp" }
@@ -80,3 +88,4 @@ composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "k
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 sqldelight = { id = "app.cash.sqldelight", version.ref = "sqldelight" }
+googleServices = { id = "com.google.gms.google-services", version = "4.4.2" }
