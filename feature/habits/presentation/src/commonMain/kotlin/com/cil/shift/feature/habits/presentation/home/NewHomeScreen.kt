@@ -29,6 +29,7 @@ import com.cil.shift.core.common.localization.LocalizationHelpers
 import com.cil.shift.core.common.localization.LocalizationManager
 import com.cil.shift.core.common.localization.StringResources
 import com.cil.shift.core.common.localization.localized
+import com.cil.shift.feature.habits.domain.model.HabitSchedule
 import com.cil.shift.feature.habits.domain.model.HabitType
 import com.cil.shift.feature.habits.presentation.home.components.*
 import com.cil.shift.feature.settings.presentation.achievements.AchievementUnlockPopup
@@ -229,6 +230,28 @@ fun NewHomeScreen(
                         viewModel.onEvent(HomeEvent.ChangeWeeklyChartType(chartType))
                     }
                 )
+            }
+
+            // Today's Schedule section (if there are scheduled events)
+            if (state.scheduledEvents.isNotEmpty()) {
+                item {
+                    Text(
+                        text = StringResources.schedule.localized(),
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = textColor
+                    )
+                }
+
+                items(
+                    items = state.scheduledEvents,
+                    key = { it.id }
+                ) { schedule ->
+                    ScheduledEventCard(
+                        schedule = schedule,
+                        currentLanguage = currentLanguage
+                    )
+                }
             }
 
             // Today's Habits header

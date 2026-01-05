@@ -9,6 +9,8 @@ import com.cil.shift.feature.habits.data.mapper.toDomain
 import com.cil.shift.feature.habits.data.mapper.toEntity
 import com.cil.shift.feature.habits.domain.model.Habit
 import com.cil.shift.feature.habits.domain.model.HabitCompletion
+import com.cil.shift.feature.habits.domain.model.HabitSchedule
+import com.cil.shift.feature.habits.domain.model.RepeatType
 import com.cil.shift.feature.habits.domain.repository.HabitRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -183,6 +185,92 @@ class HabitRepositoryImpl(
                 habit_id = habitId,
                 date = date
             )
+        }
+    }
+
+    // Schedule methods
+
+    override fun getSchedulesForDateRange(startDate: String, endDate: String): Flow<List<HabitSchedule>> {
+        return habitQueries.getSchedulesForDateRange(startDate, endDate)
+            .asFlow()
+            .mapToList(Dispatchers.IO)
+            .map { entities ->
+                entities.map { entity ->
+                    HabitSchedule(
+                        id = entity.id,
+                        habitId = entity.habit_id,
+                        habitName = entity.habit_name,
+                        habitIcon = entity.habit_icon,
+                        habitColor = entity.habit_color,
+                        date = entity.date,
+                        startTime = entity.start_time,
+                        endTime = entity.end_time,
+                        hasReminder = entity.has_reminder > 0,
+                        repeatType = try { RepeatType.valueOf(entity.repeat_type) } catch (e: Exception) { RepeatType.NEVER },
+                        notes = entity.notes,
+                        createdAt = entity.created_at
+                    )
+                }
+            }
+    }
+
+    override suspend fun getSchedulesForDate(date: String): List<HabitSchedule> {
+        return withContext(Dispatchers.IO) {
+            habitQueries.getSchedulesForDate(date).executeAsList().map { entity ->
+                HabitSchedule(
+                    id = entity.id,
+                    habitId = entity.habit_id,
+                    habitName = entity.habit_name,
+                    habitIcon = entity.habit_icon,
+                    habitColor = entity.habit_color,
+                    date = entity.date,
+                    startTime = entity.start_time,
+                    endTime = entity.end_time,
+                    hasReminder = entity.has_reminder > 0,
+                    repeatType = try { RepeatType.valueOf(entity.repeat_type) } catch (e: Exception) { RepeatType.NEVER },
+                    notes = entity.notes,
+                    createdAt = entity.created_at
+                )
+            }
+        }
+    }
+
+    @OptIn(ExperimentalUuidApi::class)
+    override suspend fun createSchedule(schedule: HabitSchedule) {
+        withContext(Dispatchers.IO) {
+            val id = if (schedule.id.isBlank()) Uuid.random().toString() else schedule.id
+            habitQueries.insertSchedule(
+                id = id,
+                habit_id = schedule.habitId,
+                date = schedule.date,
+                start_time = schedule.startTime,
+                end_time = schedule.endTime,
+                has_reminder = if (schedule.hasReminder) 1 else 0,
+                repeat_type = schedule.repeatType.name,
+                notes = schedule.notes,
+                created_at = schedule.createdAt
+            )
+        }
+    }
+
+    override suspend fun updateSchedule(schedule: HabitSchedule) {
+        withContext(Dispatchers.IO) {
+            habitQueries.updateSchedule(
+                habit_id = schedule.habitId,
+                date = schedule.date,
+                start_time = schedule.startTime,
+                end_time = schedule.endTime,
+                has_reminder = if (schedule.hasReminder) 1 else 0,
+                repeat_type = schedule.repeatType.name,
+                notes = schedule.notes,
+                id = schedule.id
+            )
+        }
+    }
+
+    override suspend fun deleteSchedule(id: String) {
+        withContext(Dispatchers.IO) {
+            habitQueries.deleteSchedule(id)
         }
     }
 }

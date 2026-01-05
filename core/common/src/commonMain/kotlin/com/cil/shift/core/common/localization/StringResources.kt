@@ -1031,6 +1031,55 @@ object StringResources {
         tr = "Yeni Beceri Öğren",
         es = "Aprender Nueva Habilidad"
     )
+
+    // Schedule Screen
+    val schedule = StringResource(
+        en = "Schedule",
+        tr = "Program",
+        es = "Programa"
+    )
+
+    val today = StringResource(
+        en = "Today",
+        tr = "Bugün",
+        es = "Hoy"
+    )
+
+    val newEvent = StringResource(
+        en = "New Event",
+        tr = "Yeni Etkinlik",
+        es = "Nuevo Evento"
+    )
+
+    val selectHabit = StringResource(
+        en = "Select Habit",
+        tr = "Alışkanlık Seç",
+        es = "Seleccionar Hábito"
+    )
+
+    val noHabits = StringResource(
+        en = "No Habits",
+        tr = "Alışkanlık Yok",
+        es = "Sin Hábitos"
+    )
+
+    val repeats = StringResource(
+        en = "Repeats",
+        tr = "Tekrar",
+        es = "Repetir"
+    )
+
+    val never = StringResource(
+        en = "Never",
+        tr = "Asla",
+        es = "Nunca"
+    )
+
+    val monthly = StringResource(
+        en = "Monthly",
+        tr = "Aylık",
+        es = "Mensual"
+    )
 }
 
 data class StringResource(

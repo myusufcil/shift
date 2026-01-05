@@ -61,6 +61,17 @@ fun SignUpScreen(
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
+    // Email validation
+    val emailRegex = remember { Regex("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}\$") }
+    fun isValidEmail(email: String): Boolean = emailRegex.matches(email)
+
+    // Password validation rules
+    val hasMinLength = password.length >= 8
+    val hasUppercase = password.any { it.isUpperCase() }
+    val hasLowercase = password.any { it.isLowerCase() }
+    val hasNumber = password.any { it.isDigit() }
+    val isPasswordValid = hasMinLength && hasUppercase && hasLowercase && hasNumber
+
     val backgroundColor = MaterialTheme.colorScheme.background
     val textColor = MaterialTheme.colorScheme.onBackground
 
@@ -222,6 +233,28 @@ fun SignUpScreen(
                 )
             )
 
+            // Password requirements - only show unmet requirements
+            if (password.isNotEmpty() && !isPasswordValid) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    if (!hasMinLength) {
+                        PasswordRequirement(text = strings.minLength)
+                    }
+                    if (!hasUppercase) {
+                        PasswordRequirement(text = strings.hasUppercase)
+                    }
+                    if (!hasLowercase) {
+                        PasswordRequirement(text = strings.hasLowercase)
+                    }
+                    if (!hasNumber) {
+                        PasswordRequirement(text = strings.hasNumber)
+                    }
+                }
+            }
+
             Spacer(modifier = Modifier.height(16.dp))
 
             // Confirm password field
@@ -265,6 +298,12 @@ fun SignUpScreen(
                 )
             )
 
+            // Password match indicator
+            if (confirmPassword.isNotEmpty() && password != confirmPassword) {
+                Spacer(modifier = Modifier.height(8.dp))
+                PasswordRequirement(text = strings.passwordsDoNotMatch)
+            }
+
             // Error message
             if (errorMessage != null) {
                 Spacer(modifier = Modifier.height(16.dp))
@@ -287,8 +326,12 @@ fun SignUpScreen(
                             errorMessage = strings.fillAllFields
                             return@Button
                         }
-                        password.length < 6 -> {
-                            errorMessage = strings.passwordTooShort
+                        !isValidEmail(email) -> {
+                            errorMessage = strings.invalidEmail
+                            return@Button
+                        }
+                        !isPasswordValid -> {
+                            errorMessage = strings.passwordRequirements
                             return@Button
                         }
                         password != confirmPassword -> {
@@ -367,6 +410,28 @@ fun SignUpScreen(
     }
 }
 
+@Composable
+private fun PasswordRequirement(text: String) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(6.dp)
+                .background(
+                    color = Color(0xFFFF6B6B),
+                    shape = RoundedCornerShape(3.dp)
+                )
+        )
+        Text(
+            text = text,
+            fontSize = 12.sp,
+            color = Color(0xFFFF6B6B)
+        )
+    }
+}
+
 private data class SignUpStrings(
     val createAccount: String,
     val subtitle: String,
@@ -378,8 +443,13 @@ private data class SignUpStrings(
     val alreadyHaveAccount: String,
     val signIn: String,
     val fillAllFields: String,
-    val passwordTooShort: String,
-    val passwordsDoNotMatch: String
+    val invalidEmail: String,
+    val passwordRequirements: String,
+    val passwordsDoNotMatch: String,
+    val minLength: String,
+    val hasUppercase: String,
+    val hasLowercase: String,
+    val hasNumber: String
 ) {
     companion object {
         fun get(language: Language): SignUpStrings {
@@ -395,8 +465,13 @@ private data class SignUpStrings(
                     alreadyHaveAccount = "Zaten hesabınız var mı?",
                     signIn = "Giriş Yap",
                     fillAllFields = "Lütfen tüm alanları doldurun",
-                    passwordTooShort = "Şifre en az 6 karakter olmalı",
-                    passwordsDoNotMatch = "Şifreler eşleşmiyor"
+                    invalidEmail = "Geçerli bir e-posta adresi girin",
+                    passwordRequirements = "Şifre tüm gereksinimleri karşılamalı",
+                    passwordsDoNotMatch = "Şifreler eşleşmiyor",
+                    minLength = "En az 8 karakter",
+                    hasUppercase = "En az 1 büyük harf",
+                    hasLowercase = "En az 1 küçük harf",
+                    hasNumber = "En az 1 rakam"
                 )
                 Language.SPANISH -> SignUpStrings(
                     createAccount = "Crear Cuenta",
@@ -409,8 +484,13 @@ private data class SignUpStrings(
                     alreadyHaveAccount = "¿Ya tienes cuenta?",
                     signIn = "Iniciar Sesión",
                     fillAllFields = "Por favor completa todos los campos",
-                    passwordTooShort = "La contraseña debe tener al menos 6 caracteres",
-                    passwordsDoNotMatch = "Las contraseñas no coinciden"
+                    invalidEmail = "Ingresa un correo electrónico válido",
+                    passwordRequirements = "La contraseña debe cumplir todos los requisitos",
+                    passwordsDoNotMatch = "Las contraseñas no coinciden",
+                    minLength = "Mínimo 8 caracteres",
+                    hasUppercase = "Al menos 1 mayúscula",
+                    hasLowercase = "Al menos 1 minúscula",
+                    hasNumber = "Al menos 1 número"
                 )
                 else -> SignUpStrings(
                     createAccount = "Create Account",
@@ -423,8 +503,13 @@ private data class SignUpStrings(
                     alreadyHaveAccount = "Already have an account?",
                     signIn = "Sign In",
                     fillAllFields = "Please fill in all fields",
-                    passwordTooShort = "Password must be at least 6 characters",
-                    passwordsDoNotMatch = "Passwords do not match"
+                    invalidEmail = "Please enter a valid email address",
+                    passwordRequirements = "Password must meet all requirements",
+                    passwordsDoNotMatch = "Passwords do not match",
+                    minLength = "At least 8 characters",
+                    hasUppercase = "At least 1 uppercase letter",
+                    hasLowercase = "At least 1 lowercase letter",
+                    hasNumber = "At least 1 number"
                 )
             }
         }

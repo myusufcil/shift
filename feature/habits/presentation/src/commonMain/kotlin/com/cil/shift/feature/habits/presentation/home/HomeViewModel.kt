@@ -26,6 +26,7 @@ class HomeViewModel(
         updateCurrentDate()
         loadWeeklyChartData()
         loadUserPreferences()
+        loadScheduledEvents()
     }
 
     private fun loadUserPreferences() {
@@ -43,8 +44,10 @@ class HomeViewModel(
         if (currentSelectedDate != null) {
             val dateString = "${currentSelectedDate.year}-${currentSelectedDate.monthNumber.toString().padStart(2, '0')}-${currentSelectedDate.dayOfMonth.toString().padStart(2, '0')}"
             loadHabits(dateString)
+            loadScheduledEvents(dateString)
         } else {
             loadHabits()
+            loadScheduledEvents()
         }
         loadWeeklyChartData()
     }
@@ -222,9 +225,10 @@ class HomeViewModel(
                 _state.update { it.copy(showAllHabits = !it.showAllHabits) }
             }
             is HomeEvent.DaySelected -> {
-                // Load habits for the selected date
+                // Load habits and scheduled events for the selected date
                 val dateString = "${event.date.year}-${event.date.monthNumber.toString().padStart(2, '0')}-${event.date.dayOfMonth.toString().padStart(2, '0')}"
                 loadHabits(dateString)
+                loadScheduledEvents(dateString)
                 _state.update {
                     it.copy(selectedDate = event.date)
                 }
@@ -360,6 +364,14 @@ class HomeViewModel(
 
                 _state.update { it.copy(weeklyChartData = weekData) }
             }
+        }
+    }
+
+    private fun loadScheduledEvents(date: String? = null) {
+        viewModelScope.launch {
+            val targetDate = date ?: getTodayDateString()
+            val schedules = habitRepository.getSchedulesForDate(targetDate)
+            _state.update { it.copy(scheduledEvents = schedules) }
         }
     }
 }

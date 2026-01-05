@@ -398,36 +398,82 @@ fun ProfileScreen(
                 }
             }
 
-            // Account section
-            item {
-                Text(
-                    text = (if (currentLanguage == Language.TURKISH) "Hesap" else if (currentLanguage == Language.SPANISH) "Cuenta" else "Account").uppercase(),
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = textColor.copy(alpha = 0.5f),
-                    letterSpacing = 1.sp,
-                    modifier = Modifier.padding(top = 16.dp)
-                )
-            }
+            // Account section - only show when logged in
+            if (authState is AuthState.Authenticated) {
+                val user = (authState as AuthState.Authenticated).user
 
-            item {
-                val isLoggedIn = authState is AuthState.Authenticated
+                item {
+                    Text(
+                        text = (if (currentLanguage == Language.TURKISH) "Hesap" else if (currentLanguage == Language.SPANISH) "Cuenta" else "Account").uppercase(),
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = textColor.copy(alpha = 0.5f),
+                        letterSpacing = 1.sp,
+                        modifier = Modifier.padding(top = 16.dp)
+                    )
+                }
 
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    if (isLoggedIn) {
+                item {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        // Show user info card
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(cardColor)
+                                .border(
+                                    width = 1.dp,
+                                    color = textColor.copy(alpha = 0.1f),
+                                    shape = RoundedCornerShape(12.dp)
+                                )
+                                .padding(16.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFF4E7CFF).copy(alpha = 0.2f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = (user.displayName?.firstOrNull() ?: user.email?.firstOrNull() ?: '?').uppercase().toString(),
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF4E7CFF)
+                                )
+                            }
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = user.displayName ?: user.email?.substringBefore("@") ?: "",
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = textColor
+                                )
+                                Text(
+                                    text = user.email ?: "",
+                                    fontSize = 12.sp,
+                                    color = textColor.copy(alpha = 0.5f)
+                                )
+                            }
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = null,
+                                tint = Color(0xFF4ECDC4),
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
                         ProfileMenuItem(
                             icon = Icons.Default.ExitToApp,
                             title = StringResources.signOut.localized(),
                             onClick = { showSignOutDialog = true },
                             isDanger = true
-                        )
-                    } else {
-                        ProfileMenuItem(
-                            icon = Icons.Default.Login,
-                            title = if (currentLanguage == Language.TURKISH) "Giriş Yap" else if (currentLanguage == Language.SPANISH) "Iniciar Sesión" else "Sign In",
-                            onClick = onNavigateToLogin
                         )
                     }
                 }

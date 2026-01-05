@@ -94,7 +94,7 @@ fun WalkthroughScreen(
             HorizontalPager(
                 state = pagerState,
                 modifier = Modifier.weight(1f),
-                userScrollEnabled = true
+                userScrollEnabled = state.isNextEnabled
             ) { page ->
                 when (page) {
                     0, 1 -> IntroPage(

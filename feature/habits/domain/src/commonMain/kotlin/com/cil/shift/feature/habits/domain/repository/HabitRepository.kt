@@ -2,6 +2,7 @@ package com.cil.shift.feature.habits.domain.repository
 
 import com.cil.shift.feature.habits.domain.model.Habit
 import com.cil.shift.feature.habits.domain.model.HabitCompletion
+import com.cil.shift.feature.habits.domain.model.HabitSchedule
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -112,4 +113,44 @@ interface HabitRepository {
      * @param note The note text
      */
     suspend fun updateCompletionNote(habitId: String, date: String, note: String?)
+
+    // Schedule methods
+
+    /**
+     * Gets all schedules for a date range.
+     *
+     * @param startDate Start date in YYYY-MM-DD format
+     * @param endDate End date in YYYY-MM-DD format
+     * @return Flow of schedules in the date range
+     */
+    fun getSchedulesForDateRange(startDate: String, endDate: String): Flow<List<HabitSchedule>>
+
+    /**
+     * Gets all schedules for a specific date.
+     *
+     * @param date The date in YYYY-MM-DD format
+     * @return List of schedules for that date
+     */
+    suspend fun getSchedulesForDate(date: String): List<HabitSchedule>
+
+    /**
+     * Creates a new schedule.
+     *
+     * @param schedule The schedule to create
+     */
+    suspend fun createSchedule(schedule: HabitSchedule)
+
+    /**
+     * Updates an existing schedule.
+     *
+     * @param schedule The schedule with updated values
+     */
+    suspend fun updateSchedule(schedule: HabitSchedule)
+
+    /**
+     * Deletes a schedule.
+     *
+     * @param id The schedule ID to delete
+     */
+    suspend fun deleteSchedule(id: String)
 }

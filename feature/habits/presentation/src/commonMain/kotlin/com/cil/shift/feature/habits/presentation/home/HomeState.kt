@@ -2,6 +2,7 @@ package com.cil.shift.feature.habits.presentation.home
 
 import com.cil.shift.feature.habits.domain.model.Habit
 import com.cil.shift.feature.habits.domain.model.HabitCompletion
+import com.cil.shift.feature.habits.domain.model.HabitSchedule
 import kotlinx.datetime.LocalDate
 
 enum class WeeklyChartType {
@@ -12,6 +13,7 @@ enum class WeeklyChartType {
 
 data class HomeState(
     val habits: List<HabitWithCompletion> = emptyList(),
+    val scheduledEvents: List<HabitSchedule> = emptyList(),
     val userName: String = "Alex",
     val currentDate: String = "",
     val selectedDate: LocalDate? = null,

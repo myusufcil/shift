@@ -213,3 +213,82 @@ WHERE id = ?;
 deleteOldNotifications:
 DELETE FROM NotificationHistory
 WHERE timestamp < ?;
+
+-- HabitSchedule table for calendar events
+CREATE TABLE HabitSchedule (
+    id TEXT NOT NULL PRIMARY KEY,
+    habit_id TEXT NOT NULL,
+    date TEXT NOT NULL,
+    start_time TEXT NOT NULL,
+    end_time TEXT NOT NULL,
+    has_reminder INTEGER NOT NULL DEFAULT 1,
+    repeat_type TEXT NOT NULL DEFAULT 'NEVER',
+    notes TEXT,
+    created_at INTEGER NOT NULL,
+    FOREIGN KEY (habit_id) REFERENCES Habit(id) ON DELETE CASCADE
+);
+
+-- Index for faster date queries on schedules
+CREATE INDEX schedule_date ON HabitSchedule(date);
+
+-- Index for habit schedule lookup
+CREATE INDEX schedule_habit_id ON HabitSchedule(habit_id);
+
+-- Get all schedules for a date range (excluding archived habits)
+getSchedulesForDateRange:
+SELECT hs.*, h.name AS habit_name, h.icon AS habit_icon, h.color AS habit_color
+FROM HabitSchedule hs
+INNER JOIN Habit h ON hs.habit_id = h.id
+WHERE hs.date >= ? AND hs.date <= ? AND h.is_archived = 0
+ORDER BY hs.date ASC, hs.start_time ASC;
+
+-- Get schedules for a specific date (excluding archived habits)
+getSchedulesForDate:
+SELECT hs.*, h.name AS habit_name, h.icon AS habit_icon, h.color AS habit_color
+FROM HabitSchedule hs
+INNER JOIN Habit h ON hs.habit_id = h.id
+WHERE hs.date = ? AND h.is_archived = 0
+ORDER BY hs.start_time ASC;
+
+-- Get schedule by ID (excluding archived habits)
+getScheduleById:
+SELECT hs.*, h.name AS habit_name, h.icon AS habit_icon, h.color AS habit_color
+FROM HabitSchedule hs
+INNER JOIN Habit h ON hs.habit_id = h.id
+WHERE hs.id = ? AND h.is_archived = 0;
+
+-- Insert schedule
+insertSchedule:
+INSERT INTO HabitSchedule (
+    id,
+    habit_id,
+    date,
+    start_time,
+    end_time,
+    has_reminder,
+    repeat_type,
+    notes,
+    created_at
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+-- Update schedule
+updateSchedule:
+UPDATE HabitSchedule
+SET habit_id = ?,
+    date = ?,
+    start_time = ?,
+    end_time = ?,
+    has_reminder = ?,
+    repeat_type = ?,
+    notes = ?
+WHERE id = ?;
+
+-- Delete schedule
+deleteSchedule:
+DELETE FROM HabitSchedule
+WHERE id = ?;
+
+-- Delete all schedules for a habit
+deleteSchedulesForHabit:
+DELETE FROM HabitSchedule
+WHERE habit_id = ?;
