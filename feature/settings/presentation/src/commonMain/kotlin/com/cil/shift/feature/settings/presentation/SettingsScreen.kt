@@ -37,9 +37,9 @@ fun SettingsScreen(
     val currentTheme by themeManager.currentTheme.collectAsState()
     val uriHandler = LocalUriHandler.current
 
-    // Update these URLs with your actual privacy policy and terms pages
-    val privacyPolicyUrl = "https://shift-app.com/privacy"
-    val termsOfServiceUrl = "https://shift-app.com/terms"
+    // GitHub Pages URLs
+    val privacyPolicyUrl = "https://myusufcil.github.io/shift/privacy.html"
+    val termsOfServiceUrl = "https://myusufcil.github.io/shift/terms.html"
 
     val backgroundColor = MaterialTheme.colorScheme.background
     val textColor = MaterialTheme.colorScheme.onBackground
