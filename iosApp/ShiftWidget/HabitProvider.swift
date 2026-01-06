@@ -36,8 +36,8 @@ struct HabitProvider: TimelineProvider {
         var habits: [WidgetHabit] = []
         let today = getTodayString()
 
-        // Get habits
-        let habitQuery = "SELECT id, name, icon, color FROM Habit WHERE is_archived = 0 LIMIT 5"
+        // Get habits with target_value
+        let habitQuery = "SELECT id, name, icon, color, target_value FROM Habit WHERE is_archived = 0 LIMIT 5"
         var statement: OpaquePointer?
 
         if sqlite3_prepare_v2(db, habitQuery, -1, &statement, nil) == SQLITE_OK {
@@ -46,16 +46,25 @@ struct HabitProvider: TimelineProvider {
                 let name = String(cString: sqlite3_column_text(statement, 1))
                 let icon = String(cString: sqlite3_column_text(statement, 2))
                 let color = String(cString: sqlite3_column_text(statement, 3))
+                let targetValue: Int? = sqlite3_column_type(statement, 4) != SQLITE_NULL
+                    ? Int(sqlite3_column_int64(statement, 4))
+                    : nil
 
-                // Check completion status
-                let isCompleted = checkCompletion(db: db, habitId: id, date: today)
+                // Check completion status and get current value
+                let (isCompleted, currentValue) = checkCompletionWithValue(db: db, habitId: id, date: today)
+
+                // Calculate streak
+                let streak = calculateStreak(db: db, habitId: id, fromDate: today)
 
                 habits.append(WidgetHabit(
                     id: id,
                     name: name,
                     icon: getIconEmoji(icon),
                     color: color,
-                    isCompleted: isCompleted
+                    isCompleted: isCompleted,
+                    streak: streak,
+                    currentValue: currentValue,
+                    targetValue: targetValue
                 ))
             }
         }
@@ -80,6 +89,56 @@ struct HabitProvider: TimelineProvider {
         sqlite3_finalize(statement)
 
         return isCompleted
+    }
+
+    private func checkCompletionWithValue(db: OpaquePointer?, habitId: String, date: String) -> (Bool, Int) {
+        let query = "SELECT is_completed, current_value FROM HabitCompletion WHERE habit_id = ? AND date = ?"
+        var statement: OpaquePointer?
+        var isCompleted = false
+        var currentValue = 0
+
+        if sqlite3_prepare_v2(db, query, -1, &statement, nil) == SQLITE_OK {
+            sqlite3_bind_text(statement, 1, (habitId as NSString).utf8String, -1, nil)
+            sqlite3_bind_text(statement, 2, (date as NSString).utf8String, -1, nil)
+
+            if sqlite3_step(statement) == SQLITE_ROW {
+                isCompleted = sqlite3_column_int64(statement, 0) == 1
+                if sqlite3_column_type(statement, 1) != SQLITE_NULL {
+                    currentValue = Int(sqlite3_column_int64(statement, 1))
+                }
+            }
+        }
+        sqlite3_finalize(statement)
+
+        return (isCompleted, currentValue)
+    }
+
+    private func calculateStreak(db: OpaquePointer?, habitId: String, fromDate: String) -> Int {
+        var streak = 0
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+
+        guard let startDate = formatter.date(from: fromDate) else {
+            return 0
+        }
+
+        // Check last 30 days for streak
+        for i in 0..<30 {
+            guard let checkDate = Calendar.current.date(byAdding: .day, value: -i, to: startDate) else {
+                break
+            }
+            let dateString = formatter.string(from: checkDate)
+            let isCompleted = checkCompletion(db: db, habitId: habitId, date: dateString)
+
+            if isCompleted {
+                streak += 1
+            } else if i > 0 {
+                // Allow today to be incomplete
+                break
+            }
+        }
+
+        return streak
     }
 
     private func getDatabasePath() -> String? {
@@ -154,9 +213,9 @@ struct HabitProvider: TimelineProvider {
 
     private var sampleHabits: [WidgetHabit] {
         [
-            WidgetHabit(id: "1", name: "Drink Water", icon: "sf:drop.fill", color: "#00D9FF", isCompleted: true),
-            WidgetHabit(id: "2", name: "Exercise", icon: "sf:dumbbell.fill", color: "#FF6B6B", isCompleted: false),
-            WidgetHabit(id: "3", name: "Read Book", icon: "sf:book.fill", color: "#4ECDC4", isCompleted: false)
+            WidgetHabit(id: "1", name: "Drink Water", icon: "sf:drop.fill", color: "#00D9FF", isCompleted: true, streak: 5, currentValue: 8, targetValue: 8),
+            WidgetHabit(id: "2", name: "Exercise", icon: "sf:dumbbell.fill", color: "#FF6B6B", isCompleted: false, streak: 3),
+            WidgetHabit(id: "3", name: "Read Book", icon: "sf:book.fill", color: "#4ECDC4", isCompleted: false, streak: 0)
         ]
     }
 }

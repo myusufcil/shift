@@ -30,6 +30,7 @@ kotlin {
             implementation(project(":core:designsystem"))
             implementation(project(":feature:habits:domain"))
             implementation(project(":feature:settings:presentation"))
+            implementation(project(":feature:onboarding:presentation"))
 
             implementation(compose.runtime)
             implementation(compose.foundation)

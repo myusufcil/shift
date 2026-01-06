@@ -4,9 +4,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cil.shift.core.common.Result
 import com.cil.shift.core.common.achievement.AchievementManager
+import com.cil.shift.core.common.currentTimestamp
 import com.cil.shift.feature.habits.domain.model.Frequency
 import com.cil.shift.feature.habits.domain.model.Habit
+import com.cil.shift.feature.habits.domain.model.HabitType
 import com.cil.shift.feature.habits.domain.usecase.CreateHabitUseCase
+import com.cil.shift.feature.onboarding.presentation.suggestions.HabitSuggestion
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -109,9 +112,33 @@ class CreateEditHabitViewModel(
             is CreateEditHabitEvent.NotesChanged -> {
                 _state.update { it.copy(notes = event.notes) }
             }
+            is CreateEditHabitEvent.IsNegativeChanged -> {
+                _state.update { it.copy(isNegative = event.isNegative) }
+            }
+            is CreateEditHabitEvent.QuitStartDateChanged -> {
+                _state.update { it.copy(quitStartDate = event.date) }
+            }
+            is CreateEditHabitEvent.SuggestionSelected -> {
+                applySuggestion(event.suggestion)
+            }
             is CreateEditHabitEvent.SaveHabit -> {
                 saveHabit()
             }
+        }
+    }
+
+    private fun applySuggestion(suggestion: HabitSuggestion) {
+        _state.update {
+            it.copy(
+                name = suggestion.name,
+                selectedIcon = suggestion.icon,
+                selectedColor = suggestion.color,
+                habitType = suggestion.habitType,
+                targetValue = suggestion.targetValue,
+                targetUnit = suggestion.targetUnit,
+                isNegative = suggestion.isNegative,
+                quitStartDate = if (suggestion.habitType == HabitType.QUIT) currentTimestamp() else null
+            )
         }
     }
 
@@ -136,7 +163,9 @@ class CreateEditHabitViewModel(
                 targetValue = currentState.targetValue,
                 targetUnit = currentState.targetUnit,
                 reminderTime = if (currentState.hasReminder) currentState.reminderTime else null,
-                createdAt = 0L // Will be set by use case
+                createdAt = 0L, // Will be set by use case
+                isNegative = currentState.isNegative,
+                quitStartDate = currentState.quitStartDate
             )
 
             when (val result = createHabitUseCase(habit)) {
@@ -167,7 +196,7 @@ sealed interface CreateEditHabitEvent {
     data class ColorSelected(val color: String) : CreateEditHabitEvent
     data class FrequencyChanged(val frequency: Frequency) : CreateEditHabitEvent
     data class WeekdayToggled(val day: DayOfWeek) : CreateEditHabitEvent
-    data class HabitTypeSelected(val habitType: com.cil.shift.feature.habits.domain.model.HabitType) : CreateEditHabitEvent
+    data class HabitTypeSelected(val habitType: HabitType) : CreateEditHabitEvent
     data class TargetValueChanged(val value: Int?) : CreateEditHabitEvent
     data class TargetUnitChanged(val unit: String) : CreateEditHabitEvent
     data class TimeOfDaySelected(val timeOfDay: TimeOfDay) : CreateEditHabitEvent
@@ -176,5 +205,8 @@ sealed interface CreateEditHabitEvent {
     data class ReminderTimeAdded(val time: String) : CreateEditHabitEvent
     data class ReminderTimeRemoved(val time: String) : CreateEditHabitEvent
     data class NotesChanged(val notes: String) : CreateEditHabitEvent
+    data class IsNegativeChanged(val isNegative: Boolean) : CreateEditHabitEvent
+    data class QuitStartDateChanged(val date: Long?) : CreateEditHabitEvent
+    data class SuggestionSelected(val suggestion: HabitSuggestion) : CreateEditHabitEvent
     data object SaveHabit : CreateEditHabitEvent
 }

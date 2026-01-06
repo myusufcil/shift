@@ -58,6 +58,43 @@ object StringResources {
         es = "Ajustes"
     )
 
+    // Chart
+    val thisWeek = StringResource(
+        en = "This Week",
+        tr = "Bu Hafta",
+        es = "Esta Semana"
+    )
+
+    val chartLine = StringResource(
+        en = "Line",
+        tr = "Çizgi",
+        es = "Línea"
+    )
+
+    val chartBar = StringResource(
+        en = "Bar",
+        tr = "Çubuk",
+        es = "Barra"
+    )
+
+    val chartPie = StringResource(
+        en = "Pie",
+        tr = "Pasta",
+        es = "Pastel"
+    )
+
+    val noData = StringResource(
+        en = "No data",
+        tr = "Veri yok",
+        es = "Sin datos"
+    )
+
+    val running = StringResource(
+        en = "RUNNING",
+        tr = "ÇALIŞIYOR",
+        es = "EN CURSO"
+    )
+
     // Habit creation
     val createHabit = StringResource(
         en = "Create Habit",
@@ -289,6 +326,18 @@ object StringResources {
         en = "Note",
         tr = "Not",
         es = "Nota"
+    )
+
+    val noNoteForToday = StringResource(
+        en = "No note for today",
+        tr = "Bugün için not yok",
+        es = "Sin nota para hoy"
+    )
+
+    val addNoteForToday = StringResource(
+        en = "Add a note for today...",
+        tr = "Bugün için not ekle...",
+        es = "Agregar nota para hoy..."
     )
 
     val decrease = StringResource(
@@ -922,6 +971,12 @@ object StringResources {
         es = "min restantes"
     )
 
+    val minCompleted = StringResource(
+        en = "min completed",
+        tr = "dk tamamlandı",
+        es = "min completados"
+    )
+
     val hoursLeft = StringResource(
         en = "hours left",
         tr = "saat kaldı",
@@ -1030,6 +1085,169 @@ object StringResources {
         en = "Learn New Skill",
         tr = "Yeni Beceri Öğren",
         es = "Aprender Nueva Habilidad"
+    )
+
+    // More predefined habits - Productivity
+    val habitPlanTomorrow = StringResource(
+        en = "Plan Tomorrow",
+        tr = "Yarını Planla",
+        es = "Planificar Mañana"
+    )
+
+    val habitClearInbox = StringResource(
+        en = "Clear Inbox",
+        tr = "Gelen Kutusunu Temizle",
+        es = "Limpiar Bandeja"
+    )
+
+    // Mindfulness
+    val habitGratitudeJournal = StringResource(
+        en = "Gratitude Journal",
+        tr = "Şükran Günlüğü",
+        es = "Diario de Gratitud"
+    )
+
+    // Learning
+    val habitLanguagePractice = StringResource(
+        en = "Language Practice",
+        tr = "Dil Pratiği",
+        es = "Práctica de Idioma"
+    )
+
+    val habitOnlineCourse = StringResource(
+        en = "Online Course",
+        tr = "Online Kurs",
+        es = "Curso en Línea"
+    )
+
+    // Lifestyle
+    val habitSleepBefore11 = StringResource(
+        en = "Sleep Before 11 PM",
+        tr = "Saat 23'ten Önce Uyu",
+        es = "Dormir Antes de las 11"
+    )
+
+    val habitCreativeHobby = StringResource(
+        en = "Creative Hobby",
+        tr = "Yaratıcı Hobi",
+        es = "Pasatiempo Creativo"
+    )
+
+    val habitMorningCoffee = StringResource(
+        en = "Morning Coffee Ritual",
+        tr = "Sabah Kahve Ritüeli",
+        es = "Ritual del Café Matutino"
+    )
+
+    // Quit habits
+    val habitSmoking = StringResource(
+        en = "Smoking",
+        tr = "Sigara",
+        es = "Fumar"
+    )
+
+    val habitAlcohol = StringResource(
+        en = "Alcohol",
+        tr = "Alkol",
+        es = "Alcohol"
+    )
+
+    val habitSocialMedia = StringResource(
+        en = "Social Media",
+        tr = "Sosyal Medya",
+        es = "Redes Sociales"
+    )
+
+    val habitJunkFood = StringResource(
+        en = "Junk Food",
+        tr = "Abur Cubur",
+        es = "Comida Chatarra"
+    )
+
+    val habitCaffeine = StringResource(
+        en = "Caffeine",
+        tr = "Kafein",
+        es = "Cafeína"
+    )
+
+    // Reduce habits
+    val habitLessCoffee = StringResource(
+        en = "Less Coffee",
+        tr = "Daha Az Kahve",
+        es = "Menos Café"
+    )
+
+    val habitLessSugar = StringResource(
+        en = "Less Sugar",
+        tr = "Daha Az Şeker",
+        es = "Menos Azúcar"
+    )
+
+    val habitLessScreenTime = StringResource(
+        en = "Less Screen Time",
+        tr = "Daha Az Ekran",
+        es = "Menos Pantalla"
+    )
+
+    val habitLessSnacking = StringResource(
+        en = "Less Snacking",
+        tr = "Daha Az Atıştırma",
+        es = "Menos Picoteo"
+    )
+
+    val habitLessSoda = StringResource(
+        en = "Less Soda",
+        tr = "Daha Az Gazlı İçecek",
+        es = "Menos Refresco"
+    )
+
+    val habitFewerCigarettes = StringResource(
+        en = "Fewer Cigarettes",
+        tr = "Daha Az Sigara",
+        es = "Menos Cigarrillos"
+    )
+
+    // Chores
+    val habitWashDishes = StringResource(
+        en = "Wash Dishes",
+        tr = "Bulaşık Yıka",
+        es = "Lavar Platos"
+    )
+
+    val habitDoLaundry = StringResource(
+        en = "Do Laundry",
+        tr = "Çamaşır Yıka",
+        es = "Hacer Lavandería"
+    )
+
+    val habitVacuum = StringResource(
+        en = "Vacuum",
+        tr = "Süpür",
+        es = "Aspirar"
+    )
+
+    val habitWaterPlants = StringResource(
+        en = "Water Plants",
+        tr = "Bitkileri Sula",
+        es = "Regar Plantas"
+    )
+
+    val habitTakeOutTrash = StringResource(
+        en = "Take Out Trash",
+        tr = "Çöp Çıkar",
+        es = "Sacar Basura"
+    )
+
+    val habitMakeBed = StringResource(
+        en = "Make Bed",
+        tr = "Yatak Yap",
+        es = "Hacer la Cama"
+    )
+
+    val habitCleanRoom = StringResource(
+        en = "Clean Room",
+        tr = "Oda Temizle",
+        es = "Limpiar Habitación"
     )
 
     // Schedule Screen
@@ -1144,18 +1362,60 @@ object LocalizationHelpers {
 
     fun getLocalizedHabitName(habitName: String, language: Language): String {
         return when (habitName) {
+            // Health
             "Evening Walk" -> StringResources.habitEveningWalk.get(language)
             "Eat Healthy Breakfast" -> StringResources.habitEatHealthyBreakfast.get(language)
             "Morning Exercise" -> StringResources.habitMorningExercise.get(language)
             "Workout Session" -> StringResources.habitWorkoutSession.get(language)
             "Drink Water" -> StringResources.habitDrinkWater.get(language)
-            "Read Book" -> StringResources.habitReadBook.get(language)
-            "Meditation" -> StringResources.habitMeditation.get(language)
-            "Sleep 8 Hours" -> StringResources.habitSleep8Hours.get(language)
+
+            // Productivity
             "Deep Work" -> StringResources.habitDeepWork.get(language)
+            "Plan Tomorrow" -> StringResources.habitPlanTomorrow.get(language)
+            "Clear Inbox" -> StringResources.habitClearInbox.get(language)
+
+            // Mindfulness
+            "Meditation" -> StringResources.habitMeditation.get(language)
+            "Gratitude Journal" -> StringResources.habitGratitudeJournal.get(language)
             "Yoga" -> StringResources.habitYoga.get(language)
             "Journaling" -> StringResources.habitJournaling.get(language)
+
+            // Learning
+            "Read Book" -> StringResources.habitReadBook.get(language)
+            "Language Practice" -> StringResources.habitLanguagePractice.get(language)
+            "Online Course" -> StringResources.habitOnlineCourse.get(language)
             "Learn New Skill" -> StringResources.habitLearnNewSkill.get(language)
+
+            // Lifestyle
+            "Sleep Before 11 PM" -> StringResources.habitSleepBefore11.get(language)
+            "Sleep 8 Hours" -> StringResources.habitSleep8Hours.get(language)
+            "Creative Hobby" -> StringResources.habitCreativeHobby.get(language)
+            "Morning Coffee Ritual" -> StringResources.habitMorningCoffee.get(language)
+
+            // Quit habits
+            "Smoking" -> StringResources.habitSmoking.get(language)
+            "Alcohol" -> StringResources.habitAlcohol.get(language)
+            "Social Media" -> StringResources.habitSocialMedia.get(language)
+            "Junk Food" -> StringResources.habitJunkFood.get(language)
+            "Caffeine" -> StringResources.habitCaffeine.get(language)
+
+            // Reduce habits
+            "Less Coffee" -> StringResources.habitLessCoffee.get(language)
+            "Less Sugar" -> StringResources.habitLessSugar.get(language)
+            "Less Screen Time" -> StringResources.habitLessScreenTime.get(language)
+            "Less Snacking" -> StringResources.habitLessSnacking.get(language)
+            "Less Soda" -> StringResources.habitLessSoda.get(language)
+            "Fewer Cigarettes" -> StringResources.habitFewerCigarettes.get(language)
+
+            // Chores
+            "Wash Dishes" -> StringResources.habitWashDishes.get(language)
+            "Do Laundry" -> StringResources.habitDoLaundry.get(language)
+            "Vacuum" -> StringResources.habitVacuum.get(language)
+            "Water Plants" -> StringResources.habitWaterPlants.get(language)
+            "Take Out Trash" -> StringResources.habitTakeOutTrash.get(language)
+            "Make Bed" -> StringResources.habitMakeBed.get(language)
+            "Clean Room" -> StringResources.habitCleanRoom.get(language)
+
             else -> habitName // Return original name if not found in predefined list
         }
     }

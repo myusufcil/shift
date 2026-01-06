@@ -61,7 +61,9 @@ class HabitRepositoryImpl(
                 notes = params.notes,
                 sort_order = params.sortOrder,
                 created_at = params.createdAt,
-                is_archived = params.isArchived
+                is_archived = params.isArchived,
+                is_negative = params.isNegative,
+                quit_start_date = params.quitStartDate
             )
         }
     }

@@ -21,6 +21,9 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.cil.shift.core.common.localization.Language
+import com.cil.shift.core.common.localization.LocalizationHelpers
+import com.cil.shift.core.common.localization.StringResources
 
 @Composable
 fun WeeklyProgressChart(
@@ -28,8 +31,15 @@ fun WeeklyProgressChart(
     chartType: com.cil.shift.feature.habits.presentation.home.WeeklyChartType = com.cil.shift.feature.habits.presentation.home.WeeklyChartType.LINE,
     selectedDayIndex: Int? = null,
     onChartTypeChange: (com.cil.shift.feature.habits.presentation.home.WeeklyChartType) -> Unit = {},
+    currentLanguage: Language = Language.ENGLISH,
     modifier: Modifier = Modifier
 ) {
+    // Localize day names
+    val localizedData = remember(weeklyData, currentLanguage) {
+        weeklyData.mapIndexed { index, (_, value) ->
+            LocalizationHelpers.getDayNameShort(index + 1, currentLanguage) to value
+        }
+    }
     val textColor = MaterialTheme.colorScheme.onBackground
     val cardColor = MaterialTheme.colorScheme.surface
 
@@ -50,7 +60,7 @@ fun WeeklyProgressChart(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "This Week",
+                text = StringResources.thisWeek.get(currentLanguage),
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = textColor.copy(alpha = 0.8f)
@@ -61,17 +71,17 @@ fun WeeklyProgressChart(
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 ChartTypeButton(
-                    text = "Line",
+                    text = StringResources.chartLine.get(currentLanguage),
                     isSelected = chartType == com.cil.shift.feature.habits.presentation.home.WeeklyChartType.LINE,
                     onClick = { onChartTypeChange(com.cil.shift.feature.habits.presentation.home.WeeklyChartType.LINE) }
                 )
                 ChartTypeButton(
-                    text = "Bar",
+                    text = StringResources.chartBar.get(currentLanguage),
                     isSelected = chartType == com.cil.shift.feature.habits.presentation.home.WeeklyChartType.BAR,
                     onClick = { onChartTypeChange(com.cil.shift.feature.habits.presentation.home.WeeklyChartType.BAR) }
                 )
                 ChartTypeButton(
-                    text = "Pie",
+                    text = StringResources.chartPie.get(currentLanguage),
                     isSelected = chartType == com.cil.shift.feature.habits.presentation.home.WeeklyChartType.PIE,
                     onClick = { onChartTypeChange(com.cil.shift.feature.habits.presentation.home.WeeklyChartType.PIE) }
                 )
@@ -88,7 +98,7 @@ fun WeeklyProgressChart(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "No data",
+                    text = StringResources.noData.get(currentLanguage),
                     color = textColor.copy(alpha = 0.5f),
                     fontSize = 12.sp
                 )
@@ -130,7 +140,7 @@ fun WeeklyProgressChart(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                weeklyData.forEach { data ->
+                localizedData.forEach { data ->
                     Text(
                         text = data.first,
                         fontSize = 10.sp,
@@ -146,7 +156,7 @@ fun WeeklyProgressChart(
                     .padding(top = 8.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                weeklyData.take(4).forEachIndexed { index, data ->
+                localizedData.take(4).forEachIndexed { index, data ->
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(4.dp)

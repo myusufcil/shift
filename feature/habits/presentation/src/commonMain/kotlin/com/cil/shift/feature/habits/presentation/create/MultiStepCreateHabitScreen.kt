@@ -108,7 +108,8 @@ fun MultiStepCreateHabitScreen(
                         name = state.name,
                         selectedIcon = state.selectedIcon,
                         onNameChange = { viewModel.onEvent(CreateEditHabitEvent.NameChanged(it)) },
-                        onIconSelect = { viewModel.onEvent(CreateEditHabitEvent.IconSelected(it)) }
+                        onIconSelect = { viewModel.onEvent(CreateEditHabitEvent.IconSelected(it)) },
+                        onSuggestionSelect = { viewModel.onEvent(CreateEditHabitEvent.SuggestionSelected(it)) }
                     )
 
                     1 -> Step2Schedule(
@@ -133,11 +134,15 @@ fun MultiStepCreateHabitScreen(
                         targetValue = state.targetValue,
                         targetUnit = state.targetUnit,
                         notes = state.notes,
+                        isNegative = state.isNegative,
+                        quitStartDate = state.quitStartDate,
                         onColorSelect = { viewModel.onEvent(CreateEditHabitEvent.ColorSelected(it)) },
                         onHabitTypeSelect = { viewModel.onEvent(CreateEditHabitEvent.HabitTypeSelected(it)) },
                         onTargetValueChange = { viewModel.onEvent(CreateEditHabitEvent.TargetValueChanged(it)) },
                         onTargetUnitChange = { viewModel.onEvent(CreateEditHabitEvent.TargetUnitChanged(it)) },
-                        onNotesChange = { viewModel.onEvent(CreateEditHabitEvent.NotesChanged(it)) }
+                        onNotesChange = { viewModel.onEvent(CreateEditHabitEvent.NotesChanged(it)) },
+                        onIsNegativeChange = { viewModel.onEvent(CreateEditHabitEvent.IsNegativeChanged(it)) },
+                        onQuitStartDateChange = { viewModel.onEvent(CreateEditHabitEvent.QuitStartDateChanged(it)) }
                     )
                 }
             }

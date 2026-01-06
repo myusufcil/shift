@@ -1,5 +1,10 @@
 package com.cil.shift.feature.habits.presentation.home.components
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -7,19 +12,28 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.cil.shift.core.common.localization.Language
 import com.cil.shift.core.common.localization.LocalizationHelpers
+import com.cil.shift.core.common.localization.StringResources
+import com.cil.shift.core.common.localization.localized
+import kotlinx.coroutines.launch
 import kotlinx.datetime.*
 
 data class CalendarDay(
@@ -41,9 +55,10 @@ fun WeeklyCalendar(
     modifier: Modifier = Modifier
 ) {
     val today = com.cil.shift.core.common.currentDate()
+    val scope = rememberCoroutineScope()
 
-    // Generate 10 days: 6 before today, today, 3 after today
-    val days = (-6..3).map { offset ->
+    // Generate 61 days: 30 before today, today, 30 after today
+    val days = (-30..30).map { offset ->
         val date = today.plus(offset, DateTimeUnit.DAY)
 
         // Get localized 3-letter day name
@@ -63,55 +78,98 @@ fun WeeklyCalendar(
     }
 
     val listState = rememberLazyListState()
+    val todayIndex = 30 // Today is at index 30 (0-based, after 30 past days)
 
-    // Scroll to today (index 6) on first composition to center it
+    // Check if today is visible in the current viewport
+    val isTodayVisible by remember {
+        derivedStateOf {
+            val visibleItems = listState.layoutInfo.visibleItemsInfo
+            visibleItems.any { it.index == todayIndex }
+        }
+    }
+
+    // Scroll to today on first composition, centering it in view
     LaunchedEffect(Unit) {
-        listState.scrollToItem(6)
+        // Scroll to show today centered (approximately)
+        listState.scrollToItem(todayIndex - 2) // Offset by 2 to center better
     }
 
     val textColor = MaterialTheme.colorScheme.onBackground
     val cardColor = MaterialTheme.colorScheme.surface
 
-    LazyRow(
-        state = listState,
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        contentPadding = PaddingValues(horizontal = 20.dp)
-    ) {
-        items(days) { day ->
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.width(48.dp)
-            ) {
-                Text(
-                    text = day.dayOfWeek,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Normal,
-                    color = textColor.copy(alpha = 0.5f)
-                )
-
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(
-                            when {
-                                day.isSelected -> Color(0xFF00D9FF) // Cyan for selected
-                                day.isToday -> Color(0xFF4E7CFF)    // Blue for today
-                                else -> cardColor                    // Theme card color for others
-                            }
-                        )
-                        .clickable { onDaySelected(day.date) },
-                    contentAlignment = Alignment.Center
+    Box(modifier = modifier) {
+        LazyRow(
+            state = listState,
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = PaddingValues(horizontal = 20.dp)
+        ) {
+            items(days) { day ->
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.width(48.dp)
                 ) {
                     Text(
-                        text = day.dayOfMonth.toString(),
-                        fontSize = 14.sp,
-                        fontWeight = if (day.isToday || day.isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                        color = if (day.isToday || day.isSelected) Color.White else textColor
+                        text = day.dayOfWeek,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Normal,
+                        color = textColor.copy(alpha = 0.5f)
                     )
+
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(
+                                when {
+                                    day.isSelected -> Color(0xFF00D9FF) // Cyan for selected
+                                    day.isToday -> Color(0xFF4E7CFF)    // Blue for today
+                                    else -> cardColor                    // Theme card color for others
+                                }
+                            )
+                            .clickable { onDaySelected(day.date) },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = day.dayOfMonth.toString(),
+                            fontSize = 14.sp,
+                            fontWeight = if (day.isToday || day.isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                            color = if (day.isToday || day.isSelected) Color.White else textColor
+                        )
+                    }
                 }
+            }
+        }
+
+        // "Today" button - appears when today is not visible
+        AnimatedVisibility(
+            visible = !isTodayVisible,
+            enter = fadeIn() + slideInVertically { -it },
+            exit = fadeOut() + slideOutVertically { -it },
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(end = 24.dp, top = 4.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .shadow(4.dp, RoundedCornerShape(16.dp))
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Color(0xFF4E7CFF))
+                    .clickable {
+                        scope.launch {
+                            listState.animateScrollToItem(todayIndex - 2)
+                        }
+                        onDaySelected(today)
+                    }
+                    .padding(horizontal = 12.dp, vertical = 6.dp)
+            ) {
+                Text(
+                    text = StringResources.today.localized(),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.White
+                )
             }
         }
     }

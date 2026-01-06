@@ -23,6 +23,7 @@ data class HomeState(
     val weeklyChartData: List<Pair<String, Float>> = emptyList(),
     val weeklyChartType: WeeklyChartType = WeeklyChartType.LINE,
     val selectedDayIndex: Int? = null, // Today's index in weekly chart (0=Monday, 6=Sunday)
+    val runningTimers: Set<String> = emptySet(), // Set of habit IDs with running timers
     val isLoading: Boolean = true,
     val error: String? = null,
     val confettiShownForDate: String? = null // Track which date confetti was shown to prevent repeating

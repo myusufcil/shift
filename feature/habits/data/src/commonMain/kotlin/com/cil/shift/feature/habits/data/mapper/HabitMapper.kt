@@ -28,7 +28,9 @@ fun HabitEntity.toDomain(): Habit {
         reminderTime = reminder_time,
         notes = notes,
         sortOrder = sort_order?.toInt() ?: 0,
-        createdAt = created_at
+        createdAt = created_at,
+        isNegative = is_negative == 1L,
+        quitStartDate = quit_start_date
     )
 }
 
@@ -55,7 +57,9 @@ fun Habit.toEntity(): HabitInsertParams {
         notes = notes,
         sortOrder = sortOrder.toLong(),
         createdAt = createdAt,
-        isArchived = 0L // Always 0 for new/updated habits
+        isArchived = 0L, // Always 0 for new/updated habits
+        isNegative = if (isNegative) 1L else 0L,
+        quitStartDate = quitStartDate
     )
 }
 
@@ -77,5 +81,7 @@ data class HabitInsertParams(
     val notes: String?,
     val sortOrder: Long,
     val createdAt: Long,
-    val isArchived: Long
+    val isArchived: Long,
+    val isNegative: Long,
+    val quitStartDate: Long?
 )

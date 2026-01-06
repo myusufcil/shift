@@ -51,6 +51,12 @@ class CreateHabitUseCase(
 
             // Schedule notification reminder if reminder time is set
             habitWithId.reminderTime?.let { reminderTime ->
+                // Request permission first (will be no-op if already granted)
+                val hasPermission = notificationManager.hasNotificationPermission()
+                if (!hasPermission) {
+                    notificationManager.requestNotificationPermission()
+                }
+
                 notificationManager.scheduleHabitReminder(
                     habitId = habitWithId.id,
                     habitName = habitWithId.name,

@@ -1,6 +1,7 @@
 package com.cil.shift.widget
 
 import android.content.Context
+import android.content.Intent
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -23,10 +24,10 @@ import com.cil.shift.MainActivity
 import com.cil.shift.core.database.DatabaseDriverFactory
 import com.cil.shift.feature.habits.data.database.HabitsDatabase
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.datetime.Clock
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.todayIn
+import kotlinx.datetime.*
 
 class HabitWidget : GlanceAppWidget() {
 
@@ -50,9 +51,11 @@ class HabitWidget : GlanceAppWidget() {
     }
 
     private suspend fun loadHabits(context: Context): List<WidgetHabit> = withContext(Dispatchers.IO) {
+        var driver: app.cash.sqldelight.db.SqlDriver? = null
         try {
+            android.util.Log.d("HabitWidget", "Loading habits...")
             val driverFactory = DatabaseDriverFactory(context)
-            val driver = driverFactory.createDriverWithSchema(
+            driver = driverFactory.createDriverWithSchema(
                 HabitsDatabase.Schema,
                 "shift_v4.db"
             )
@@ -62,22 +65,59 @@ class HabitWidget : GlanceAppWidget() {
             val habits = database.habitQueries.getAll().executeAsList()
             val completions = database.habitQueries.getCompletionsForDate(today).executeAsList()
 
+            android.util.Log.d("HabitWidget", "Found ${habits.size} habits, ${completions.size} completions for $today")
+            completions.forEach { c ->
+                android.util.Log.d("HabitWidget", "  Completion: ${c.habit_id} = ${c.is_completed}")
+            }
+
             habits.filter { it.is_archived == 0L }.take(5).map { habit ->
-                val isCompleted = completions.any { completion ->
-                    completion.habit_id == habit.id && completion.is_completed == 1L
-                }
+                val completion = completions.find { it.habit_id == habit.id }
+                val isCompleted = completion?.is_completed == 1L
+                val currentValue = completion?.current_value?.toInt() ?: 0
+                val targetValue = habit.target_value?.toInt()
+                val progress = if (targetValue != null && targetValue > 0) {
+                    (currentValue.toFloat() / targetValue).coerceIn(0f, 1f)
+                } else if (isCompleted) 1f else 0f
+
+                // Calculate streak (simplified - just count consecutive days)
+                val streak = calculateStreak(database, habit.id, today)
+
                 WidgetHabit(
                     id = habit.id,
                     name = habit.name,
                     icon = habit.icon,
                     color = habit.color,
-                    isCompleted = isCompleted
+                    isCompleted = isCompleted,
+                    streak = streak,
+                    progress = progress,
+                    targetValue = targetValue,
+                    currentValue = currentValue
                 )
             }
         } catch (e: Exception) {
+            android.util.Log.e("HabitWidget", "Error loading habits", e)
             e.printStackTrace()
             emptyList()
+        } finally {
+            driver?.close()
         }
+    }
+
+    private fun calculateStreak(database: HabitsDatabase, habitId: String, fromDate: String): Int {
+        var streak = 0
+        var checkDate = LocalDate.parse(fromDate)
+
+        for (i in 0 until 30) { // Check last 30 days
+            val completion = database.habitQueries.getCompletion(habitId, checkDate.toString()).executeAsOneOrNull()
+
+            if (completion?.is_completed == 1L) {
+                streak++
+            } else if (i > 0) { // Allow today to be incomplete
+                break
+            }
+            checkDate = checkDate.minus(1, DateTimeUnit.DAY)
+        }
+        return streak
     }
 
     companion object {
@@ -91,7 +131,11 @@ data class WidgetHabit(
     val name: String,
     val icon: String,
     val color: String,
-    val isCompleted: Boolean
+    val isCompleted: Boolean,
+    val streak: Int = 0,
+    val progress: Float = 0f, // For measurable habits (0.0 to 1.0)
+    val targetValue: Int? = null,
+    val currentValue: Int = 0
 )
 
 @Composable
@@ -117,7 +161,11 @@ private fun HabitWidgetContent(
             modifier = GlanceModifier.fillMaxSize(),
             verticalAlignment = Alignment.Top
         ) {
-            // Header
+            // Header with progress
+            val completedCount = habits.count { it.isCompleted }
+            val totalCount = habits.size
+            val progressPercent = if (totalCount > 0) (completedCount * 100 / totalCount) else 0
+
             Row(
                 modifier = GlanceModifier
                     .fillMaxWidth()
@@ -129,18 +177,35 @@ private fun HabitWidgetContent(
                     text = "Shift",
                     style = TextStyle(
                         color = accentColor,
-                        fontSize = 18.sp,
+                        fontSize = 16.sp,
                         fontWeight = FontWeight.Bold
                     )
                 )
                 Spacer(modifier = GlanceModifier.width(8.dp))
                 Text(
-                    text = "Today's Habits",
+                    text = "$completedCount/$totalCount",
                     style = TextStyle(
                         color = subtextColor,
                         fontSize = 12.sp
                     )
                 )
+                Spacer(modifier = GlanceModifier.defaultWeight())
+                // Progress badge
+                Box(
+                    modifier = GlanceModifier
+                        .background(if (progressPercent == 100) ColorProvider(Color(0xFF4ECDC4)) else ColorProvider(Color(0xFF333355)))
+                        .cornerRadius(10.dp)
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        text = "$progressPercent%",
+                        style = TextStyle(
+                            color = ColorProvider(Color.White),
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    )
+                }
             }
 
             Spacer(modifier = GlanceModifier.height(12.dp))
@@ -196,7 +261,9 @@ private fun HabitItem(
 ) {
     val cardColor = ColorProvider(Color(0xFF16213E))
     val textColor = ColorProvider(Color.White)
+    val subtextColor = ColorProvider(Color(0xFFAAAAAA))
     val completedColor = ColorProvider(Color(0xFF4ECDC4))
+    val streakColor = ColorProvider(Color(0xFFFF9500))
     val checkColor = if (habit.isCompleted) completedColor else ColorProvider(Color(0xFF333355))
 
     Row(
@@ -204,7 +271,7 @@ private fun HabitItem(
             .fillMaxWidth()
             .background(cardColor)
             .cornerRadius(12.dp)
-            .padding(12.dp)
+            .padding(10.dp)
             .clickable(actionRunCallback<ToggleHabitAction>(
                 actionParametersOf(
                     HabitWidget.habitIdKey to habit.id,
@@ -217,9 +284,9 @@ private fun HabitItem(
         // Checkbox
         Box(
             modifier = GlanceModifier
-                .size(28.dp)
+                .size(26.dp)
                 .background(checkColor)
-                .cornerRadius(8.dp),
+                .cornerRadius(7.dp),
             contentAlignment = Alignment.Center
         ) {
             if (habit.isCompleted) {
@@ -227,33 +294,69 @@ private fun HabitItem(
                     text = "✓",
                     style = TextStyle(
                         color = ColorProvider(Color.White),
-                        fontSize = 16.sp,
+                        fontSize = 14.sp,
                         fontWeight = FontWeight.Bold
                     )
                 )
             }
         }
 
-        Spacer(modifier = GlanceModifier.width(12.dp))
+        Spacer(modifier = GlanceModifier.width(10.dp))
 
         // Icon
         Text(
             text = getIconEmoji(habit.icon),
-            style = TextStyle(fontSize = 20.sp)
+            style = TextStyle(fontSize = 18.sp)
         )
 
         Spacer(modifier = GlanceModifier.width(8.dp))
 
-        // Name
-        Text(
-            text = habit.name,
-            style = TextStyle(
-                color = textColor,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium
-            ),
-            maxLines = 1
-        )
+        // Name and details
+        Column(
+            modifier = GlanceModifier.defaultWeight(),
+            verticalAlignment = Alignment.Top
+        ) {
+            Text(
+                text = habit.name,
+                style = TextStyle(
+                    color = textColor,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium
+                ),
+                maxLines = 1
+            )
+
+            // Show progress for measurable habits or streak
+            if (habit.targetValue != null) {
+                Text(
+                    text = "${habit.currentValue}/${habit.targetValue}",
+                    style = TextStyle(
+                        color = subtextColor,
+                        fontSize = 11.sp
+                    )
+                )
+            }
+        }
+
+        // Streak badge
+        if (habit.streak > 0) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "🔥",
+                    style = TextStyle(fontSize = 12.sp)
+                )
+                Text(
+                    text = "${habit.streak}",
+                    style = TextStyle(
+                        color = streakColor,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                )
+            }
+        }
     }
 }
 
@@ -287,13 +390,21 @@ class ToggleHabitAction : ActionCallback {
         glanceId: GlanceId,
         parameters: ActionParameters
     ) {
-        val habitId = parameters[HabitWidget.habitIdKey] ?: return
-        val date = parameters[HabitWidget.dateKey] ?: return
+        val habitId = parameters[HabitWidget.habitIdKey]
+        val date = parameters[HabitWidget.dateKey]
+
+        android.util.Log.d("HabitWidget", "Toggle action triggered - habitId: $habitId, date: $date")
+
+        if (habitId == null || date == null) {
+            android.util.Log.e("HabitWidget", "Missing parameters - habitId: $habitId, date: $date")
+            return
+        }
 
         withContext(Dispatchers.IO) {
+            var driver: app.cash.sqldelight.db.SqlDriver? = null
             try {
                 val driverFactory = DatabaseDriverFactory(context)
-                val driver = driverFactory.createDriverWithSchema(
+                driver = driverFactory.createDriverWithSchema(
                     HabitsDatabase.Schema,
                     "shift_v4.db"
                 )
@@ -304,9 +415,12 @@ class ToggleHabitAction : ActionCallback {
                     .getCompletion(habitId, date)
                     .executeAsOneOrNull()
 
+                android.util.Log.d("HabitWidget", "Existing completion: $existing")
+
                 if (existing != null) {
                     // Toggle completion
                     val newStatus = if (existing.is_completed == 1L) 0L else 1L
+                    android.util.Log.d("HabitWidget", "Toggling from ${existing.is_completed} to $newStatus")
                     database.habitQueries.upsertCompletion(
                         habit_id = habitId,
                         date = date,
@@ -316,6 +430,7 @@ class ToggleHabitAction : ActionCallback {
                     )
                 } else {
                     // Create new completion
+                    android.util.Log.d("HabitWidget", "Creating new completion as completed")
                     database.habitQueries.upsertCompletion(
                         habit_id = habitId,
                         date = date,
@@ -324,16 +439,40 @@ class ToggleHabitAction : ActionCallback {
                         note = null
                     )
                 }
+
+                android.util.Log.d("HabitWidget", "Toggle completed successfully")
             } catch (e: Exception) {
+                android.util.Log.e("HabitWidget", "Error toggling habit", e)
                 e.printStackTrace()
+            } finally {
+                // Close the driver to ensure changes are flushed
+                driver?.close()
             }
         }
 
-        // Update widget
+        // Update widget after database changes are complete
+        android.util.Log.d("HabitWidget", "Updating widget...")
         HabitWidget().update(context, glanceId)
     }
 }
 
 class HabitWidgetReceiver : GlanceAppWidgetReceiver() {
     override val glanceAppWidget: GlanceAppWidget = HabitWidget()
+
+    override fun onReceive(context: Context, intent: Intent) {
+        super.onReceive(context, intent)
+
+        // Handle custom broadcast to update widgets
+        if (intent.action == com.cil.shift.core.common.widget.WidgetNotifier.ACTION_UPDATE_WIDGETS) {
+            android.util.Log.d("HabitWidget", "Received widget update broadcast")
+            kotlinx.coroutines.GlobalScope.launch {
+                try {
+                    HabitWidget().updateAll(context)
+                    android.util.Log.d("HabitWidget", "Widgets updated via broadcast")
+                } catch (e: Exception) {
+                    android.util.Log.e("HabitWidget", "Error updating widgets via broadcast", e)
+                }
+            }
+        }
+    }
 }

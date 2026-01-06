@@ -18,12 +18,24 @@ actual class NotificationManager {
     private val center = UNUserNotificationCenter.currentNotificationCenter()
 
     actual fun scheduleHabitReminder(habitId: String, habitName: String, reminderTime: String) {
+        println("iOS: Scheduling notification for habit '$habitName' at $reminderTime")
+
         // Parse reminder time (HH:mm format)
         val timeParts = reminderTime.split(":")
-        if (timeParts.size != 2) return
+        if (timeParts.size != 2) {
+            println("iOS: Invalid reminder time format: $reminderTime")
+            return
+        }
 
-        val hour = timeParts[0].toLongOrNull() ?: return
-        val minute = timeParts[1].toLongOrNull() ?: return
+        val hour = timeParts[0].toLongOrNull()
+        val minute = timeParts[1].toLongOrNull()
+
+        if (hour == null || minute == null) {
+            println("iOS: Could not parse hour/minute from: $reminderTime")
+            return
+        }
+
+        println("iOS: Parsed time - hour: $hour, minute: $minute")
 
         // Create notification content
         val content = UNMutableNotificationContent().apply {
@@ -53,8 +65,10 @@ actual class NotificationManager {
 
         // Schedule notification
         center.addNotificationRequest(request) { error ->
-            error?.let {
-                println("iOS: Failed to schedule notification - ${it.localizedDescription}")
+            if (error != null) {
+                println("iOS: Failed to schedule notification - ${error.localizedDescription}")
+            } else {
+                println("iOS: Successfully scheduled notification for habit '$habitName' at $hour:$minute")
             }
         }
     }

@@ -95,6 +95,9 @@ class StatisticsViewModel(
                     )}
                 }
             }
+            is StatisticsEvent.ChangeChartPeriod -> {
+                _state.update { it.copy(chartPeriod = event.period) }
+            }
         }
     }
 
@@ -122,16 +125,17 @@ class StatisticsViewModel(
                 val monthlyData = calculateMonthlyData(habits)
 
                 // Calculate current streak and completed dates
-                val (currentStreak, longestStreak, completedDates) = calculateStreakData(habits)
+                val streakData = calculateStreakData(habits)
 
                 _state.update { currentState ->
                     currentState.copy(
                         completionRate = completionRate,
                         totalHabits = totalHabits,
                         completedToday = completedToday,
-                        currentStreak = currentStreak,
-                        longestStreak = longestStreak,
-                        completedDates = completedDates,
+                        currentStreak = streakData.currentStreak,
+                        longestStreak = streakData.longestStreak,
+                        completedDates = streakData.completedDates,
+                        completionRatesByDate = streakData.completionRatesByDate,
                         weeklyData = weeklyData,
                         monthlyData = monthlyData,
                         weeklyChartType = currentState.weeklyChartType,
@@ -197,30 +201,31 @@ class StatisticsViewModel(
         return monthData
     }
 
-    private suspend fun calculateStreakData(habits: List<com.cil.shift.feature.habits.domain.model.Habit>): Triple<Int, Int, Set<LocalDate>> {
-        if (habits.isEmpty()) return Triple(0, 0, emptySet())
+    private suspend fun calculateStreakData(habits: List<com.cil.shift.feature.habits.domain.model.Habit>): StreakData {
+        if (habits.isEmpty()) return StreakData(0, 0, emptySet(), emptyMap())
 
         val today = com.cil.shift.core.common.currentDate()
         val completedDates = mutableSetOf<LocalDate>()
+        val completionRatesByDate = mutableMapOf<LocalDate, Float>()
 
-        // Scan last 6 months to find all completed dates
+        // Scan last 6 months to find all completed dates and their completion rates
         val sixMonthsAgo = today.minus(180, DateTimeUnit.DAY)
         var scanDate = sixMonthsAgo
 
         while (scanDate <= today) {
             val dateString = scanDate.toString()
-            var anyCompleted = false
+            var completedCount = 0
 
             habits.forEach { habit ->
                 val completion = habitRepository.getCompletion(habit.id, dateString)
                 if (completion?.isCompleted == true) {
-                    anyCompleted = true
-                    return@forEach
+                    completedCount++
                 }
             }
 
-            if (anyCompleted) {
+            if (completedCount > 0) {
                 completedDates.add(scanDate)
+                completionRatesByDate[scanDate] = completedCount.toFloat() / habits.size
             }
 
             scanDate = scanDate.plus(1, DateTimeUnit.DAY)
@@ -264,9 +269,16 @@ class StatisticsViewModel(
         }
         longestStreak = maxOf(longestStreak, tempStreak)
 
-        return Triple(currentStreak, longestStreak, completedDates)
+        return StreakData(currentStreak, longestStreak, completedDates, completionRatesByDate)
     }
 }
+
+private data class StreakData(
+    val currentStreak: Int,
+    val longestStreak: Int,
+    val completedDates: Set<LocalDate>,
+    val completionRatesByDate: Map<LocalDate, Float>
+)
 
 sealed interface StatisticsEvent {
     data object PreviousWeek : StatisticsEvent
@@ -277,4 +289,5 @@ sealed interface StatisticsEvent {
     data object NextStreakMonth : StatisticsEvent
     data class ChangeWeeklyChartType(val chartType: ChartType) : StatisticsEvent
     data class ChangeMonthlyChartType(val chartType: ChartType) : StatisticsEvent
+    data class ChangeChartPeriod(val period: ChartPeriod) : StatisticsEvent
 }

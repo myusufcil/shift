@@ -338,7 +338,8 @@ private fun HabitSuggestionCard(
                                     com.cil.shift.feature.habits.domain.model.HabitType.SIMPLE -> "Simple"
                                     com.cil.shift.feature.habits.domain.model.HabitType.MEASURABLE -> "${suggestion.targetValue}${suggestion.targetUnit}"
                                     com.cil.shift.feature.habits.domain.model.HabitType.TIMER -> "${suggestion.targetValue} min"
-                                    com.cil.shift.feature.habits.domain.model.HabitType.SESSION -> "Session"
+                                    com.cil.shift.feature.habits.domain.model.HabitType.QUIT -> "Quit"
+                                    com.cil.shift.feature.habits.domain.model.HabitType.NEGATIVE -> "Max ${suggestion.targetValue} ${suggestion.targetUnit}"
                                 },
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Medium,

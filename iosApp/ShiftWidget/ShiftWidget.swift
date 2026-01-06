@@ -24,20 +24,28 @@ struct ShiftWidgetEntryView: View {
             Color(hex: "1A1A2E")
 
             VStack(alignment: .leading, spacing: 8) {
-                // Header
+                // Header with progress
                 HStack {
                     Text("Shift")
-                        .font(.headline)
-                        .fontWeight(.bold)
+                        .font(.system(size: 15, weight: .bold))
                         .foregroundColor(Color(hex: "00D9FF"))
 
-                    if family != .systemSmall {
-                        Text("Today's Habits")
-                            .font(.caption)
-                            .foregroundColor(Color(hex: "AAAAAA"))
-                    }
+                    Text("\(entry.completedCount)/\(entry.habits.count)")
+                        .font(.caption)
+                        .foregroundColor(Color(hex: "AAAAAA"))
 
                     Spacer()
+
+                    // Progress badge
+                    Text("\(entry.progressPercent)%")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(
+                            RoundedRectangle(cornerRadius: 10)
+                                .fill(entry.progressPercent == 100 ? Color(hex: "4ECDC4") : Color(hex: "333355"))
+                        )
                 }
                 .padding(.bottom, 4)
 
@@ -94,11 +102,11 @@ struct HabitRowView: View {
             ZStack {
                 RoundedRectangle(cornerRadius: 6)
                     .fill(habit.isCompleted ? Color(hex: "4ECDC4") : Color(hex: "333355"))
-                    .frame(width: 24, height: 24)
+                    .frame(width: 22, height: 22)
 
                 if habit.isCompleted {
                     Image(systemName: "checkmark")
-                        .font(.system(size: 12, weight: .bold))
+                        .font(.system(size: 11, weight: .bold))
                         .foregroundColor(.white)
                 }
             }
@@ -106,20 +114,39 @@ struct HabitRowView: View {
             // Icon (SF Symbol or emoji)
             if habit.icon.hasPrefix("sf:") {
                 Image(systemName: String(habit.icon.dropFirst(3)))
-                    .font(.system(size: 16))
+                    .font(.system(size: 14))
                     .foregroundColor(Color(hex: "00D9FF"))
             } else {
                 Text(habit.icon)
-                    .font(.system(size: 16))
+                    .font(.system(size: 14))
             }
 
-            // Name
-            Text(habit.name)
-                .font(.subheadline)
-                .foregroundColor(.white)
-                .lineLimit(1)
+            // Name and progress
+            VStack(alignment: .leading, spacing: 1) {
+                Text(habit.name)
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(.white)
+                    .lineLimit(1)
+
+                if let target = habit.targetValue {
+                    Text("\(habit.currentValue)/\(target)")
+                        .font(.system(size: 10))
+                        .foregroundColor(Color(hex: "AAAAAA"))
+                }
+            }
 
             Spacer()
+
+            // Streak badge
+            if habit.streak > 0 {
+                HStack(spacing: 2) {
+                    Text("🔥")
+                        .font(.system(size: 10))
+                    Text("\(habit.streak)")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundColor(Color(hex: "FF9500"))
+                }
+            }
         }
         .padding(8)
         .background(Color(hex: "16213E"))

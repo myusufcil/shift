@@ -2,6 +2,8 @@ package com.cil.shift.feature.statistics.presentation
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.rememberScrollState
@@ -11,6 +13,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -71,142 +74,53 @@ fun StatisticsScreen(
                         .padding(24.dp),
                     verticalArrangement = Arrangement.spacedBy(24.dp)
                 ) {
-                    // Header with greeting
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        if (state.userName.isNotBlank()) {
-                            Text(
-                                text = "Hello, ${state.userName}",
-                                fontSize = 28.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = textColor
-                            )
-                            Text(
-                                text = StringResources.statistics.localized(),
-                                fontSize = 16.sp,
-                                color = textColor.copy(alpha = 0.6f)
-                            )
-                        } else {
-                            Text(
-                                text = StringResources.statistics.localized(),
-                                fontSize = 28.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = textColor
-                            )
-                        }
-                    }
+                    // Header
+                    Text(
+                        text = StringResources.statistics.localized(),
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = textColor
+                    )
 
                     // Streak Calendar
                     StreakCalendarCard(
                         completedDates = state.completedDates,
+                        completionRatesByDate = state.completionRatesByDate,
                         currentStreak = state.currentStreak,
                         longestStreak = state.longestStreak
                     )
 
-                    // Weekly Distribution
-                    WeeklyDistributionCard(
+                    // Unified Progress Chart (Weekly/Monthly Toggle)
+                    UnifiedProgressChart(
                         weeklyData = state.weeklyData,
+                        monthlyData = state.monthlyData,
                         selectedWeekStart = state.selectedWeekStart,
-                        chartType = state.weeklyChartType,
-                        onPreviousWeek = { viewModel.onEvent(StatisticsEvent.PreviousWeek) },
-                        onNextWeek = { viewModel.onEvent(StatisticsEvent.NextWeek) },
-                        onChartTypeChange = { viewModel.onEvent(StatisticsEvent.ChangeWeeklyChartType(it)) }
-                    )
-
-                    // Monthly Chart
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .border(
-                                width = 1.dp,
-                                color = textColor.copy(alpha = 0.1f),
-                                shape = RoundedCornerShape(16.dp)
-                            ),
-                        colors = CardDefaults.cardColors(
-                            containerColor = cardColor
-                        ),
-                        shape = RoundedCornerShape(16.dp)
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(20.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                IconButton(onClick = { viewModel.onEvent(StatisticsEvent.PreviousMonth) }) {
-                                    Text("←", fontSize = 20.sp, color = textColor)
-                                }
-                                Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    Text(
-                                        text = StringResources.monthlyProgress.localized(),
-                                        fontSize = 12.sp,
-                                        color = textColor.copy(alpha = 0.6f)
-                                    )
-                                    Text(
-                                        text = state.selectedMonthStart?.let {
-                                            "${it.month.name.lowercase().replaceFirstChar { it.uppercase() }} ${it.year}"
-                                        } ?: "",
-                                        fontSize = 16.sp,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = textColor
-                                    )
-                                }
-                                IconButton(onClick = { viewModel.onEvent(StatisticsEvent.NextMonth) }) {
-                                    Text("→", fontSize = 20.sp, color = textColor)
-                                }
+                        selectedMonthStart = state.selectedMonthStart,
+                        chartPeriod = state.chartPeriod,
+                        chartType = if (state.chartPeriod == ChartPeriod.WEEKLY) state.weeklyChartType else state.monthlyChartType,
+                        onPreviousPeriod = {
+                            if (state.chartPeriod == ChartPeriod.WEEKLY) {
+                                viewModel.onEvent(StatisticsEvent.PreviousWeek)
+                            } else {
+                                viewModel.onEvent(StatisticsEvent.PreviousMonth)
                             }
-
-                            // Chart type selector
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.Center,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                ChartTypeSelector(
-                                    selectedType = state.monthlyChartType,
-                                    onTypeSelected = { viewModel.onEvent(StatisticsEvent.ChangeMonthlyChartType(it)) }
-                                )
+                        },
+                        onNextPeriod = {
+                            if (state.chartPeriod == ChartPeriod.WEEKLY) {
+                                viewModel.onEvent(StatisticsEvent.NextWeek)
+                            } else {
+                                viewModel.onEvent(StatisticsEvent.NextMonth)
                             }
-
-                            AnimatedContent(
-                                targetState = state.monthlyChartType,
-                                transitionSpec = {
-                                    fadeIn(animationSpec = tween(400)) +
-                                        slideInVertically(
-                                            animationSpec = tween(400, easing = FastOutSlowInEasing),
-                                            initialOffsetY = { it / 3 }
-                                        ) togetherWith fadeOut(animationSpec = tween(400)) +
-                                        slideOutVertically(
-                                            animationSpec = tween(400, easing = FastOutSlowInEasing),
-                                            targetOffsetY = { -it / 3 }
-                                        )
-                                },
-                                label = "monthly_chart_animation"
-                            ) { type ->
-                                when (type) {
-                                    ChartType.LINE -> {
-                                        LineChart(
-                                            data = state.monthlyData.map {
-                                                ChartData(it.dayName, it.completionRate * 100)
-                                            }
-                                        )
-                                    }
-                                    ChartType.BAR -> {
-                                        MonthlyBarChart(monthlyData = state.monthlyData)
-                                    }
-                                    ChartType.PIE -> {
-                                        MonthlyPieChart(monthlyData = state.monthlyData)
-                                    }
-                                }
+                        },
+                        onPeriodChange = { viewModel.onEvent(StatisticsEvent.ChangeChartPeriod(it)) },
+                        onChartTypeChange = { type ->
+                            if (state.chartPeriod == ChartPeriod.WEEKLY) {
+                                viewModel.onEvent(StatisticsEvent.ChangeWeeklyChartType(type))
+                            } else {
+                                viewModel.onEvent(StatisticsEvent.ChangeMonthlyChartType(type))
                             }
                         }
-                    }
+                    )
 
 
                     // Streak Card
@@ -222,6 +136,7 @@ fun StatisticsScreen(
 @Composable
 private fun StreakCalendarCard(
     completedDates: Set<kotlinx.datetime.LocalDate>,
+    completionRatesByDate: Map<kotlinx.datetime.LocalDate, Float>,
     currentStreak: Int,
     longestStreak: Int
 ) {
@@ -302,7 +217,7 @@ private fun StreakCalendarCard(
                         MiniMonthCalendarGrid(
                             year = year,
                             month = month,
-                            completedDates = completedDates,
+                            completionRatesByDate = completionRatesByDate,
                             today = today
                         )
                     }
@@ -316,7 +231,7 @@ private fun StreakCalendarCard(
 private fun MiniMonthCalendarGrid(
     year: Int,
     month: kotlinx.datetime.Month,
-    completedDates: Set<kotlinx.datetime.LocalDate>,
+    completionRatesByDate: Map<kotlinx.datetime.LocalDate, Float>,
     today: kotlinx.datetime.LocalDate
 ) {
     val firstDayOfMonth = kotlinx.datetime.LocalDate(year, month, 1)
@@ -324,6 +239,8 @@ private fun MiniMonthCalendarGrid(
     val firstDayOfWeek = firstDayOfMonth.dayOfWeek.ordinal // Monday = 0
 
     val textColor = MaterialTheme.colorScheme.onBackground
+    val completedColor = Color(0xFF4ECDC4)
+    val todayBorderColor = Color(0xFFFFD700) // Gold for today
 
     Column(
         verticalArrangement = Arrangement.spacedBy(1.dp)
@@ -346,25 +263,31 @@ private fun MiniMonthCalendarGrid(
                     ) {
                         if (dayNum in 1..daysInMonth) {
                             val date = kotlinx.datetime.LocalDate(year, month, dayNum)
-                            val isCompleted = completedDates.contains(date)
+                            val completionRate = completionRatesByDate[date]
                             val isToday = date == today
                             val isFuture = date > today
+
+                            // Calculate color based on completion rate
+                            val backgroundColor = when {
+                                completionRate != null && completionRate > 0f -> {
+                                    // Color intensity based on completion rate (0.3 to 1.0 alpha)
+                                    completedColor.copy(alpha = 0.3f + (completionRate * 0.7f))
+                                }
+                                isFuture -> textColor.copy(alpha = 0.05f) // Subtle bg for future days
+                                else -> textColor.copy(alpha = 0.1f) // Past days without completion
+                            }
 
                             Box(
                                 modifier = Modifier
                                     .size(10.dp)
                                     .background(
-                                        color = when {
-                                            isCompleted -> Color(0xFF4ECDC4)
-                                            isFuture -> Color.Transparent
-                                            else -> textColor.copy(alpha = 0.1f)
-                                        },
+                                        color = backgroundColor,
                                         shape = RoundedCornerShape(2.dp)
                                     )
                                     .then(
                                         if (isToday) Modifier.border(
-                                            width = 1.dp,
-                                            color = Color(0xFF00D9FF),
+                                            width = 1.5.dp,
+                                            color = todayBorderColor,
                                             shape = RoundedCornerShape(2.dp)
                                         ) else Modifier
                                     ),
@@ -666,45 +589,30 @@ private fun ChartTypeSelectorButton(
     onClick: () -> Unit
 ) {
     val textColor = MaterialTheme.colorScheme.onBackground
-    val scale = androidx.compose.runtime.remember { Animatable(1f) }
+    val accentColor = Color(0xFF4ECDC4)
 
-    androidx.compose.runtime.LaunchedEffect(isSelected) {
-        if (isSelected) {
-            scale.animateTo(
-                targetValue = 1.1f,
-                animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioMediumBouncy,
-                    stiffness = Spring.StiffnessLow
-                )
-            )
-            scale.animateTo(
-                targetValue = 1f,
-                animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioMediumBouncy,
-                    stiffness = Spring.StiffnessLow
-                )
-            )
-        }
-    }
-
-    TextButton(
-        onClick = onClick,
-        colors = ButtonDefaults.textButtonColors(
-            containerColor = if (isSelected) Color(0xFF4E7CFF) else Color.Transparent,
-            contentColor = if (isSelected) textColor else textColor.copy(alpha = 0.6f)
-        ),
-        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
-            .height(24.dp)
-            .graphicsLayer {
-                scaleX = scale.value
-                scaleY = scale.value
-            }
+            .clickable(onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 4.dp)
     ) {
         Text(
             text = text,
-            fontSize = 10.sp,
-            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+            fontSize = 11.sp,
+            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+            color = if (isSelected) accentColor else textColor.copy(alpha = 0.5f)
+        )
+        Spacer(modifier = Modifier.height(2.dp))
+        // Underline indicator
+        Box(
+            modifier = Modifier
+                .width(24.dp)
+                .height(2.dp)
+                .background(
+                    color = if (isSelected) accentColor else Color.Transparent,
+                    shape = RoundedCornerShape(1.dp)
+                )
         )
     }
 }
@@ -986,6 +894,244 @@ private fun MonthlyPieChart(monthlyData: List<DayCompletion>) {
                 )
                 Text(
                     text = label,
+                    fontSize = 10.sp,
+                    color = textColor.copy(alpha = 0.6f)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun UnifiedProgressChart(
+    weeklyData: List<DayCompletion>,
+    monthlyData: List<DayCompletion>,
+    selectedWeekStart: kotlinx.datetime.LocalDate?,
+    selectedMonthStart: kotlinx.datetime.LocalDate?,
+    chartPeriod: ChartPeriod,
+    chartType: ChartType,
+    onPreviousPeriod: () -> Unit,
+    onNextPeriod: () -> Unit,
+    onPeriodChange: (ChartPeriod) -> Unit,
+    onChartTypeChange: (ChartType) -> Unit
+) {
+    val textColor = MaterialTheme.colorScheme.onBackground
+    val cardColor = MaterialTheme.colorScheme.surface
+    val data = if (chartPeriod == ChartPeriod.WEEKLY) weeklyData else monthlyData
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(
+                width = 1.dp,
+                color = textColor.copy(alpha = 0.1f),
+                shape = RoundedCornerShape(16.dp)
+            ),
+        colors = CardDefaults.cardColors(containerColor = cardColor),
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // Header with navigation and period toggle
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onPreviousPeriod) {
+                    Text("←", fontSize = 20.sp, color = textColor)
+                }
+
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    // Period Toggle (Weekly/Monthly)
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        PeriodToggleButton(
+                            text = "Weekly",
+                            isSelected = chartPeriod == ChartPeriod.WEEKLY,
+                            onClick = { onPeriodChange(ChartPeriod.WEEKLY) }
+                        )
+                        PeriodToggleButton(
+                            text = "Monthly",
+                            isSelected = chartPeriod == ChartPeriod.MONTHLY,
+                            onClick = { onPeriodChange(ChartPeriod.MONTHLY) }
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    // Date range display
+                    Text(
+                        text = if (chartPeriod == ChartPeriod.WEEKLY) {
+                            selectedWeekStart?.let { weekStart ->
+                                val weekEnd = weekStart.plus(6, DateTimeUnit.DAY)
+                                val startMonth = weekStart.month.name.lowercase().replaceFirstChar { it.uppercase() }.take(3)
+                                val endMonth = weekEnd.month.name.lowercase().replaceFirstChar { it.uppercase() }.take(3)
+                                if (startMonth == endMonth) {
+                                    "$startMonth ${weekStart.dayOfMonth} - ${weekEnd.dayOfMonth}"
+                                } else {
+                                    "$startMonth ${weekStart.dayOfMonth} - $endMonth ${weekEnd.dayOfMonth}"
+                                }
+                            } ?: ""
+                        } else {
+                            selectedMonthStart?.let {
+                                "${it.month.name.lowercase().replaceFirstChar { it.uppercase() }} ${it.year}"
+                            } ?: ""
+                        },
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = textColor
+                    )
+                }
+
+                IconButton(onClick = onNextPeriod) {
+                    Text("→", fontSize = 20.sp, color = textColor)
+                }
+            }
+
+            // Chart type selector
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                ChartTypeSelector(
+                    selectedType = chartType,
+                    onTypeSelected = onChartTypeChange
+                )
+            }
+
+            // Chart content with animation
+            AnimatedContent(
+                targetState = Pair(chartPeriod, chartType),
+                transitionSpec = {
+                    fadeIn(animationSpec = tween(300)) +
+                        slideInHorizontally(
+                            animationSpec = tween(300),
+                            initialOffsetX = { if (targetState.first != initialState.first) it / 4 else 0 }
+                        ) togetherWith fadeOut(animationSpec = tween(300)) +
+                        slideOutHorizontally(
+                            animationSpec = tween(300),
+                            targetOffsetX = { if (targetState.first != initialState.first) -it / 4 else 0 }
+                        )
+                },
+                label = "chart_animation"
+            ) { (period, type) ->
+                val chartData = if (period == ChartPeriod.WEEKLY) weeklyData else monthlyData
+                when (type) {
+                    ChartType.LINE -> {
+                        LineChart(
+                            data = chartData.map { ChartData(it.dayName, it.completionRate * 100) }
+                        )
+                    }
+                    ChartType.BAR -> {
+                        if (period == ChartPeriod.WEEKLY) {
+                            WeeklyBarChart(weeklyData = chartData)
+                        } else {
+                            MonthlyBarChart(monthlyData = chartData)
+                        }
+                    }
+                    ChartType.PIE -> {
+                        if (period == ChartPeriod.WEEKLY) {
+                            WeeklyPieChart(weeklyData = chartData)
+                        } else {
+                            MonthlyPieChart(monthlyData = chartData)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PeriodToggleButton(
+    text: String,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    val textColorBase = MaterialTheme.colorScheme.onBackground
+    val accentColor = Color(0xFF4ECDC4)
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .clickable(
+                onClick = onClick,
+                indication = null,
+                interactionSource = remember { MutableInteractionSource() }
+            )
+            .padding(horizontal = 8.dp, vertical = 4.dp)
+    ) {
+        Text(
+            text = text,
+            fontSize = 13.sp,
+            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+            color = if (isSelected) accentColor else textColorBase.copy(alpha = 0.5f)
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        // Underline indicator
+        Box(
+            modifier = Modifier
+                .width(32.dp)
+                .height(2.dp)
+                .background(
+                    color = if (isSelected) accentColor else Color.Transparent,
+                    shape = RoundedCornerShape(1.dp)
+                )
+        )
+    }
+}
+
+@Composable
+private fun WeeklyBarChart(weeklyData: List<DayCompletion>) {
+    val textColor = MaterialTheme.colorScheme.onBackground
+    val maxRate = weeklyData.maxOfOrNull { it.completionRate }?.coerceAtLeast(0.01f) ?: 1f
+    val barHeight = 120.dp
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.Bottom
+    ) {
+        weeklyData.forEach { day ->
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Bottom,
+                modifier = Modifier.width(36.dp)
+            ) {
+                // Fixed height container for bars with bottom alignment
+                Box(
+                    modifier = Modifier
+                        .width(28.dp)
+                        .height(barHeight),
+                    contentAlignment = Alignment.BottomCenter
+                ) {
+                    val animatedRate = androidx.compose.animation.core.animateFloatAsState(
+                        targetValue = (day.completionRate / maxRate).coerceIn(0f, 1f),
+                        animationSpec = tween(600, easing = FastOutSlowInEasing),
+                        label = "bar_height"
+                    )
+                    Box(
+                        modifier = Modifier
+                            .width(28.dp)
+                            .fillMaxHeight(animatedRate.value.coerceAtLeast(0.03f))
+                            .background(
+                                Color(0xFF4ECDC4),
+                                RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
+                            )
+                    )
+                }
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = day.dayName.take(3),
                     fontSize = 10.sp,
                     color = textColor.copy(alpha = 0.6f)
                 )

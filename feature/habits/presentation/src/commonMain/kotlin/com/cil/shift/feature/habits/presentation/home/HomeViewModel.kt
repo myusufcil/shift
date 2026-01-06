@@ -278,6 +278,82 @@ class HomeViewModel(
                 _state.update { it.copy(confettiShownForDate = event.date) }
                 onboardingPreferences.setLastConfettiDate(event.date)
             }
+            is HomeEvent.ToggleTimer -> {
+                _state.update { currentState ->
+                    val newRunningTimers = if (currentState.runningTimers.contains(event.habitId)) {
+                        currentState.runningTimers - event.habitId
+                    } else {
+                        currentState.runningTimers + event.habitId
+                    }
+                    currentState.copy(runningTimers = newRunningTimers)
+                }
+            }
+            is HomeEvent.TimerTick -> {
+                viewModelScope.launch {
+                    val targetDate = _state.value.selectedDate?.toString() ?: getTodayDateString()
+                    val habitWithCompletion = _state.value.habits.find { it.habit.id == event.habitId }
+                    if (habitWithCompletion != null) {
+                        val newValue = habitWithCompletion.currentValue + 1
+                        val targetValue = habitWithCompletion.habit.targetValue ?: Int.MAX_VALUE
+                        val finalValue = newValue.coerceAtMost(targetValue)
+
+                        // Save to database
+                        habitRepository.updateCurrentValue(event.habitId, targetDate, finalValue)
+
+                        // Update UI
+                        _state.update { currentState ->
+                            val updatedHabits = currentState.habits.map { habit ->
+                                if (habit.habit.id == event.habitId) {
+                                    habit.copy(currentValue = finalValue)
+                                } else {
+                                    habit
+                                }
+                            }
+                            // If target reached, stop timer and mark complete
+                            val newRunningTimers = if (finalValue >= targetValue) {
+                                currentState.runningTimers - event.habitId
+                            } else {
+                                currentState.runningTimers
+                            }
+                            currentState.copy(habits = updatedHabits, runningTimers = newRunningTimers)
+                        }
+
+                        // Refresh chart
+                        loadWeeklyChartData()
+                    }
+                }
+            }
+            is HomeEvent.ResetTimer -> {
+                viewModelScope.launch {
+                    val targetDate = _state.value.selectedDate?.toString() ?: getTodayDateString()
+
+                    // Stop timer and reset value to 0
+                    habitRepository.updateCurrentValue(event.habitId, targetDate, 0)
+
+                    _state.update { currentState ->
+                        val updatedHabits = currentState.habits.map { habit ->
+                            if (habit.habit.id == event.habitId) {
+                                habit.copy(currentValue = 0)
+                            } else {
+                                habit
+                            }
+                        }
+                        currentState.copy(
+                            habits = updatedHabits,
+                            runningTimers = currentState.runningTimers - event.habitId
+                        )
+                    }
+
+                    loadWeeklyChartData()
+                }
+            }
+            is HomeEvent.ResetToToday -> {
+                // Reset selected date to null (show today) and refresh all data
+                _state.update { it.copy(selectedDate = null) }
+                loadHabits()
+                loadScheduledEvents()
+                loadWeeklyChartData()
+            }
         }
     }
 
@@ -402,4 +478,8 @@ sealed interface HomeEvent {
     data class ChangeWeeklyChartType(val chartType: WeeklyChartType) : HomeEvent
     data object RefreshChartOnly : HomeEvent
     data class ConfettiShown(val date: String) : HomeEvent
+    data class ToggleTimer(val habitId: String) : HomeEvent
+    data class TimerTick(val habitId: String) : HomeEvent
+    data class ResetTimer(val habitId: String) : HomeEvent
+    data object ResetToToday : HomeEvent
 }

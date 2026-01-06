@@ -4,11 +4,17 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -17,6 +23,9 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.cil.shift.core.common.localization.Language
+import com.cil.shift.core.common.localization.StringResources
+import kotlinx.coroutines.delay
 
 @Composable
 fun HabitItemTimer(
@@ -25,14 +34,32 @@ fun HabitItemTimer(
     targetMinutes: Int,
     icon: String,
     color: Color,
-    statusLabel: String, // e.g., "FOCUS", "2h 15min left"
+    statusLabel: String,
     isCompleted: Boolean = false,
     streak: Int = 0,
+    currentLanguage: Language = Language.ENGLISH,
+    isTimerRunning: Boolean = false,
+    onTimerToggle: () -> Unit = {},
+    onTimerTick: () -> Unit = {},
+    onTimerReset: () -> Unit = {},
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val progress = (currentMinutes.toFloat() / targetMinutes).coerceIn(0f, 1f)
-    val displayLabel = if (isCompleted) "DONE" else statusLabel
+    // When completed, always show 100% progress; otherwise show actual progress
+    val progress = if (isCompleted) 1f else (currentMinutes.toFloat() / targetMinutes).coerceIn(0f, 1f)
+    val displayLabel = when {
+        isCompleted -> StringResources.done.get(currentLanguage)
+        isTimerRunning -> StringResources.running.get(currentLanguage)
+        else -> statusLabel
+    }
+
+    // Real-time timer countdown
+    LaunchedEffect(isTimerRunning, currentMinutes) {
+        if (isTimerRunning && currentMinutes < targetMinutes) {
+            delay(60_000L) // 1 minute
+            onTimerTick()
+        }
+    }
 
     val textColor = MaterialTheme.colorScheme.onBackground
     val cardColor = MaterialTheme.colorScheme.surface
@@ -109,26 +136,86 @@ fun HabitItemTimer(
             }
         }
 
-        Column(
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            LinearProgressIndicator(
-                progress = { progress },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(8.dp)
-                    .clip(RoundedCornerShape(4.dp)),
-                color = color,
-                trackColor = textColor.copy(alpha = 0.1f),
-                strokeCap = StrokeCap.Round
-            )
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                LinearProgressIndicator(
+                    progress = { progress },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(8.dp)
+                        .clip(RoundedCornerShape(4.dp)),
+                    color = when {
+                        isCompleted -> Color(0xFF4ECDC4) // Green when completed
+                        isTimerRunning -> Color(0xFF4ECDC4)
+                        else -> color
+                    },
+                    trackColor = textColor.copy(alpha = 0.1f),
+                    strokeCap = StrokeCap.Round
+                )
 
-            Text(
-                text = "${targetMinutes - currentMinutes} min left",
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Normal,
-                color = textColor.copy(alpha = 0.5f)
-            )
+                val remainingMinutes = (targetMinutes - currentMinutes).coerceAtLeast(0)
+                Text(
+                    text = if (isCompleted) {
+                        "$targetMinutes ${StringResources.minCompleted.get(currentLanguage)}"
+                    } else {
+                        "$remainingMinutes ${StringResources.minLeft.get(currentLanguage)}"
+                    },
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Normal,
+                    color = if (isCompleted) Color(0xFF4ECDC4).copy(alpha = 0.7f) else textColor.copy(alpha = 0.5f)
+                )
+            }
+
+            // Timer control buttons
+            if (!isCompleted) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Reset button (only show if timer has progress)
+                    if (currentMinutes > 0) {
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .background(textColor.copy(alpha = 0.1f))
+                                .clickable { onTimerReset() },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Refresh,
+                                contentDescription = "Reset",
+                                tint = textColor.copy(alpha = 0.7f),
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
+
+                    // Play/Pause button
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .background(if (isTimerRunning) Color(0xFF4ECDC4) else color)
+                            .clickable { onTimerToggle() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = if (isTimerRunning) Icons.Default.Pause else Icons.Default.PlayArrow,
+                            contentDescription = if (isTimerRunning) "Pause" else "Start",
+                            tint = Color.White,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+            }
         }
     }
 }

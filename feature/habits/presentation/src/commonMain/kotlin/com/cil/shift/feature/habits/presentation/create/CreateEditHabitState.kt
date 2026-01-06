@@ -27,7 +27,9 @@ data class CreateEditHabitState(
     val notes: String = "",
     val isLoading: Boolean = false,
     val error: String? = null,
-    val isSaved: Boolean = false
+    val isSaved: Boolean = false,
+    val isNegative: Boolean = false,      // For NEGATIVE/reduce type habits
+    val quitStartDate: Long? = null       // For QUIT type habits (null = today)
 ) {
     val isValid: Boolean
         get() = name.isNotBlank()

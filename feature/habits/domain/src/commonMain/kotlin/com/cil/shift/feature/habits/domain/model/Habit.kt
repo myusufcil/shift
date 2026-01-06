@@ -30,7 +30,9 @@ data class Habit(
     val reminderTime: String?,
     val notes: String? = null,
     val sortOrder: Int = 0,
-    val createdAt: Long
+    val createdAt: Long,
+    val isNegative: Boolean = false,      // For reduce/limit habits - true means "less than" goal
+    val quitStartDate: Long? = null       // For QUIT habits - epoch millis when user started quitting
 )
 
 /**
@@ -39,8 +41,9 @@ data class Habit(
 enum class HabitType {
     SIMPLE,      // Simple checkbox (e.g., Read 20 mins, Workout)
     MEASURABLE,  // Trackable with numbers (e.g., Hydration: 1250ml / 2000ml)
-    TIMER,       // Time-based with progress (e.g., Deep Work: 2h 15min left)
-    SESSION      // Start/Stop session (e.g., Meditation: 15 mins goal)
+    TIMER,       // Time-based with start/stop tracking (e.g., Meditation: 15 mins goal)
+    QUIT,        // Sobriety counter - track days since quitting (e.g., "15 days smoke-free")
+    NEGATIVE     // Reduce/limit goals - "Less than X per day" (e.g., "Max 2 cups coffee")
 }
 
 /**

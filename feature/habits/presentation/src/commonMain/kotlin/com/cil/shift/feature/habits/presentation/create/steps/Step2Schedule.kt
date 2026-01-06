@@ -327,11 +327,10 @@ private fun TimePicker(
     cardColor: Color = Color(0xFF1A2942),
     accentColor: Color = Color(0xFF4E7CFF)
 ) {
-    // Parse time (format: "HH:mm" or "hh:mm")
+    // Parse time (format: "HH:mm" - 24 hour format)
     val parts = time.split(":")
     var hour by remember { mutableStateOf(parts.getOrNull(0)?.toIntOrNull() ?: 9) }
     var minute by remember { mutableStateOf(parts.getOrNull(1)?.toIntOrNull() ?: 0) }
-    var isAM by remember { mutableStateOf(hour < 12) }
 
     // Update callback when values change
     LaunchedEffect(hour, minute) {
@@ -345,19 +344,17 @@ private fun TimePicker(
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly,
+            horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Hour picker
+            // Hour picker (24-hour format: 00-23)
             TimePickerColumn(
-                value = if (hour == 0) 12 else if (hour > 12) hour - 12 else hour,
+                value = hour,
                 onIncrement = {
-                    hour = ((hour + 1) % 24)
-                    isAM = hour < 12
+                    hour = (hour + 1) % 24
                 },
                 onDecrement = {
                     hour = if (hour == 0) 23 else hour - 1
-                    isAM = hour < 12
                 },
                 textColor = textColor
             )
@@ -380,48 +377,6 @@ private fun TimePicker(
                 },
                 textColor = textColor
             )
-
-            // AM/PM toggle
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(if (isAM) accentColor else cardColor)
-                        .clickable {
-                            isAM = true
-                            if (hour >= 12) hour -= 12
-                        }
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                ) {
-                    Text(
-                        text = "AM",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = if (isAM) Color.White else textColor
-                    )
-                }
-
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(if (!isAM) accentColor else cardColor)
-                        .clickable {
-                            isAM = false
-                            if (hour < 12) hour += 12
-                        }
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                ) {
-                    Text(
-                        text = "PM",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = if (!isAM) Color.White else textColor
-                    )
-                }
-            }
         }
     }
 }

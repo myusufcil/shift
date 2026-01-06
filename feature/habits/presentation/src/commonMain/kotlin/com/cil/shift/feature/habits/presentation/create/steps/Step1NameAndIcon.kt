@@ -3,16 +3,19 @@ package com.cil.shift.feature.habits.presentation.create.steps
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -21,6 +24,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.cil.shift.feature.onboarding.presentation.suggestions.HabitSuggestion
+import com.cil.shift.feature.onboarding.presentation.suggestions.SuggestionCategory
+import com.cil.shift.feature.onboarding.presentation.suggestions.habitSuggestions
 
 @Composable
 fun Step1NameAndIcon(
@@ -28,6 +34,7 @@ fun Step1NameAndIcon(
     selectedIcon: String,
     onNameChange: (String) -> Unit,
     onIconSelect: (String) -> Unit,
+    onSuggestionSelect: (HabitSuggestion) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val textColor = MaterialTheme.colorScheme.onBackground
@@ -35,18 +42,47 @@ fun Step1NameAndIcon(
     val borderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
     val accentColor = Color(0xFF4E7CFF)
 
+    // Selected category for filtering suggestions
+    var selectedCategory by remember { mutableStateOf<SuggestionCategory?>(null) }
+
+    // Filtered suggestions based on selected category
+    val filteredSuggestions = remember(selectedCategory) {
+        if (selectedCategory == null) {
+            habitSuggestions.take(12) // Show first 12 if no category selected
+        } else {
+            habitSuggestions.filter { it.category == selectedCategory }
+        }
+    }
+
+    val scrollState = rememberScrollState()
+
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = 20.dp, vertical = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(24.dp)
+            .verticalScroll(scrollState)
+            .padding(horizontal = 20.dp)
+            .padding(top = 8.dp, bottom = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // Title
         Text(
             text = "Name your habit",
-            fontSize = 26.sp,
+            fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
             color = textColor
+        )
+
+        // Quick Suggestions Section
+        QuickSuggestions(
+            selectedCategory = selectedCategory,
+            suggestions = filteredSuggestions,
+            onCategorySelected = { category ->
+                selectedCategory = if (selectedCategory == category) null else category
+            },
+            onSuggestionSelected = onSuggestionSelect,
+            cardColor = cardColor,
+            borderColor = borderColor,
+            textColor = textColor
         )
 
         // Habit name input card
@@ -112,45 +148,13 @@ fun Step1NameAndIcon(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Choose an icon",
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = textColor.copy(alpha = 0.6f),
-                    letterSpacing = 0.5.sp
-                )
-
-                // Preview of selected icon
-                if (selectedIcon.isNotEmpty()) {
-                    val selectedEmoji = availableIcons.find { it.id == selectedIcon }?.emoji ?: ""
-                    if (selectedEmoji.isNotEmpty()) {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(20.dp))
-                                .background(accentColor.copy(alpha = 0.1f))
-                                .padding(horizontal = 12.dp, vertical = 6.dp)
-                        ) {
-                            Text(
-                                text = selectedEmoji,
-                                fontSize = 18.sp
-                            )
-                            Text(
-                                text = "Selected",
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = accentColor
-                            )
-                        }
-                    }
-                }
-            }
+            Text(
+                text = "Choose an icon",
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Medium,
+                color = textColor.copy(alpha = 0.6f),
+                letterSpacing = 0.5.sp
+            )
 
             // Divider
             Box(
@@ -160,23 +164,37 @@ fun Step1NameAndIcon(
                     .background(borderColor)
             )
 
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(6),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-                modifier = Modifier.fillMaxWidth()
+            // Use fixed rows instead of LazyVerticalGrid for scroll compatibility
+            val iconRows = availableIcons.chunked(6)
+            Column(
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                items(availableIcons) { icon ->
-                    IconItem(
-                        icon = icon.emoji,
-                        isSelected = selectedIcon == icon.id,
-                        onClick = { onIconSelect(icon.id) },
-                        cardColor = MaterialTheme.colorScheme.background,
-                        accentColor = accentColor
-                    )
+                iconRows.forEach { rowIcons ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        rowIcons.forEach { icon ->
+                            IconItem(
+                                icon = icon.emoji,
+                                isSelected = selectedIcon == icon.id,
+                                onClick = { onIconSelect(icon.id) },
+                                cardColor = MaterialTheme.colorScheme.background,
+                                accentColor = accentColor,
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                        // Fill remaining spaces if row is not complete
+                        repeat(6 - rowIcons.size) {
+                            Spacer(modifier = Modifier.weight(1f))
+                        }
+                    }
                 }
             }
         }
+
+        // Bottom spacer for scroll padding
+        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 
@@ -215,22 +233,231 @@ private fun IconItem(
 data class IconData(val id: String, val emoji: String)
 
 private val availableIcons = listOf(
+    // Health & Fitness
     IconData("water", "💧"),
-    IconData("tools", "🛠"),
-    IconData("camera", "📷"),
-    IconData("umbrella", "☂️"),
     IconData("run", "🏃"),
+    IconData("dumbbell", "🏋️"),
+    IconData("heart", "❤️"),
+    IconData("apple", "🍎"),
+    IconData("salad", "🥗"),
+    IconData("bike", "🚴"),
+    IconData("swim", "🏊"),
+
+    // Mindfulness & Wellness
+    IconData("meditation", "🧘"),
     IconData("moon", "🌙"),
+    IconData("sun", "☀️"),
+    IconData("sparkles", "✨"),
+    IconData("brain", "🧠"),
+    IconData("lotus", "🪷"),
+    IconData("pray", "🙏"),
+    IconData("sleep", "😴"),
+
+    // Productivity & Work
     IconData("code", "💻"),
     IconData("book", "📚"),
+    IconData("briefcase", "💼"),
+    IconData("pencil", "✏️"),
+    IconData("target", "🎯"),
+    IconData("clock", "⏰"),
+    IconData("calendar", "📅"),
+    IconData("chart", "📈"),
+
+    // Food & Drinks
+    IconData("coffee", "☕"),
     IconData("utensils", "🍴"),
+    IconData("pizza", "🍕"),
+    IconData("burger", "🍔"),
+    IconData("candy", "🍬"),
+    IconData("soda", "🥤"),
+    IconData("beer", "🍺"),
+    IconData("wine", "🍷"),
+
+    // Lifestyle & Home
+    IconData("home", "🏠"),
+    IconData("bed", "🛏️"),
+    IconData("clean", "🧹"),
+    IconData("laundry", "🧺"),
+    IconData("plant", "🌱"),
     IconData("leaf", "🍃"),
-    IconData("dumbbell", "🏋️"),
-    IconData("meditation", "🧘"),
+    IconData("flower", "🌸"),
+    IconData("dog", "🐕"),
+
+    // Entertainment & Hobbies
     IconData("music", "🎵"),
     IconData("palette", "🎨"),
-    IconData("briefcase", "💼"),
-    IconData("coffee", "☕"),
-    IconData("brain", "🧠"),
-    IconData("heart", "❤️")
+    IconData("camera", "📷"),
+    IconData("game", "🎮"),
+    IconData("guitar", "🎸"),
+    IconData("movie", "🎬"),
+    IconData("headphones", "🎧"),
+    IconData("mic", "🎤"),
+
+    // Quit & Reduce
+    IconData("cigarette", "🚬"),
+    IconData("phone", "📱"),
+    IconData("tv", "📺"),
+    IconData("shopping", "🛍️"),
+    IconData("cookie", "🍪"),
+    IconData("chocolate", "🍫"),
+    IconData("ice", "🍦"),
+    IconData("donut", "🍩"),
+
+    // Tools & Misc
+    IconData("tools", "🛠"),
+    IconData("umbrella", "☂️"),
+    IconData("car", "🚗"),
+    IconData("plane", "✈️"),
+    IconData("star", "⭐"),
+    IconData("fire", "🔥"),
+    IconData("trophy", "🏆"),
+    IconData("check", "✅")
 )
+
+@Composable
+private fun QuickSuggestions(
+    selectedCategory: SuggestionCategory?,
+    suggestions: List<HabitSuggestion>,
+    onCategorySelected: (SuggestionCategory) -> Unit,
+    onSuggestionSelected: (HabitSuggestion) -> Unit,
+    cardColor: Color,
+    borderColor: Color,
+    textColor: Color,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(cardColor)
+            .border(1.dp, borderColor, RoundedCornerShape(16.dp))
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Text(
+            text = "Quick Suggestions",
+            fontSize = 13.sp,
+            fontWeight = FontWeight.Medium,
+            color = textColor.copy(alpha = 0.6f),
+            letterSpacing = 0.5.sp
+        )
+
+        // Category chips - horizontal scroll
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            SuggestionCategory.entries.forEach { category ->
+                CategoryChip(
+                    category = category,
+                    isSelected = selectedCategory == category,
+                    onClick = { onCategorySelected(category) }
+                )
+            }
+        }
+
+        // Suggestion chips grid
+        val suggestionRows = suggestions.chunked(3)
+        Column(
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            suggestionRows.forEach { rowSuggestions ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    rowSuggestions.forEach { suggestion ->
+                        SuggestionChip(
+                            suggestion = suggestion,
+                            onClick = { onSuggestionSelected(suggestion) },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    // Fill remaining spaces if row is not complete
+                    repeat(3 - rowSuggestions.size) {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CategoryChip(
+    category: SuggestionCategory,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val chipColor = try {
+        Color(category.colorHex.removePrefix("#").toLong(16) or 0xFF000000)
+    } catch (e: Exception) {
+        Color(0xFF4E7CFF)
+    }
+
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(20.dp))
+            .background(
+                if (isSelected) chipColor.copy(alpha = 0.2f)
+                else chipColor.copy(alpha = 0.08f)
+            )
+            .border(
+                width = if (isSelected) 1.5.dp else 0.dp,
+                color = if (isSelected) chipColor else Color.Transparent,
+                shape = RoundedCornerShape(20.dp)
+            )
+            .clickable(onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 8.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = category.emoji,
+                fontSize = 14.sp
+            )
+            Text(
+                text = category.displayName,
+                fontSize = 13.sp,
+                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
+                color = if (isSelected) chipColor else Color.Gray
+            )
+        }
+    }
+}
+
+@Composable
+private fun SuggestionChip(
+    suggestion: HabitSuggestion,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val chipColor = try {
+        Color(suggestion.color.removePrefix("#").toLong(16) or 0xFF000000)
+    } catch (e: Exception) {
+        Color(0xFF4E7CFF)
+    }
+
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(12.dp))
+            .background(chipColor.copy(alpha = 0.12f))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = suggestion.name,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Medium,
+            color = chipColor,
+            maxLines = 1
+        )
+    }
+}

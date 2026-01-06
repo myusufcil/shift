@@ -89,9 +89,24 @@ fun CalendarScreen(
         }
     }
 
-    // Load schedules for current week
-    LaunchedEffect(selectedWeekStart) {
-        val endDate = selectedWeekStart.plus(6, DateTimeUnit.DAY)
+    // Load schedules based on view mode
+    LaunchedEffect(selectedWeekStart, viewMode) {
+        val endDate = when (viewMode) {
+            ScheduleViewMode.DAY_1 -> selectedWeekStart
+            ScheduleViewMode.DAY_3 -> selectedWeekStart.plus(2, DateTimeUnit.DAY)
+            ScheduleViewMode.WEEK -> selectedWeekStart.plus(6, DateTimeUnit.DAY)
+            ScheduleViewMode.MONTH -> {
+                // Load entire month plus buffer for scrolling
+                val monthStart = LocalDate(selectedWeekStart.year, selectedWeekStart.monthNumber, 1)
+                val daysInMonth = when (selectedWeekStart.monthNumber) {
+                    1, 3, 5, 7, 8, 10, 12 -> 31
+                    4, 6, 9, 11 -> 30
+                    2 -> if (selectedWeekStart.year % 4 == 0) 29 else 28
+                    else -> 31
+                }
+                monthStart.plus(daysInMonth - 1, DateTimeUnit.DAY)
+            }
+        }
         val startStr = formatDate(selectedWeekStart)
         val endStr = formatDate(endDate)
         habitRepository.getSchedulesForDateRange(startStr, endStr).collect {
@@ -637,9 +652,22 @@ private fun TimeRow(
                 val isToday = date == today
                 val isWeekend = date.dayOfWeek == DayOfWeek.SATURDAY || date.dayOfWeek == DayOfWeek.SUNDAY
                 val dateStr = formatDate(date)
-                val cellSchedules = schedules.filter {
-                    it.date == dateStr && it.startTime.startsWith(hour.toString().padStart(2, '0'))
+
+                // Find schedules that span this hour (not just start at this hour)
+                val cellSchedules = schedules.filter { schedule ->
+                    if (schedule.date != dateStr) return@filter false
+
+                    val startHour = schedule.startTime.take(2).toIntOrNull() ?: 0
+                    val endHour = schedule.endTime.take(2).toIntOrNull() ?: 24
+                    val endMinute = schedule.endTime.takeLast(2).toIntOrNull() ?: 0
+
+                    // Adjust end hour if it has minutes (e.g., 23:45 should include hour 23)
+                    val effectiveEndHour = if (endMinute > 0) endHour else (endHour - 1).coerceAtLeast(startHour)
+
+                    hour in startHour..effectiveEndHour
                 }
+
+                val eventCount = cellSchedules.size
 
                 Box(
                     modifier = Modifier
@@ -661,21 +689,140 @@ private fun TimeRow(
                         )
                         .clickable { onCellClick(date, hour) }
                 ) {
-                    // Show schedules in this cell
-                    cellSchedules.forEach { schedule ->
-                        ScheduleItem(
-                            schedule = schedule,
-                            backgroundColor = backgroundColor,
-                            isMonthView = isMonthView,
-                            isSelected = schedule.id in selectedScheduleIds,
-                            isSelectionMode = isSelectionMode,
-                            onLongPress = { onScheduleLongPress(schedule.id) },
-                            onClick = { onScheduleClick(schedule.id) }
-                        )
+                    // Show schedules that span this hour - split horizontally if multiple
+                    if (eventCount > 0) {
+                        Row(modifier = Modifier.fillMaxSize()) {
+                            cellSchedules.forEachIndexed { index, schedule ->
+                                val scheduleStartHour = schedule.startTime.take(2).toIntOrNull() ?: 0
+                                val scheduleEndHour = schedule.endTime.take(2).toIntOrNull() ?: 24
+                                val scheduleEndMinute = schedule.endTime.takeLast(2).toIntOrNull() ?: 0
+                                val effectiveEndHour = if (scheduleEndMinute > 0) scheduleEndHour else (scheduleEndHour - 1).coerceAtLeast(scheduleStartHour)
+
+                                val isFirstRow = hour == scheduleStartHour
+                                val isLastRow = hour == effectiveEndHour
+
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .fillMaxHeight()
+                                ) {
+                                    ScheduleItemSpanning(
+                                        schedule = schedule,
+                                        backgroundColor = backgroundColor,
+                                        isMonthView = isMonthView,
+                                        isSelected = schedule.id in selectedScheduleIds,
+                                        isSelectionMode = isSelectionMode,
+                                        isFirstRow = isFirstRow,
+                                        isLastRow = isLastRow,
+                                        onLongPress = { onScheduleLongPress(schedule.id) },
+                                        onClick = { onScheduleClick(schedule.id) }
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun ScheduleItemSpanning(
+    schedule: HabitSchedule,
+    backgroundColor: Color,
+    isMonthView: Boolean = false,
+    isSelected: Boolean = false,
+    isSelectionMode: Boolean = false,
+    isFirstRow: Boolean = true,
+    isLastRow: Boolean = false,
+    onLongPress: () -> Unit = {},
+    onClick: () -> Unit = {}
+) {
+    val habitColor = try {
+        val colorString = schedule.habitColor.removePrefix("#")
+        val colorInt = colorString.toLong(16)
+        if (colorString.length == 6) {
+            Color(0xFF000000 or colorInt)
+        } else {
+            Color(colorInt)
+        }
+    } catch (e: Exception) {
+        Color(0xFF6C63FF)
+    }
+
+    // For continuous events, we want the background to fill completely
+    // - First row: top rounded, has top padding
+    // - Middle rows: no rounding, no vertical padding (covers borders)
+    // - Last row: bottom rounded, has bottom padding
+    val shape = when {
+        isFirstRow && isLastRow -> RoundedCornerShape(4.dp) // Single row event
+        isFirstRow -> RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp, bottomStart = 0.dp, bottomEnd = 0.dp)
+        isLastRow -> RoundedCornerShape(topStart = 0.dp, topEnd = 0.dp, bottomStart = 4.dp, bottomEnd = 4.dp)
+        else -> RoundedCornerShape(0.dp)
+    }
+
+    val topPadding = if (isFirstRow) 2.dp else 0.dp
+    val bottomPadding = if (isLastRow) 2.dp else 0.dp
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(start = 2.dp, end = 2.dp, top = topPadding, bottom = bottomPadding)
+            .clip(shape)
+            .background(habitColor.copy(alpha = if (isSelected) 1f else 0.9f))
+            .then(
+                if (isSelected) Modifier.border(2.dp, Color.White, shape)
+                else Modifier
+            )
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onLongPress = { onLongPress() },
+                    onTap = { onClick() }
+                )
+            }
+            .padding(horizontal = 4.dp, vertical = if (isFirstRow) 2.dp else 0.dp)
+    ) {
+        // Only show full details in first row, continuation rows just show colored background
+        if (isFirstRow) {
+            Column {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    if (isSelectionMode) {
+                        Icon(
+                            imageVector = if (isSelected) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
+                            contentDescription = null,
+                            modifier = Modifier.size(12.dp),
+                            tint = Color.White
+                        )
+                    }
+                    Text(
+                        text = schedule.habitName,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+                Text(
+                    text = "${schedule.startTime} - ${schedule.endTime}",
+                    fontSize = 8.sp,
+                    color = Color.White.copy(alpha = 0.8f)
+                )
+                if (schedule.hasReminder && !isSelectionMode) {
+                    Icon(
+                        imageVector = Icons.Default.Notifications,
+                        contentDescription = null,
+                        modifier = Modifier.size(10.dp),
+                        tint = Color.White.copy(alpha = 0.8f)
+                    )
+                }
+            }
+        }
+        // Continuation rows just show the colored bar (no text needed)
     }
 }
 
@@ -778,8 +925,16 @@ private fun EventCreationDialog(
     var repeatType by remember { mutableStateOf(RepeatType.NEVER) }
     var showRepeatDropdown by remember { mutableStateOf(false) }
 
-    val startTime = "${selectedHour.toString().padStart(2, '0')}:00"
-    val endTime = "${((selectedHour + 1) % 24).toString().padStart(2, '0')}:00"
+    // Editable time state
+    var startHour by remember(selectedHour) { mutableStateOf(selectedHour) }
+    var startMinute by remember { mutableStateOf(0) }
+    var endHour by remember(selectedHour) { mutableStateOf((selectedHour + 1) % 24) }
+    var endMinute by remember { mutableStateOf(0) }
+    var showTimePicker by remember { mutableStateOf(false) }
+    var editingStartTime by remember { mutableStateOf(true) }
+
+    val startTime = "${startHour.toString().padStart(2, '0')}:${startMinute.toString().padStart(2, '0')}"
+    val endTime = "${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}"
 
     val selectedHabit = habits.find { it.id == selectedHabitId }
 
@@ -995,13 +1150,37 @@ private fun EventCreationDialog(
                         )
                     }
 
-                    IconButton(onClick = { /* Open time picker */ }) {
+                    IconButton(onClick = { showTimePicker = true }) {
                         Icon(
                             imageVector = Icons.Default.Edit,
                             contentDescription = "Edit Time",
                             tint = textColor.copy(alpha = 0.6f)
                         )
                     }
+                }
+
+                // Time Picker Dialog
+                if (showTimePicker) {
+                    TimePickerDialog(
+                        startHour = startHour,
+                        startMinute = startMinute,
+                        endHour = endHour,
+                        endMinute = endMinute,
+                        onStartTimeChanged = { hour, minute ->
+                            startHour = hour
+                            startMinute = minute
+                            // Auto-adjust end time if it's before start
+                            if (endHour < hour || (endHour == hour && endMinute <= minute)) {
+                                endHour = (hour + 1) % 24
+                                endMinute = minute
+                            }
+                        },
+                        onEndTimeChanged = { hour, minute ->
+                            endHour = hour
+                            endMinute = minute
+                        },
+                        onDismiss = { showTimePicker = false }
+                    )
                 }
 
                 HorizontalDivider(color = textColor.copy(alpha = 0.1f))
@@ -1129,6 +1308,193 @@ private fun getDayAbbreviation(dayOfWeek: DayOfWeek, language: Language): String
             DayOfWeek.SATURDAY -> "S"
             DayOfWeek.SUNDAY -> "Su"
             else -> "?"
+        }
+    }
+}
+
+@Composable
+private fun TimePickerDialog(
+    startHour: Int,
+    startMinute: Int,
+    endHour: Int,
+    endMinute: Int,
+    onStartTimeChanged: (hour: Int, minute: Int) -> Unit,
+    onEndTimeChanged: (hour: Int, minute: Int) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val textColor = MaterialTheme.colorScheme.onBackground
+    val cardColor = MaterialTheme.colorScheme.surface
+    var editingStart by remember { mutableStateOf(true) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = cardColor,
+        title = {
+            Text(
+                text = if (editingStart) "Start Time" else "End Time",
+                fontWeight = FontWeight.Bold,
+                color = textColor
+            )
+        },
+        text = {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // Tab selector
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    TabButton(
+                        text = "Start",
+                        selected = editingStart,
+                        onClick = { editingStart = true },
+                        modifier = Modifier.weight(1f)
+                    )
+                    TabButton(
+                        text = "End",
+                        selected = !editingStart,
+                        onClick = { editingStart = false },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Time display and picker
+                val currentHour = if (editingStart) startHour else endHour
+                val currentMinute = if (editingStart) startMinute else endMinute
+
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Hour picker
+                    NumberPicker(
+                        value = currentHour,
+                        range = 0..23,
+                        onValueChange = { hour ->
+                            if (editingStart) {
+                                onStartTimeChanged(hour, currentMinute)
+                            } else {
+                                onEndTimeChanged(hour, currentMinute)
+                            }
+                        }
+                    )
+
+                    Text(
+                        text = ":",
+                        fontSize = 32.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = textColor,
+                        modifier = Modifier.padding(horizontal = 8.dp)
+                    )
+
+                    // Minute picker
+                    NumberPicker(
+                        value = currentMinute,
+                        range = 0..59,
+                        step = 5,
+                        onValueChange = { minute ->
+                            if (editingStart) {
+                                onStartTimeChanged(currentHour, minute)
+                            } else {
+                                onEndTimeChanged(currentHour, minute)
+                            }
+                        }
+                    )
+                }
+
+                // Preview
+                Text(
+                    text = "${startHour.toString().padStart(2, '0')}:${startMinute.toString().padStart(2, '0')} - ${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}",
+                    fontSize = 14.sp,
+                    color = textColor.copy(alpha = 0.7f)
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Done", color = Color(0xFF4ECDC4))
+            }
+        }
+    )
+}
+
+@Composable
+private fun TabButton(
+    text: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val backgroundColor = if (selected) Color(0xFF4E7CFF) else Color.Transparent
+    val textColor = if (selected) Color.White else MaterialTheme.colorScheme.onBackground
+
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(8.dp),
+        color = backgroundColor,
+        onClick = onClick
+    ) {
+        Text(
+            text = text,
+            modifier = Modifier.padding(vertical = 8.dp, horizontal = 16.dp),
+            textAlign = TextAlign.Center,
+            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+            color = textColor
+        )
+    }
+}
+
+@Composable
+private fun NumberPicker(
+    value: Int,
+    range: IntRange,
+    step: Int = 1,
+    onValueChange: (Int) -> Unit
+) {
+    val textColor = MaterialTheme.colorScheme.onBackground
+    val validValues = range.filter { it % step == 0 || it == value }
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // Up button
+        IconButton(
+            onClick = {
+                val newValue = if (value + step > range.last) range.first else value + step
+                onValueChange(newValue)
+            }
+        ) {
+            Icon(
+                imageVector = Icons.Default.KeyboardArrowUp,
+                contentDescription = "Increase",
+                tint = textColor.copy(alpha = 0.6f)
+            )
+        }
+
+        // Value
+        Text(
+            text = value.toString().padStart(2, '0'),
+            fontSize = 32.sp,
+            fontWeight = FontWeight.Bold,
+            color = textColor
+        )
+
+        // Down button
+        IconButton(
+            onClick = {
+                val newValue = if (value - step < range.first) range.last - (range.last % step) else value - step
+                onValueChange(newValue)
+            }
+        ) {
+            Icon(
+                imageVector = Icons.Default.KeyboardArrowDown,
+                contentDescription = "Decrease",
+                tint = textColor.copy(alpha = 0.6f)
+            )
         }
     }
 }

@@ -1,6 +1,7 @@
 package com.cil.shift
 
 import android.app.Application
+import com.cil.shift.core.common.widget.WidgetNotifier
 import com.revenuecat.purchases.kmp.Purchases
 import com.revenuecat.purchases.kmp.PurchasesConfiguration
 import com.revenuecat.purchases.kmp.LogLevel
@@ -9,6 +10,9 @@ class ShiftApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+
+        // Initialize WidgetNotifier for widget updates
+        WidgetNotifier.initialize(this)
 
         // Configure RevenueCat SDK
         initRevenueCat()

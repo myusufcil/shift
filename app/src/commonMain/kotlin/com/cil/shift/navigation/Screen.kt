@@ -60,6 +60,19 @@ private object HomeScreenWrapper : cafe.adriel.voyager.core.screen.Screen {
         val navigator = LocalNavigator.currentOrThrow
         val viewModel: HomeViewModel = koinInject()
 
+        // Track navigator stack size to detect returns from child screens
+        val navigatorSize = navigator.size
+        val previousSizeState = remember { androidx.compose.runtime.mutableStateOf(navigatorSize) }
+
+        // Detect when returning from a screen (stack size decreased)
+        LaunchedEffect(navigatorSize) {
+            if (navigatorSize < previousSizeState.value) {
+                // Returned from a child screen - refresh with today's data
+                viewModel.onEvent(com.cil.shift.feature.habits.presentation.home.HomeEvent.ResetToToday)
+            }
+            previousSizeState.value = navigatorSize
+        }
+
         // Observe global navigation event
         LaunchedEffect(GlobalNavigationEvents.shouldNavigateToCreateHabit) {
             if (GlobalNavigationEvents.shouldNavigateToCreateHabit) {

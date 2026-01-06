@@ -929,8 +929,8 @@ private fun TodayProgressSection(
                     }
                 }
 
-                HabitType.TIMER, HabitType.SESSION -> {
-                    // Timer/Session controls (simplified for now)
+                HabitType.TIMER -> {
+                    // Timer controls
                     Column(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
@@ -972,6 +972,103 @@ private fun TodayProgressSection(
                                     } else {
                                         StringResources.markAsComplete.get(currentLanguage)
                                     },
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                        }
+                    }
+                }
+
+                HabitType.QUIT -> {
+                    // Quit habit - show days since quit
+                    val daysSinceQuit = habit.quitStartDate?.let { startDate ->
+                        val now = com.cil.shift.core.common.currentTimestamp()
+                        ((now - startDate) / (1000 * 60 * 60 * 24)).toInt().coerceAtLeast(0)
+                    } ?: 0
+
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = "$daysSinceQuit",
+                            fontSize = 48.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = habitColor
+                        )
+                        Text(
+                            text = if (daysSinceQuit == 1) "day clean" else "days clean",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = textColor.copy(alpha = 0.7f)
+                        )
+                        Text(
+                            text = "Keep going! You're doing great!",
+                            fontSize = 14.sp,
+                            color = textColor.copy(alpha = 0.5f)
+                        )
+                    }
+                }
+
+                HabitType.NEGATIVE -> {
+                    // Negative/reduce habit - show current vs limit
+                    val limitValue = habit.targetValue ?: 2
+                    val isExceeded = currentValue > limitValue
+                    val statusColor = if (isExceeded) Color(0xFFFF6B6B) else habitColor
+
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.Bottom
+                        ) {
+                            Text(
+                                text = "$currentValue",
+                                fontSize = 48.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = statusColor
+                            )
+                            Text(
+                                text = " / $limitValue ${habit.targetUnit ?: "times"}",
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = textColor.copy(alpha = 0.5f),
+                                modifier = Modifier.padding(bottom = 8.dp)
+                            )
+                        }
+
+                        if (isExceeded) {
+                            Text(
+                                text = "⚠️ You've exceeded your daily limit",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = statusColor,
+                                modifier = Modifier.align(Alignment.CenterHorizontally)
+                            )
+                        }
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Button(
+                                onClick = { onIncrementValue(1) },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(56.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = statusColor,
+                                    contentColor = Color.White
+                                ),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Text(
+                                    text = "Log Usage (+1)",
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.SemiBold
                                 )
@@ -1031,7 +1128,7 @@ private fun TodayProgressSection(
                             modifier = Modifier.fillMaxWidth(),
                             placeholder = {
                                 Text(
-                                    text = "Add a note for today...",
+                                    text = StringResources.addNoteForToday.get(currentLanguage),
                                     color = textColor.copy(alpha = 0.4f),
                                     fontSize = 14.sp
                                 )
@@ -1112,21 +1209,7 @@ private fun TodayProgressSection(
                     } else {
                         // Dinamik note placeholder - seçili tarihe göre
                         val notePlaceholder = remember(selectedDate, currentLanguage) {
-                            if (selectedDate != null) {
-                                try {
-                                    val date = kotlinx.datetime.LocalDate.parse(selectedDate)
-                                    val today = com.cil.shift.core.common.currentDate()
-                                    if (date.toString() == today.toString()) {
-                                        "No note for today"
-                                    } else {
-                                        "No note for ${formatCompletionDate(selectedDate, currentLanguage)}"
-                                    }
-                                } catch (e: Exception) {
-                                    "No note for today"
-                                }
-                            } else {
-                                "No note for today"
-                            }
+                            StringResources.noNoteForToday.get(currentLanguage)
                         }
 
                         Text(
@@ -1254,20 +1337,12 @@ private fun formatFrequency(
         }
         is com.cil.shift.feature.habits.domain.model.Frequency.Weekly -> {
             val dayNames = frequency.days.map { day ->
-                when (day) {
-                    kotlinx.datetime.DayOfWeek.MONDAY -> "Mon"
-                    kotlinx.datetime.DayOfWeek.TUESDAY -> "Tue"
-                    kotlinx.datetime.DayOfWeek.WEDNESDAY -> "Wed"
-                    kotlinx.datetime.DayOfWeek.THURSDAY -> "Thu"
-                    kotlinx.datetime.DayOfWeek.FRIDAY -> "Fri"
-                    kotlinx.datetime.DayOfWeek.SATURDAY -> "Sat"
-                    kotlinx.datetime.DayOfWeek.SUNDAY -> "Sun"
-                }
+                LocalizationHelpers.getDayNameShort(day.ordinal + 1, language)
             }.joinToString(", ")
-            "Weekly ($dayNames)"
+            "${StringResources.weekly.get(language)} ($dayNames)"
         }
         is com.cil.shift.feature.habits.domain.model.Frequency.Custom -> {
-            "Every ${frequency.daysInterval} days"
+            "${frequency.daysInterval} ${StringResources.days.get(language)}"
         }
     }
 }

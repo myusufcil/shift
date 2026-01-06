@@ -238,7 +238,8 @@ fun NewHomeScreen(
                     selectedDayIndex = selectedDayIndex,
                     onChartTypeChange = { chartType ->
                         viewModel.onEvent(HomeEvent.ChangeWeeklyChartType(chartType))
-                    }
+                    },
+                    currentLanguage = currentLanguage
                 )
             }
 
@@ -310,13 +311,24 @@ fun NewHomeScreen(
                             HabitType.TIMER -> {
                                 HabitItemTimer(
                                     name = LocalizationHelpers.getLocalizedHabitName(habit.name, currentLanguage),
-                                    currentMinutes = 0, // TODO: Get from completion data
-                                    targetMinutes = habit.targetValue ?: 120,
+                                    currentMinutes = habitWithCompletion.currentValue,
+                                    targetMinutes = habit.targetValue ?: 30,
                                     icon = habit.icon,
                                     color = habitColor,
                                     statusLabel = StringResources.focus.localized(),
                                     isCompleted = habitWithCompletion.isCompleted,
                                     streak = habitWithCompletion.currentStreak,
+                                    currentLanguage = currentLanguage,
+                                    isTimerRunning = state.runningTimers.contains(habit.id),
+                                    onTimerToggle = {
+                                        hapticManager.performHaptic(HapticType.LIGHT)
+                                        viewModel.onEvent(HomeEvent.ToggleTimer(habit.id))
+                                    },
+                                    onTimerTick = { viewModel.onEvent(HomeEvent.TimerTick(habit.id)) },
+                                    onTimerReset = {
+                                        hapticManager.performHaptic(HapticType.LIGHT)
+                                        viewModel.onEvent(HomeEvent.ResetTimer(habit.id))
+                                    },
                                     onClick = { onNavigateToHabitDetail(habit.id, state.selectedDate?.toString()) },
                                     modifier = Modifier.longPressDraggableHandle()
                                 )
@@ -344,19 +356,6 @@ fun NewHomeScreen(
                                 )
                             }
 
-                            HabitType.SESSION -> {
-                                HabitItemSession(
-                                    name = LocalizationHelpers.getLocalizedHabitName(habit.name, currentLanguage),
-                                    subtitle = "${habit.targetValue ?: 15} ${StringResources.minsGoal.localized()} • ${habit.targetUnit ?: StringResources.session.localized()}",
-                                    icon = habit.icon,
-                                    color = habitColor,
-                                    isCompleted = habitWithCompletion.isCompleted,
-                                    streak = habitWithCompletion.currentStreak,
-                                    onClick = { onNavigateToHabitDetail(habit.id, state.selectedDate?.toString()) },
-                                    modifier = Modifier.longPressDraggableHandle()
-                                )
-                            }
-
                             HabitType.SIMPLE -> {
                                 HabitItemSimple(
                                     name = LocalizationHelpers.getLocalizedHabitName(habit.name, currentLanguage),
@@ -370,6 +369,34 @@ fun NewHomeScreen(
                                         val hapticType = if (habitWithCompletion.isCompleted) HapticType.LIGHT else HapticType.SUCCESS
                                         hapticManager.performHaptic(hapticType)
                                         viewModel.onEvent(HomeEvent.ToggleHabit(habit.id))
+                                    },
+                                    onClick = { onNavigateToHabitDetail(habit.id, state.selectedDate?.toString()) },
+                                    modifier = Modifier.longPressDraggableHandle()
+                                )
+                            }
+
+                            HabitType.QUIT -> {
+                                HabitItemQuit(
+                                    name = LocalizationHelpers.getLocalizedHabitName(habit.name, currentLanguage),
+                                    quitStartDate = habit.quitStartDate,
+                                    icon = habit.icon,
+                                    color = habitColor,
+                                    onClick = { onNavigateToHabitDetail(habit.id, state.selectedDate?.toString()) },
+                                    modifier = Modifier.longPressDraggableHandle()
+                                )
+                            }
+
+                            HabitType.NEGATIVE -> {
+                                HabitItemNegative(
+                                    name = LocalizationHelpers.getLocalizedHabitName(habit.name, currentLanguage),
+                                    currentValue = habitWithCompletion.currentValue,
+                                    limitValue = habit.targetValue ?: 2,
+                                    unit = habit.targetUnit ?: "times",
+                                    icon = habit.icon,
+                                    color = habitColor,
+                                    onIncrement = { amount ->
+                                        hapticManager.performHaptic(HapticType.LIGHT)
+                                        viewModel.onEvent(HomeEvent.IncrementHabit(habit.id, amount))
                                     },
                                     onClick = { onNavigateToHabitDetail(habit.id, state.selectedDate?.toString()) },
                                     modifier = Modifier.longPressDraggableHandle()

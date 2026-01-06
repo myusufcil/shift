@@ -558,8 +558,8 @@ fun ProfileScreen(
                                 }
                                 // Small delay to ensure settings are persisted
                                 kotlinx.coroutines.delay(100)
-                                // Exit the app
-                                kotlin.system.exitProcess(0)
+                                // Close dialog - app will apply changes on next restart
+                                showRestartDialog = false
                             }
                         }
                     ) {

@@ -36,11 +36,15 @@ fun Step3CustomizeAndPreview(
     targetValue: Int?,
     targetUnit: String?,
     notes: String,
+    isNegative: Boolean = false,
+    quitStartDate: Long? = null,
     onColorSelect: (String) -> Unit,
     onHabitTypeSelect: (HabitType) -> Unit,
     onTargetValueChange: (Int?) -> Unit,
     onTargetUnitChange: (String) -> Unit,
     onNotesChange: (String) -> Unit,
+    onIsNegativeChange: (Boolean) -> Unit = {},
+    onQuitStartDateChange: (Long?) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val textColor = MaterialTheme.colorScheme.onBackground
@@ -202,31 +206,55 @@ fun Step3CustomizeAndPreview(
                 )
 
                 HabitTypeChip(
-                    text = "Session",
-                    isSelected = habitType == HabitType.SESSION,
-                    onClick = { onHabitTypeSelect(HabitType.SESSION) },
+                    text = "Quit",
+                    isSelected = habitType == HabitType.QUIT,
+                    onClick = { onHabitTypeSelect(HabitType.QUIT) },
                     modifier = Modifier.weight(1f),
                     textColor = textColor,
                     cardColor = cardColor,
-                    accentColor = accentColor
+                    accentColor = Color(0xFFFF6B6B) // Red for quit
                 )
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                HabitTypeChip(
+                    text = "Reduce",
+                    isSelected = habitType == HabitType.NEGATIVE,
+                    onClick = { onHabitTypeSelect(HabitType.NEGATIVE) },
+                    modifier = Modifier.weight(1f),
+                    textColor = textColor,
+                    cardColor = cardColor,
+                    accentColor = Color(0xFFFFB347) // Amber for reduce
+                )
+
+                // Empty spacer for balance
+                Spacer(modifier = Modifier.weight(1f))
             }
         }
 
         // Type description
+        val typeDescriptionColor = when (habitType) {
+            HabitType.QUIT -> Color(0xFFFF6B6B)
+            HabitType.NEGATIVE -> Color(0xFFFFB347)
+            else -> accentColor
+        }
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(12.dp))
-                .background(accentColor.copy(alpha = 0.1f))
+                .background(typeDescriptionColor.copy(alpha = 0.1f))
                 .padding(12.dp)
         ) {
             Text(
                 text = when (habitType) {
                     HabitType.SIMPLE -> "Simple checkbox - just mark it done"
                     HabitType.MEASURABLE -> "Track numbers (e.g., water intake, pages read)"
-                    HabitType.TIMER -> "Track time spent (e.g., deep work, study)"
-                    HabitType.SESSION -> "Start/stop sessions (e.g., meditation, workout)"
+                    HabitType.TIMER -> "Track time with start/stop (e.g., meditation, deep work)"
+                    HabitType.QUIT -> "Track days since quitting (e.g., smoke-free, sober)"
+                    HabitType.NEGATIVE -> "Set a daily limit to reduce (e.g., max 2 cups coffee)"
                 },
                 fontSize = 12.sp,
                 color = textColor.copy(alpha = 0.7f),
@@ -234,8 +262,10 @@ fun Step3CustomizeAndPreview(
             )
         }
 
-        // Target value input (for Measurable, Timer, Session)
-        if (habitType != HabitType.SIMPLE) {
+        // Target value input (for Measurable, Timer, Session, Negative)
+        // QUIT type doesn't need target values - it tracks days automatically
+        // SIMPLE type doesn't need target values either
+        if (habitType != HabitType.SIMPLE && habitType != HabitType.QUIT) {
             Column(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
@@ -264,8 +294,8 @@ fun Step3CustomizeAndPreview(
                             Text(
                                 text = when (habitType) {
                                     HabitType.MEASURABLE -> "2000"
-                                    HabitType.TIMER -> "120"
-                                    HabitType.SESSION -> "15"
+                                    HabitType.TIMER -> "30"
+                                    HabitType.NEGATIVE -> "2"
                                     else -> "0"
                                 },
                                 color = textColor.copy(alpha = 0.3f)
@@ -285,145 +315,222 @@ fun Step3CustomizeAndPreview(
                         singleLine = true
                     )
 
-                    // Unit - Different for Timer/Session vs Measurable
-                    if (habitType == HabitType.TIMER || habitType == HabitType.SESSION) {
-                        // Time unit selector (hr, min, sec)
-                        Column(
-                            modifier = Modifier.weight(0.6f),
-                            verticalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            val timeUnits = listOf(
-                                "hr" to StringResources.hr.localized(),
-                                "min" to StringResources.min.localized(),
-                                "sec" to StringResources.sec.localized()
-                            )
+                    // Unit selection based on habit type
+                    val negativeAccentColor = Color(0xFFFFB347)
+                    when (habitType) {
+                        HabitType.TIMER -> {
+                            // Time unit selector (hr, min, sec)
+                            Column(
+                                modifier = Modifier.weight(0.6f),
+                                verticalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                val timeUnits = listOf(
+                                    "hr" to StringResources.hr.localized(),
+                                    "min" to StringResources.min.localized(),
+                                    "sec" to StringResources.sec.localized()
+                                )
 
-                            timeUnits.forEach { (unit, label) ->
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(32.dp)
-                                        .clip(RoundedCornerShape(8.dp))
-                                        .background(
-                                            if (targetUnit == unit) accentColor
-                                            else cardColor
+                                timeUnits.forEach { (unit, label) ->
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(32.dp)
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(
+                                                if (targetUnit == unit) accentColor
+                                                else cardColor
+                                            )
+                                            .clickable { onTargetUnitChange(unit) },
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = label,
+                                            fontSize = 12.sp,
+                                            fontWeight = if (targetUnit == unit) FontWeight.SemiBold else FontWeight.Normal,
+                                            color = if (targetUnit == unit) Color.White else textColor
                                         )
-                                        .clickable { onTargetUnitChange(unit) },
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = label,
-                                        fontSize = 12.sp,
-                                        fontWeight = if (targetUnit == unit) FontWeight.SemiBold else FontWeight.Normal,
-                                        color = if (targetUnit == unit) Color.White else textColor
-                                    )
+                                    }
                                 }
                             }
                         }
-                    } else {
-                        // Unit selector for Measurable - Column 1
-                        Column(
-                            modifier = Modifier.weight(0.65f),
-                            verticalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            val measurableUnits = listOf(
-                                "ml", "L", "g", "kg", "steps", "pages", "reps", "cal"
+                        HabitType.NEGATIVE -> {
+                            // Negative/Reduce type units (cups, glasses, times, cigarettes, etc.)
+                            val negativeUnits = listOf(
+                                "cups", "glasses", "times", "cigarettes", "drinks", "hours", "snacks", "servings"
                             )
 
-                            // Show first 3 units
-                            measurableUnits.take(3).forEach { unit ->
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(32.dp)
-                                        .clip(RoundedCornerShape(8.dp))
-                                        .background(
-                                            if (targetUnit == unit) accentColor
-                                            else cardColor
+                            // First column - show first 3 units
+                            Column(
+                                modifier = Modifier.weight(0.65f),
+                                verticalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                negativeUnits.take(3).forEach { unit ->
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(32.dp)
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(
+                                                if (targetUnit == unit) negativeAccentColor
+                                                else cardColor
+                                            )
+                                            .clickable { onTargetUnitChange(unit) },
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = unit,
+                                            fontSize = 12.sp,
+                                            fontWeight = if (targetUnit == unit) FontWeight.SemiBold else FontWeight.Normal,
+                                            color = if (targetUnit == unit) Color.White else textColor
                                         )
-                                        .clickable { onTargetUnitChange(unit) },
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = unit,
-                                        fontSize = 12.sp,
-                                        fontWeight = if (targetUnit == unit) FontWeight.SemiBold else FontWeight.Normal,
-                                        color = if (targetUnit == unit) Color.White else textColor
-                                    )
+                                    }
                                 }
+                            }
+                            // Second column - show units 4-6
+                            Column(
+                                modifier = Modifier.weight(0.65f),
+                                verticalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                negativeUnits.slice(3..5).forEach { unit ->
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(32.dp)
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(
+                                                if (targetUnit == unit) negativeAccentColor
+                                                else cardColor
+                                            )
+                                            .clickable { onTargetUnitChange(unit) },
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = unit,
+                                            fontSize = 12.sp,
+                                            fontWeight = if (targetUnit == unit) FontWeight.SemiBold else FontWeight.Normal,
+                                            color = if (targetUnit == unit) Color.White else textColor
+                                        )
+                                    }
+                                }
+                            }
+                            // Third column - show remaining units
+                            Column(
+                                modifier = Modifier.weight(0.65f),
+                                verticalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                negativeUnits.drop(6).forEach { unit ->
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(32.dp)
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(
+                                                if (targetUnit == unit) negativeAccentColor
+                                                else cardColor
+                                            )
+                                            .clickable { onTargetUnitChange(unit) },
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = unit,
+                                            fontSize = 12.sp,
+                                            fontWeight = if (targetUnit == unit) FontWeight.SemiBold else FontWeight.Normal,
+                                            color = if (targetUnit == unit) Color.White else textColor
+                                        )
+                                    }
+                                }
+                                // Add spacer for alignment
+                                Spacer(modifier = Modifier.height(32.dp))
                             }
                         }
-                    }
-
-                    // Show remaining units in a second column if needed
-                    if (habitType == HabitType.MEASURABLE) {
-                        Column(
-                            modifier = Modifier.weight(0.65f),
-                            verticalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
+                        else -> {
+                            // Unit selector for Measurable - Column 1
                             val measurableUnits = listOf(
                                 "ml", "L", "g", "kg", "steps", "pages", "reps", "cal"
                             )
-
-                            // Show units 4-6
-                            measurableUnits.slice(3..5).forEach { unit ->
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(32.dp)
-                                        .clip(RoundedCornerShape(8.dp))
-                                        .background(
-                                            if (targetUnit == unit) accentColor
-                                            else cardColor
+                            Column(
+                                modifier = Modifier.weight(0.65f),
+                                verticalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                // Show first 3 units
+                                measurableUnits.take(3).forEach { unit ->
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(32.dp)
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(
+                                                if (targetUnit == unit) accentColor
+                                                else cardColor
+                                            )
+                                            .clickable { onTargetUnitChange(unit) },
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = unit,
+                                            fontSize = 12.sp,
+                                            fontWeight = if (targetUnit == unit) FontWeight.SemiBold else FontWeight.Normal,
+                                            color = if (targetUnit == unit) Color.White else textColor
                                         )
-                                        .clickable { onTargetUnitChange(unit) },
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = unit,
-                                        fontSize = 12.sp,
-                                        fontWeight = if (targetUnit == unit) FontWeight.SemiBold else FontWeight.Normal,
-                                        color = if (targetUnit == unit) Color.White else textColor
-                                    )
+                                    }
                                 }
                             }
-                        }
-                    }
-
-                    // Third column for remaining units
-                    if (habitType == HabitType.MEASURABLE) {
-                        Column(
-                            modifier = Modifier.weight(0.65f),
-                            verticalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            val measurableUnits = listOf(
-                                "ml", "L", "g", "kg", "steps", "pages", "reps", "cal"
-                            )
-
-                            // Show remaining units
-                            measurableUnits.drop(6).forEach { unit ->
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(32.dp)
-                                        .clip(RoundedCornerShape(8.dp))
-                                        .background(
-                                            if (targetUnit == unit) accentColor
-                                            else cardColor
+                            // Column 2
+                            Column(
+                                modifier = Modifier.weight(0.65f),
+                                verticalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                // Show units 4-6
+                                measurableUnits.slice(3..5).forEach { unit ->
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(32.dp)
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(
+                                                if (targetUnit == unit) accentColor
+                                                else cardColor
+                                            )
+                                            .clickable { onTargetUnitChange(unit) },
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = unit,
+                                            fontSize = 12.sp,
+                                            fontWeight = if (targetUnit == unit) FontWeight.SemiBold else FontWeight.Normal,
+                                            color = if (targetUnit == unit) Color.White else textColor
                                         )
-                                        .clickable { onTargetUnitChange(unit) },
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = unit,
-                                        fontSize = 12.sp,
-                                        fontWeight = if (targetUnit == unit) FontWeight.SemiBold else FontWeight.Normal,
-                                        color = if (targetUnit == unit) Color.White else textColor
-                                    )
+                                    }
                                 }
                             }
-                            // Add spacer for alignment with other columns
-                            if (measurableUnits.size - 6 < 3) {
+                            // Column 3
+                            Column(
+                                modifier = Modifier.weight(0.65f),
+                                verticalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                // Show remaining units
+                                measurableUnits.drop(6).forEach { unit ->
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(32.dp)
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(
+                                                if (targetUnit == unit) accentColor
+                                                else cardColor
+                                            )
+                                            .clickable { onTargetUnitChange(unit) },
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = unit,
+                                            fontSize = 12.sp,
+                                            fontWeight = if (targetUnit == unit) FontWeight.SemiBold else FontWeight.Normal,
+                                            color = if (targetUnit == unit) Color.White else textColor
+                                        )
+                                    }
+                                }
+                                // Add spacer for alignment
                                 Spacer(modifier = Modifier.height(32.dp))
                             }
                         }
@@ -565,24 +672,86 @@ private fun String.toComposeColor(): Color {
 private fun String.toEmoji(): String {
     // Map icon IDs to emojis
     return when (this) {
+        // Health & Fitness
         "water" -> "💧"
-        "tools" -> "🛠"
-        "camera" -> "📷"
-        "umbrella" -> "☂️"
         "run" -> "🏃"
+        "dumbbell" -> "🏋️"
+        "heart" -> "❤️"
+        "apple" -> "🍎"
+        "salad" -> "🥗"
+        "bike" -> "🚴"
+        "swim" -> "🏊"
+
+        // Mindfulness & Wellness
+        "meditation" -> "🧘"
         "moon" -> "🌙"
+        "sun" -> "☀️"
+        "sparkles" -> "✨"
+        "brain" -> "🧠"
+        "lotus" -> "🪷"
+        "pray" -> "🙏"
+        "sleep" -> "😴"
+
+        // Productivity & Work
         "code" -> "💻"
         "book" -> "📚"
+        "briefcase" -> "💼"
+        "pencil" -> "✏️"
+        "target" -> "🎯"
+        "clock" -> "⏰"
+        "calendar" -> "📅"
+        "chart" -> "📈"
+
+        // Food & Drinks
+        "coffee" -> "☕"
         "utensils" -> "🍴"
+        "pizza" -> "🍕"
+        "burger" -> "🍔"
+        "candy" -> "🍬"
+        "soda" -> "🥤"
+        "beer" -> "🍺"
+        "wine" -> "🍷"
+
+        // Lifestyle & Home
+        "home" -> "🏠"
+        "bed" -> "🛏️"
+        "clean" -> "🧹"
+        "laundry" -> "🧺"
+        "plant" -> "🌱"
         "leaf" -> "🍃"
-        "dumbbell" -> "🏋️"
-        "meditation" -> "🧘"
+        "flower" -> "🌸"
+        "dog" -> "🐕"
+
+        // Entertainment & Hobbies
         "music" -> "🎵"
         "palette" -> "🎨"
-        "briefcase" -> "💼"
-        "coffee" -> "☕"
-        "brain" -> "🧠"
-        "heart" -> "❤️"
+        "camera" -> "📷"
+        "game" -> "🎮"
+        "guitar" -> "🎸"
+        "movie" -> "🎬"
+        "headphones" -> "🎧"
+        "mic" -> "🎤"
+
+        // Quit & Reduce
+        "cigarette" -> "🚬"
+        "phone" -> "📱"
+        "tv" -> "📺"
+        "shopping" -> "🛍️"
+        "cookie" -> "🍪"
+        "chocolate" -> "🍫"
+        "ice" -> "🍦"
+        "donut" -> "🍩"
+
+        // Tools & Misc
+        "tools" -> "🛠"
+        "umbrella" -> "☂️"
+        "car" -> "🚗"
+        "plane" -> "✈️"
+        "star" -> "⭐"
+        "fire" -> "🔥"
+        "trophy" -> "🏆"
+        "check" -> "✅"
+
         else -> "✓"
     }
 }
