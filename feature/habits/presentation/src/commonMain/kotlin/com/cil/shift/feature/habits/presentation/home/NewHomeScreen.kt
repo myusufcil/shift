@@ -290,28 +290,6 @@ fun NewHomeScreen(
                 )
             }
 
-            // Today's Schedule section (if there are scheduled events)
-            if (state.scheduledEvents.isNotEmpty()) {
-                item {
-                    Text(
-                        text = StringResources.schedule.localized(),
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = textColor
-                    )
-                }
-
-                items(
-                    items = state.scheduledEvents,
-                    key = { it.id }
-                ) { schedule ->
-                    ScheduledEventCard(
-                        schedule = schedule,
-                        currentLanguage = currentLanguage
-                    )
-                }
-            }
-
             // Today's Habits header
             item {
                 Row(
@@ -390,6 +368,7 @@ fun NewHomeScreen(
                                     icon = habit.icon,
                                     color = habitColor,
                                     streak = habitWithCompletion.currentStreak,
+                                    currentLanguage = currentLanguage,
                                     onIncrement = {
                                         hapticManager.performHaptic(HapticType.LIGHT)
                                         viewModel.onEvent(HomeEvent.IncrementHabit(habit.id, 250))
@@ -451,6 +430,28 @@ fun NewHomeScreen(
                             }
                         }
                     }
+                }
+            }
+
+            // Today's Schedule section (if there are scheduled events) - shown after habits
+            if (state.scheduledEvents.isNotEmpty()) {
+                item {
+                    Text(
+                        text = StringResources.schedule.localized(),
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = textColor
+                    )
+                }
+
+                items(
+                    items = state.scheduledEvents,
+                    key = { it.id }
+                ) { schedule ->
+                    ScheduledEventCard(
+                        schedule = schedule,
+                        currentLanguage = currentLanguage
+                    )
                 }
             }
 

@@ -128,6 +128,7 @@ private fun getIconEmoji(icon: String): String {
         "vegetables", "veg" -> "🥦"
         "fruit", "fru" -> "🍉"
         "cooking", "coo" -> "🍳"
+        "breakfast", "bre", "kahvaltı", "kah" -> "🍳"
         "sunrise", "sun" -> "🌅"
         "sunset" -> "🌇"
         "pill", "med" -> "💊"

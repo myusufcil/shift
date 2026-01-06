@@ -22,6 +22,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.cil.shift.core.common.localization.Language
+import com.cil.shift.core.common.localization.StringResources
 
 @Composable
 fun HabitItemMeasurable(
@@ -32,6 +34,7 @@ fun HabitItemMeasurable(
     icon: String,
     color: Color,
     streak: Int = 0,
+    currentLanguage: Language = Language.ENGLISH,
     onIncrement: () -> Unit,
     onDecrement: () -> Unit,
     onClick: () -> Unit,
@@ -129,7 +132,7 @@ fun HabitItemMeasurable(
 
                     if (currentValue >= targetValue && targetValue > 0) {
                         Text(
-                            text = "DONE",
+                            text = StringResources.done.get(currentLanguage).uppercase(),
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF4ECDC4),
@@ -145,43 +148,45 @@ fun HabitItemMeasurable(
             }
         }
 
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        // Show buttons only when not completed, otherwise just show checkmark
+        if (currentValue >= targetValue && targetValue > 0) {
+            // Completed state - show checkmark only
             Box(
                 modifier = Modifier
-                    .size(32.dp)
+                    .size(36.dp)
                     .clip(CircleShape)
-                    .background(textColor.copy(alpha = 0.1f))
-                    .clickable(onClick = onDecrement),
+                    .background(Color(0xFF4ECDC4)),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "−",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Normal,
-                    color = textColor
+                Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = "Completed",
+                    tint = Color.White,
+                    modifier = Modifier.size(22.dp)
                 )
             }
-
-            // Show checkmark when completed, otherwise show percentage
-            if (currentValue >= targetValue && targetValue > 0) {
+        } else {
+            // Not completed - show increment/decrement buttons
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Box(
                     modifier = Modifier
-                        .size(28.dp)
+                        .size(32.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFF4ECDC4)),
+                        .background(textColor.copy(alpha = 0.1f))
+                        .clickable(onClick = onDecrement),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Check,
-                        contentDescription = "Completed",
-                        tint = Color.White,
-                        modifier = Modifier.size(18.dp)
+                    Text(
+                        text = "−",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Normal,
+                        color = textColor
                     )
                 }
-            } else {
+
                 Text(
                     text = "$animatedPercentage%",
                     fontSize = 16.sp,
@@ -189,25 +194,25 @@ fun HabitItemMeasurable(
                     color = textColor,
                     modifier = Modifier.widthIn(min = 40.dp)
                 )
-            }
 
-            Box(
-                modifier = Modifier
-                    .size(32.dp)
-                    .clip(CircleShape)
-                    .background(color),
-                contentAlignment = Alignment.Center
-            ) {
-                IconButton(
-                    onClick = onIncrement,
-                    modifier = Modifier.size(32.dp)
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .background(color),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Add",
-                        tint = Color.White,
-                        modifier = Modifier.size(20.dp)
-                    )
+                    IconButton(
+                        onClick = onIncrement,
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Add",
+                            tint = Color.White,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
                 }
             }
         }
@@ -221,6 +226,7 @@ private fun getIconEmoji(icon: String): String {
         "vegetables", "veg" -> "🥦"
         "fruit", "fru" -> "🍉"
         "cooking", "coo" -> "🍳"
+        "breakfast", "bre", "kahvaltı", "kah" -> "🍳"
         "sunrise", "sun" -> "🌅"
         "sunset" -> "🌇"
         "pill", "med" -> "💊"

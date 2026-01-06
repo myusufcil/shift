@@ -12,6 +12,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -19,7 +21,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.cil.shift.core.common.localization.LocalizationHelpers
+import com.cil.shift.core.common.localization.LocalizationManager
 import com.cil.shift.feature.habits.presentation.home.HabitWithCompletion
+import org.koin.compose.koinInject
 
 @Composable
 fun HabitCard(
@@ -31,6 +36,10 @@ fun HabitCard(
     val habit = habitWithCompletion.habit
     val isCompleted = habitWithCompletion.isCompletedToday
     val habitColor = habit.color.toComposeColor()
+
+    val localizationManager = koinInject<LocalizationManager>()
+    val currentLanguage by localizationManager.currentLanguage.collectAsState()
+    val localizedHabitName = LocalizationHelpers.getLocalizedHabitName(habit.name, currentLanguage)
 
     val textColor = MaterialTheme.colorScheme.onBackground
     val cardColor = MaterialTheme.colorScheme.surface
@@ -72,7 +81,7 @@ fun HabitCard(
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Text(
-                    text = habit.name,
+                    text = localizedHabitName,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = textColor
@@ -135,6 +144,7 @@ private fun getIconEmoji(icon: String): String {
         "vegetables", "veg" -> "🥦"
         "fruit", "fru" -> "🍉"
         "cooking", "coo" -> "🍳"
+        "breakfast", "bre", "kahvaltı", "kah" -> "🍳"
         "sunrise", "sun" -> "🌅"
         "sunset" -> "🌇"
         "pill", "med" -> "💊"
