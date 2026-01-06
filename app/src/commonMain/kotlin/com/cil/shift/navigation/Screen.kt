@@ -86,6 +86,7 @@ private object HomeScreenWrapper : cafe.adriel.voyager.core.screen.Screen {
             onNavigateToHabitDetail = { habitId, selectedDate -> navigator.push(HabitDetailScreen(habitId, selectedDate)) },
             onNavigateToNotifications = { navigator.push(NotificationsScreenNav) },
             onNavigateToProfile = { navigator.push(ProfileScreenNav) },
+            onNavigateToPremium = { navigator.push(PremiumScreenNav) },
             viewModel = viewModel
         )
     }

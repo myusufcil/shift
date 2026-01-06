@@ -25,10 +25,14 @@ import com.cil.shift.core.common.achievement.Achievement
 import com.cil.shift.core.common.achievement.AchievementManager
 import com.cil.shift.core.common.haptic.HapticType
 import com.cil.shift.core.common.haptic.getHapticFeedbackManager
+import com.cil.shift.core.common.honey.HoneyManager
+import com.cil.shift.core.common.honey.HoneyReason
 import com.cil.shift.core.common.localization.LocalizationHelpers
 import com.cil.shift.core.common.localization.LocalizationManager
 import com.cil.shift.core.common.localization.StringResources
 import com.cil.shift.core.common.localization.localized
+import com.cil.shift.core.designsystem.components.HoneyCounter
+import com.cil.shift.core.designsystem.components.HoneyEarnedPopup
 import com.cil.shift.feature.habits.domain.model.HabitSchedule
 import com.cil.shift.feature.habits.domain.model.HabitType
 import com.cil.shift.feature.habits.presentation.home.components.*
@@ -44,6 +48,7 @@ fun NewHomeScreen(
     onNavigateToHabitDetail: (String, String?) -> Unit,
     onNavigateToNotifications: () -> Unit = {},
     onNavigateToProfile: () -> Unit = {},
+    onNavigateToPremium: () -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = viewModel {
         throw IllegalStateException("ViewModel should be provided via DI")
@@ -58,6 +63,32 @@ fun NewHomeScreen(
 
     // Achievement manager
     val achievementManager = koinInject<AchievementManager>()
+
+    // Honey system
+    val honeyManager = koinInject<HoneyManager>()
+    val honeyStatus by honeyManager.honeyStatus.collectAsState()
+    var showHoneyEarned by remember { mutableStateOf(false) }
+    var honeyEarnedAmount by remember { mutableStateOf(0) }
+    var honeyEarnedReason by remember { mutableStateOf("") }
+
+    // Check for daily reward on screen load
+    LaunchedEffect(Unit) {
+        val dailyReward = honeyManager.checkDailyReward()
+        if (dailyReward != null) {
+            honeyEarnedAmount = dailyReward
+            honeyEarnedReason = "Daily check-in bonus!"
+            showHoneyEarned = true
+        }
+    }
+
+    // Observe honey earned from habit completions
+    LaunchedEffect(state.lastHoneyEarned, state.lastHoneyReason) {
+        if (state.lastHoneyEarned > 0 && state.lastHoneyReason.isNotEmpty()) {
+            honeyEarnedAmount = state.lastHoneyEarned
+            honeyEarnedReason = state.lastHoneyReason
+            showHoneyEarned = true
+        }
+    }
 
     val newlyUnlockedAchievement by achievementManager.newlyUnlocked.collectAsState()
     var displayedAchievement by remember { mutableStateOf<Achievement?>(null) }
@@ -147,7 +178,7 @@ fun NewHomeScreen(
             ),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            // Header with user info and notifications
+            // Header with user info, honey counter, and notifications
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -155,7 +186,8 @@ fun NewHomeScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(
-                        verticalArrangement = Arrangement.spacedBy(2.dp)
+                        verticalArrangement = Arrangement.spacedBy(2.dp),
+                        modifier = Modifier.weight(1f)
                     ) {
                         Text(
                             text = state.currentDate.uppercase(),
@@ -172,19 +204,34 @@ fun NewHomeScreen(
                         )
                     }
 
-                    IconButton(
-                        onClick = onNavigateToNotifications,
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(CircleShape)
-                            .background(cardColor)
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Notifications,
-                            contentDescription = StringResources.notifications.localized(),
-                            tint = textColor,
-                            modifier = Modifier.size(20.dp)
-                        )
+                        // Honey counter (only show if not premium)
+                        if (!honeyManager.isPremium()) {
+                            HoneyCounter(
+                                balance = honeyStatus.balance,
+                                onClick = onNavigateToPremium,
+                                isLow = honeyStatus.isLowBalance,
+                                isCritical = honeyStatus.isCriticalBalance
+                            )
+                        }
+
+                        IconButton(
+                            onClick = onNavigateToNotifications,
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .background(cardColor)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Notifications,
+                                contentDescription = StringResources.notifications.localized(),
+                                tint = textColor,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -426,6 +473,17 @@ fun NewHomeScreen(
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .statusBarsPadding()
+        )
+
+        // Honey earned popup
+        HoneyEarnedPopup(
+            visible = showHoneyEarned,
+            amount = honeyEarnedAmount,
+            reason = honeyEarnedReason,
+            onDismiss = {
+                showHoneyEarned = false
+                viewModel.onEvent(HomeEvent.ClearHoneyEarned)
+            }
         )
     }
 }

@@ -2,6 +2,7 @@ package com.cil.shift.feature.habits.presentation.home.components
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.LinearProgressIndicator
@@ -74,6 +75,11 @@ fun DailyGoalProgress(
                 .height(8.dp)
                 .clip(RoundedCornerShape(4.dp))
                 .background(cardColor)
+                .border(
+                    width = 1.dp,
+                    color = textColor.copy(alpha = 0.15f),
+                    shape = RoundedCornerShape(4.dp)
+                )
         ) {
             Box(
                 modifier = Modifier

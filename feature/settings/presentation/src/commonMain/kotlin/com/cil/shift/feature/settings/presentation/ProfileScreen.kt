@@ -3,6 +3,7 @@ package com.cil.shift.feature.settings.presentation
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
@@ -301,7 +302,7 @@ fun ProfileScreen(
                                 )
                             }
                             Text(
-                                text = "⭐",
+                                text = "🍯",
                                 fontSize = 32.sp
                             )
                         }
@@ -360,15 +361,12 @@ fun ProfileScreen(
                         subtitle = currentLanguage.nativeName,
                         onClick = { showLanguageDialog = true }
                     )
-                    ProfileMenuItem(
-                        icon = Icons.Default.Palette,
-                        title = StringResources.theme.localized(),
-                        subtitle = when (currentTheme) {
-                            AppTheme.DARK -> StringResources.dark.localized()
-                            AppTheme.LIGHT -> StringResources.light.localized()
-                            AppTheme.SYSTEM -> StringResources.systemDefault.localized()
+                    ThemeToggleMenuItem(
+                        currentTheme = currentTheme,
+                        onThemeToggle = { isDark ->
+                            themeManager.setTheme(if (isDark) AppTheme.DARK else AppTheme.LIGHT)
                         },
-                        onClick = { showThemeDialog = true }
+                        onMoreOptions = { showThemeDialog = true }
                     )
                     ProfileMenuItem(
                         icon = Icons.Default.EmojiEvents,
@@ -496,13 +494,9 @@ fun ProfileScreen(
             LanguageSelectionDialog(
                 currentLanguage = currentLanguage,
                 onLanguageSelected = { language ->
-                    if (language != currentLanguage) {
-                        pendingLanguage = language
-                        showLanguageDialog = false
-                        showRestartDialog = true
-                    } else {
-                        showLanguageDialog = false
-                    }
+                    // Apply language immediately - no restart needed
+                    localizationManager.setLanguage(language)
+                    showLanguageDialog = false
                 },
                 onDismiss = { showLanguageDialog = false }
             )
@@ -512,13 +506,9 @@ fun ProfileScreen(
             ThemeSelectionDialog(
                 currentTheme = currentTheme,
                 onThemeSelected = { theme ->
-                    if (theme != currentTheme) {
-                        pendingTheme = theme
-                        showThemeDialog = false
-                        showRestartDialog = true
-                    } else {
-                        showThemeDialog = false
-                    }
+                    // Apply theme immediately - no restart needed
+                    themeManager.setTheme(theme)
+                    showThemeDialog = false
                 },
                 onDismiss = { showThemeDialog = false }
             )
@@ -734,6 +724,97 @@ private fun ProfileMenuItem(
             tint = textColor.copy(alpha = 0.3f),
             modifier = Modifier.size(20.dp)
         )
+    }
+}
+
+@Composable
+private fun ThemeToggleMenuItem(
+    currentTheme: AppTheme,
+    onThemeToggle: (isDark: Boolean) -> Unit,
+    onMoreOptions: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val cardColor = MaterialTheme.colorScheme.surface
+    val textColor = MaterialTheme.colorScheme.onBackground
+    val isDark = currentTheme == AppTheme.DARK ||
+                 (currentTheme == AppTheme.SYSTEM && isSystemInDarkTheme())
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(cardColor)
+            .border(
+                width = 1.dp,
+                color = textColor.copy(alpha = 0.1f),
+                shape = RoundedCornerShape(12.dp)
+            )
+            .clickable(onClick = onMoreOptions)
+            .padding(16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.Palette,
+                contentDescription = StringResources.theme.localized(),
+                tint = textColor.copy(alpha = 0.7f),
+                modifier = Modifier.size(20.dp)
+            )
+            Column(
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                Text(
+                    text = StringResources.theme.localized(),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = textColor
+                )
+                Text(
+                    text = when (currentTheme) {
+                        AppTheme.DARK -> StringResources.dark.localized()
+                        AppTheme.LIGHT -> StringResources.light.localized()
+                        AppTheme.SYSTEM -> StringResources.systemDefault.localized()
+                    },
+                    fontSize = 12.sp,
+                    color = textColor.copy(alpha = 0.5f)
+                )
+            }
+        }
+
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Sun icon for light mode
+            Text(
+                text = "☀️",
+                fontSize = 14.sp,
+                color = if (!isDark) Color(0xFFFFD700) else textColor.copy(alpha = 0.3f)
+            )
+
+            Switch(
+                checked = isDark,
+                onCheckedChange = { onThemeToggle(it) },
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = Color.White,
+                    checkedTrackColor = Color(0xFF4E7CFF),
+                    uncheckedThumbColor = Color.White,
+                    uncheckedTrackColor = Color(0xFFFFD700)
+                ),
+                modifier = Modifier.height(24.dp)
+            )
+
+            // Moon icon for dark mode
+            Text(
+                text = "🌙",
+                fontSize = 14.sp,
+                color = if (isDark) Color(0xFF4E7CFF) else textColor.copy(alpha = 0.3f)
+            )
+        }
     }
 }
 
