@@ -213,14 +213,23 @@ fun NewHomeScreen(
             // Weekly Progress Chart
             item {
                 // Calculate selected day index for chart highlighting
-                val selectedDayIndex = remember(state.selectedDate) {
+                // Chart shows Monday to Sunday (index 0=Mon, 6=Sun)
+                val selectedDayIndex = remember(state.selectedDate, state.selectedDayIndex) {
                     state.selectedDate?.let { selectedDate ->
+                        // Use the day of week (Monday=0, Sunday=6)
                         val today = com.cil.shift.core.common.currentDate()
-                        val daysDifference = selectedDate.toEpochDays() - today.toEpochDays()
-                        // Chart shows days from 6 days ago to today (index 0-6)
-                        // Today = index 6, yesterday = index 5, etc.
-                        (6 + daysDifference).toInt().takeIf { it in 0..6 }
-                    }
+                        val daysFromMonday = today.dayOfWeek.ordinal
+                        val mondayOfWeek = today.toEpochDays() - daysFromMonday
+                        val sundayOfWeek = mondayOfWeek + 6
+
+                        // Check if selected date is within current week
+                        val selectedEpochDays = selectedDate.toEpochDays()
+                        if (selectedEpochDays in mondayOfWeek..sundayOfWeek) {
+                            selectedDate.dayOfWeek.ordinal
+                        } else {
+                            null
+                        }
+                    } ?: state.selectedDayIndex // Default to today's index from state
                 }
 
                 WeeklyProgressChart(

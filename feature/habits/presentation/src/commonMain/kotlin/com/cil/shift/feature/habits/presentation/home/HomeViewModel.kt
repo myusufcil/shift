@@ -337,12 +337,19 @@ class HomeViewModel(
                 val today = com.cil.shift.core.common.currentDate()
                 val weekData = mutableListOf<Pair<String, Float>>()
 
-                val weekDays = listOf("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat")
+                // ISO week day names (Monday = 0, Sunday = 6)
+                val weekDays = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
 
-                for (i in 6 downTo 0) {
-                    val date = today.minus(i, DateTimeUnit.DAY)
+                // Calculate the Monday of the current week
+                // dayOfWeek.ordinal: Monday=0, Tuesday=1, ..., Sunday=6
+                val daysFromMonday = today.dayOfWeek.ordinal
+                val mondayOfWeek = today.minus(daysFromMonday, DateTimeUnit.DAY)
+
+                // Iterate Monday to Sunday
+                for (i in 0..6) {
+                    val date = mondayOfWeek.plus(i, DateTimeUnit.DAY)
                     val dateString = date.toString()
-                    val dayName = weekDays[date.dayOfWeek.ordinal]
+                    val dayName = weekDays[i]
 
                     var completedCount = 0
                     var totalHabitsForDay = 0
@@ -362,7 +369,13 @@ class HomeViewModel(
                     weekData.add(dayName to rate)
                 }
 
-                _state.update { it.copy(weeklyChartData = weekData) }
+                // Find today's index in the week (0=Monday, 6=Sunday)
+                val todayIndex = today.dayOfWeek.ordinal
+
+                _state.update { it.copy(
+                    weeklyChartData = weekData,
+                    selectedDayIndex = todayIndex
+                ) }
             }
         }
     }
