@@ -58,6 +58,7 @@ fun NewHomeScreen(
 
     // Achievement manager
     val achievementManager = koinInject<AchievementManager>()
+
     val newlyUnlockedAchievement by achievementManager.newlyUnlocked.collectAsState()
     var displayedAchievement by remember { mutableStateOf<Achievement?>(null) }
 

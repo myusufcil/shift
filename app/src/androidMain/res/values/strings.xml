@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Shift</string>
+    <string name="widget_description">Track and complete your daily habits quickly from your home screen</string>
+    <string name="widget_name">Shift Habits</string>
 </resources>

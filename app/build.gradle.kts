@@ -97,6 +97,10 @@ kotlin {
             implementation(libs.googleid)
             implementation(libs.androidx.credentials)
             implementation(libs.androidx.credentials.play.services)
+
+            // Glance (App Widget)
+            implementation(libs.androidx.glance)
+            implementation(libs.androidx.glance.material3)
         }
     }
 }
