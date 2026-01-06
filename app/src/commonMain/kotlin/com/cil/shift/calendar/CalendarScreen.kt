@@ -82,6 +82,9 @@ fun CalendarScreen(
     var isSelectionMode by remember { mutableStateOf(false) }
     var selectedScheduleIds by remember { mutableStateOf(setOf<String>()) }
 
+    // Tooltip for schedule info
+    var tooltipSchedule by remember { mutableStateOf<HabitSchedule?>(null) }
+
     // Load habits
     LaunchedEffect(Unit) {
         habitRepository.getHabits().collect { habits ->
@@ -119,6 +122,7 @@ fun CalendarScreen(
     val cardColor = MaterialTheme.colorScheme.surface
     val gridLineColor = textColor.copy(alpha = 0.1f)
     val accentColor = Color(0xFF4E7CFF) // App theme blue
+    val weekendColor = Color(0xFFB8A9C9).copy(alpha = 0.15f) // Soft lavender for weekends
 
     // Calculate visible days based on view mode
     val visibleDays = when (viewMode) {
@@ -259,13 +263,8 @@ fun CalendarScreen(
                         )
                     }
                 } else {
-                    IconButton(onClick = { /* Toggle list view */ }) {
-                        Icon(
-                            imageVector = Icons.Default.ViewList,
-                            contentDescription = "List View",
-                            tint = accentColor
-                        )
-                    }
+                    // Empty spacer for layout balance
+                    Spacer(modifier = Modifier.width(48.dp))
                 }
             }
 
@@ -297,22 +296,24 @@ fun CalendarScreen(
 
                 // Navigation Buttons
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(
-                        onClick = {
-                            selectedWeekStart = selectedWeekStart.minus(visibleDays, DateTimeUnit.DAY)
-                        },
+                    Box(
                         modifier = Modifier
-                            .size(40.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(accentColor.copy(alpha = 0.15f))
+                            .size(28.dp)
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(accentColor.copy(alpha = 0.1f))
+                            .clickable {
+                                selectedWeekStart = selectedWeekStart.minus(visibleDays, DateTimeUnit.DAY)
+                            },
+                        contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.ChevronLeft,
                             contentDescription = "Previous",
-                            tint = accentColor
+                            tint = accentColor,
+                            modifier = Modifier.size(18.dp)
                         )
                     }
 
@@ -325,28 +326,30 @@ fun CalendarScreen(
                             contentColor = Color.White
                         ),
                         shape = RoundedCornerShape(8.dp),
-                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
                     ) {
                         Text(
                             text = StringResources.today.localized(),
-                            fontSize = 14.sp,
+                            fontSize = 13.sp,
                             fontWeight = FontWeight.Medium
                         )
                     }
 
-                    IconButton(
-                        onClick = {
-                            selectedWeekStart = selectedWeekStart.plus(visibleDays, DateTimeUnit.DAY)
-                        },
+                    Box(
                         modifier = Modifier
-                            .size(40.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(accentColor.copy(alpha = 0.15f))
+                            .size(28.dp)
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(accentColor.copy(alpha = 0.1f))
+                            .clickable {
+                                selectedWeekStart = selectedWeekStart.plus(visibleDays, DateTimeUnit.DAY)
+                            },
+                        contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.ChevronRight,
                             contentDescription = "Next",
-                            tint = accentColor
+                            tint = accentColor,
+                            modifier = Modifier.size(18.dp)
                         )
                     }
                 }
@@ -385,7 +388,7 @@ fun CalendarScreen(
                                 if (useWeight) Modifier.weight(1f)
                                 else Modifier.width(if (isMonthView) 48.dp else 60.dp)
                             )
-                            .background(if (isWeekend) textColor.copy(alpha = 0.04f) else Color.Transparent)
+                            .background(if (isWeekend) weekendColor else Color.Transparent)
                             .padding(vertical = 8.dp),
                         contentAlignment = Alignment.Center
                     ) {
@@ -460,6 +463,7 @@ fun CalendarScreen(
                         gridLineColor = gridLineColor,
                         textColor = textColor,
                         backgroundColor = backgroundColor,
+                        weekendColor = weekendColor,
                         isMonthView = isMonthView,
                         viewMode = viewMode,
                         horizontalScrollState = horizontalScrollState,
@@ -476,16 +480,19 @@ fun CalendarScreen(
                             isSelectionMode = true
                             selectedScheduleIds = selectedScheduleIds + scheduleId
                         },
-                        onScheduleClick = { scheduleId ->
+                        onScheduleClick = { schedule ->
                             if (isSelectionMode) {
-                                selectedScheduleIds = if (scheduleId in selectedScheduleIds) {
-                                    selectedScheduleIds - scheduleId
+                                selectedScheduleIds = if (schedule.id in selectedScheduleIds) {
+                                    selectedScheduleIds - schedule.id
                                 } else {
-                                    selectedScheduleIds + scheduleId
+                                    selectedScheduleIds + schedule.id
                                 }
                                 if (selectedScheduleIds.isEmpty()) {
                                     isSelectionMode = false
                                 }
+                            } else {
+                                // Show tooltip when not in selection mode
+                                tooltipSchedule = schedule
                             }
                         }
                     )
@@ -551,6 +558,302 @@ fun CalendarScreen(
             }
         )
     }
+
+    // Schedule Info Tooltip
+    if (tooltipSchedule != null) {
+        ScheduleInfoTooltip(
+            schedule = tooltipSchedule!!,
+            currentLanguage = currentLanguage,
+            onDismiss = { tooltipSchedule = null },
+            onDelete = {
+                scope.launch {
+                    habitRepository.deleteSchedule(tooltipSchedule!!.id)
+                    tooltipSchedule = null
+                }
+            },
+            onMuteToggle = { isMuted ->
+                scope.launch {
+                    // Update the schedule's hasReminder field
+                    val updatedSchedule = tooltipSchedule!!.copy(hasReminder = !isMuted)
+                    habitRepository.updateSchedule(updatedSchedule)
+                }
+            }
+        )
+    }
+}
+
+@Composable
+private fun ScheduleInfoTooltip(
+    schedule: HabitSchedule,
+    currentLanguage: Language,
+    onDismiss: () -> Unit,
+    onDelete: () -> Unit,
+    onMuteToggle: (Boolean) -> Unit
+) {
+    val textColor = MaterialTheme.colorScheme.onBackground
+    val cardColor = MaterialTheme.colorScheme.surface
+
+    // Local mute state for this schedule
+    var isMuted by remember { mutableStateOf(!schedule.hasReminder) }
+
+    val habitColor = try {
+        val colorString = schedule.habitColor.removePrefix("#")
+        val colorInt = colorString.toLong(16)
+        if (colorString.length == 6) {
+            Color(0xFF000000 or colorInt)
+        } else {
+            Color(colorInt)
+        }
+    } catch (e: Exception) {
+        Color(0xFF6C63FF)
+    }
+
+    // Get emoji from icon ID
+    val iconEmoji = getIconEmoji(schedule.habitIcon)
+    val localizedHabitName = LocalizationHelpers.getLocalizedHabitName(schedule.habitName, currentLanguage)
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = cardColor,
+        title = {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(habitColor.copy(alpha = 0.2f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = iconEmoji,
+                        fontSize = 22.sp
+                    )
+                }
+                Text(
+                    text = localizedHabitName,
+                    fontWeight = FontWeight.Bold,
+                    color = textColor,
+                    fontSize = 18.sp,
+                    maxLines = 2
+                )
+            }
+        },
+        text = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Time
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Schedule,
+                        contentDescription = null,
+                        tint = habitColor,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Text(
+                        text = "${schedule.startTime} - ${schedule.endTime}",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = textColor
+                    )
+                }
+
+                // Date
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.CalendarToday,
+                        contentDescription = null,
+                        tint = habitColor,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Text(
+                        text = schedule.date,
+                        fontSize = 14.sp,
+                        color = textColor.copy(alpha = 0.8f)
+                    )
+                }
+
+                // Reminder with mute toggle
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            imageVector = if (isMuted) Icons.Default.NotificationsOff else Icons.Default.Notifications,
+                            contentDescription = null,
+                            tint = if (isMuted) textColor.copy(alpha = 0.4f) else habitColor,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Text(
+                            text = StringResources.reminder.localized(),
+                            fontSize = 14.sp,
+                            color = if (isMuted) textColor.copy(alpha = 0.5f) else textColor.copy(alpha = 0.8f)
+                        )
+                    }
+                    Switch(
+                        checked = !isMuted,
+                        onCheckedChange = { enabled ->
+                            isMuted = !enabled
+                            onMuteToggle(!enabled)
+                        },
+                        modifier = Modifier.height(24.dp),
+                        colors = SwitchDefaults.colors(
+                            checkedTrackColor = habitColor,
+                            checkedThumbColor = Color.White,
+                            uncheckedTrackColor = textColor.copy(alpha = 0.2f),
+                            uncheckedThumbColor = textColor.copy(alpha = 0.5f)
+                        )
+                    )
+                }
+
+                // Repeat
+                if (schedule.repeatType != RepeatType.NEVER) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Repeat,
+                            contentDescription = null,
+                            tint = habitColor,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Text(
+                            text = when (schedule.repeatType) {
+                                RepeatType.DAILY -> StringResources.daily.localized()
+                                RepeatType.WEEKLY -> StringResources.weekly.localized()
+                                RepeatType.MONTHLY -> StringResources.monthly.localized()
+                                else -> ""
+                            },
+                            fontSize = 14.sp,
+                            color = textColor.copy(alpha = 0.8f)
+                        )
+                    }
+                }
+
+                // Notes
+                val notes = schedule.notes
+                if (!notes.isNullOrBlank()) {
+                    HorizontalDivider(color = textColor.copy(alpha = 0.1f))
+                    Text(
+                        text = notes,
+                        fontSize = 13.sp,
+                        color = textColor.copy(alpha = 0.7f)
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(
+                    text = StringResources.close.localized(),
+                    color = Color(0xFF4E7CFF)
+                )
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDelete) {
+                Text(
+                    text = StringResources.delete.localized(),
+                    color = Color.Red.copy(alpha = 0.8f)
+                )
+            }
+        }
+    )
+}
+
+// Helper function to convert icon ID to emoji
+private fun getIconEmoji(iconId: String): String {
+    return when (iconId) {
+        // Health & Fitness
+        "water" -> "💧"
+        "run" -> "🏃"
+        "dumbbell" -> "🏋️"
+        "heart" -> "❤️"
+        "apple" -> "🍎"
+        "salad" -> "🥗"
+        "bike" -> "🚴"
+        "swim" -> "🏊"
+        // Mindfulness & Wellness
+        "meditation" -> "🧘"
+        "moon" -> "🌙"
+        "sun" -> "☀️"
+        "sparkles" -> "✨"
+        "brain" -> "🧠"
+        "lotus" -> "🪷"
+        "pray" -> "🙏"
+        "sleep" -> "😴"
+        // Productivity & Work
+        "code" -> "💻"
+        "book" -> "📚"
+        "briefcase" -> "💼"
+        "pencil" -> "✏️"
+        "target" -> "🎯"
+        "clock" -> "⏰"
+        "calendar" -> "📅"
+        "chart" -> "📈"
+        // Food & Drinks
+        "coffee" -> "☕"
+        "utensils" -> "🍴"
+        "pizza" -> "🍕"
+        "burger" -> "🍔"
+        "candy" -> "🍬"
+        "soda" -> "🥤"
+        "beer" -> "🍺"
+        "wine" -> "🍷"
+        // Lifestyle & Home
+        "home" -> "🏠"
+        "bed" -> "🛏️"
+        "clean" -> "🧹"
+        "laundry" -> "🧺"
+        "plant" -> "🌱"
+        "leaf" -> "🍃"
+        "flower" -> "🌸"
+        "dog" -> "🐕"
+        // Entertainment & Hobbies
+        "music" -> "🎵"
+        "palette" -> "🎨"
+        "camera" -> "📷"
+        "game" -> "🎮"
+        "guitar" -> "🎸"
+        "movie" -> "🎬"
+        "headphones" -> "🎧"
+        "mic" -> "🎤"
+        // Quit & Reduce
+        "cigarette" -> "🚬"
+        "phone" -> "📱"
+        "tv" -> "📺"
+        "shopping" -> "🛍️"
+        "cookie" -> "🍪"
+        "chocolate" -> "🍫"
+        "ice" -> "🍦"
+        "donut" -> "🍩"
+        // Tools & Misc
+        "tools" -> "🛠"
+        "umbrella" -> "☂️"
+        "car" -> "🚗"
+        "plane" -> "✈️"
+        "star" -> "⭐"
+        "fire" -> "🔥"
+        "trophy" -> "🏆"
+        "check" -> "✅"
+        // Default
+        else -> if (iconId.isNotEmpty() && iconId.length <= 2) iconId else "📅"
+    }
 }
 
 @Composable
@@ -598,6 +901,7 @@ private fun TimeRow(
     gridLineColor: Color,
     textColor: Color,
     backgroundColor: Color,
+    weekendColor: Color,
     isMonthView: Boolean,
     viewMode: ScheduleViewMode,
     horizontalScrollState: ScrollState,
@@ -605,7 +909,7 @@ private fun TimeRow(
     selectedScheduleIds: Set<String>,
     onCellClick: (LocalDate, Int) -> Unit,
     onScheduleLongPress: (String) -> Unit,
-    onScheduleClick: (String) -> Unit
+    onScheduleClick: (HabitSchedule) -> Unit
 ) {
     val hourString = "${hour.toString().padStart(2, '0')}:00"
     val useWeight = viewMode == ScheduleViewMode.DAY_1 || viewMode == ScheduleViewMode.DAY_3
@@ -678,8 +982,8 @@ private fun TimeRow(
                         .fillMaxHeight()
                         .background(
                             when {
-                                isToday -> textColor.copy(alpha = 0.05f)
-                                isWeekend -> textColor.copy(alpha = 0.03f)
+                                isToday -> Color(0xFF4E7CFF).copy(alpha = 0.08f)
+                                isWeekend -> weekendColor
                                 else -> Color.Transparent
                             }
                         )
@@ -715,7 +1019,7 @@ private fun TimeRow(
                                         isFirstRow = isFirstRow,
                                         isLastRow = isLastRow,
                                         onLongPress = { onScheduleLongPress(schedule.id) },
-                                        onClick = { onScheduleClick(schedule.id) }
+                                        onClick = { onScheduleClick(schedule) }
                                     )
                                 }
                             }
