@@ -592,7 +592,7 @@ private fun TimeRow(
     onScheduleLongPress: (String) -> Unit,
     onScheduleClick: (String) -> Unit
 ) {
-    val hourString = String.format("%02d:00", hour)
+    val hourString = "${hour.toString().padStart(2, '0')}:00"
     val useWeight = viewMode == ScheduleViewMode.DAY_1 || viewMode == ScheduleViewMode.DAY_3
     val rowHeight = if (viewMode == ScheduleViewMode.DAY_1) 80.dp else 60.dp
 
@@ -638,7 +638,7 @@ private fun TimeRow(
                 val isWeekend = date.dayOfWeek == DayOfWeek.SATURDAY || date.dayOfWeek == DayOfWeek.SUNDAY
                 val dateStr = formatDate(date)
                 val cellSchedules = schedules.filter {
-                    it.date == dateStr && it.startTime.startsWith(String.format("%02d", hour))
+                    it.date == dateStr && it.startTime.startsWith(hour.toString().padStart(2, '0'))
                 }
 
                 Box(
@@ -778,8 +778,8 @@ private fun EventCreationDialog(
     var repeatType by remember { mutableStateOf(RepeatType.NEVER) }
     var showRepeatDropdown by remember { mutableStateOf(false) }
 
-    val startTime = String.format("%02d:00", selectedHour)
-    val endTime = String.format("%02d:00", (selectedHour + 1) % 24)
+    val startTime = "${selectedHour.toString().padStart(2, '0')}:00"
+    val endTime = "${((selectedHour + 1) % 24).toString().padStart(2, '0')}:00"
 
     val selectedHabit = habits.find { it.id == selectedHabitId }
 

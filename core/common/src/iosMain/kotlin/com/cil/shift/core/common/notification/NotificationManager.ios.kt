@@ -1,7 +1,10 @@
 package com.cil.shift.core.common.notification
 
 import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.datetime.Clock
+import platform.Foundation.NSDate
 import platform.Foundation.NSDateComponents
+import platform.Foundation.timeIntervalSince1970
 import platform.UserNotifications.*
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -104,12 +107,17 @@ actual class NotificationManager {
                 // Extract habit name from title (format: "Time for {habitName}!")
                 val habitName = title.removePrefix("Time for ").removeSuffix("!")
 
+                // Get timestamp from notification date
+                val notificationDate = un.date as? NSDate
+                val timestamp = notificationDate?.timeIntervalSince1970?.times(1000)?.toLong()
+                    ?: Clock.System.now().toEpochMilliseconds()
+
                 DeliveredNotification(
                     habitId = habitId,
                     habitName = habitName,
                     title = title,
                     message = message,
-                    timestamp = (un.date.timeIntervalSince1970 * 1000).toLong()
+                    timestamp = timestamp
                 )
             } ?: emptyList()
 
