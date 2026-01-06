@@ -289,44 +289,48 @@ private fun FocusAreasPage(
     onAreaToggled: (FocusArea) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val scrollState = rememberScrollState()
     val textColor = MaterialTheme.colorScheme.onBackground
 
     Column(
-        modifier = modifier.padding(horizontal = 32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        modifier = modifier
+            .padding(horizontal = 32.dp)
+            .verticalScroll(scrollState),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Spacer(modifier = Modifier.height(16.dp))
+
         Text(
             text = "🎯",
-            fontSize = 80.sp,
+            fontSize = 64.sp,
             textAlign = TextAlign.Center
         )
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
         Text(
             text = "What do you want\nto focus on?",
-            fontSize = 32.sp,
+            fontSize = 28.sp,
             fontWeight = FontWeight.Bold,
             color = textColor,
             textAlign = TextAlign.Center,
-            lineHeight = 40.sp
+            lineHeight = 36.sp
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
         Text(
             text = "Select one or more areas",
-            fontSize = 17.sp,
+            fontSize = 16.sp,
             fontWeight = FontWeight.Normal,
             color = textColor.copy(alpha = 0.7f),
             textAlign = TextAlign.Center
         )
 
-        Spacer(modifier = Modifier.height(40.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
         Column(
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
             FocusArea.entries.forEach { area ->
@@ -337,6 +341,8 @@ private fun FocusAreasPage(
                 )
             }
         }
+
+        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 
@@ -562,20 +568,20 @@ private fun SelectableCard(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(56.dp)
-            .clip(RoundedCornerShape(16.dp))
+            .height(52.dp)
+            .clip(RoundedCornerShape(14.dp))
             .background(backgroundColor)
             .border(
                 width = 2.dp,
                 color = borderColor,
-                shape = RoundedCornerShape(16.dp)
+                shape = RoundedCornerShape(14.dp)
             )
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = text,
-            fontSize = 18.sp,
+            fontSize = 17.sp,
             fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
             color = if (isSelected) Color(0xFF00D9FF) else textColor
         )
