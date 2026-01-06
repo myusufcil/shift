@@ -813,9 +813,9 @@ private fun EventCreationDialog(
                     enabled = selectedHabitId != null
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Save,
+                        imageVector = Icons.Default.Check,
                         contentDescription = "Save",
-                        tint = if (selectedHabitId != null) textColor else textColor.copy(alpha = 0.3f)
+                        tint = if (selectedHabitId != null) Color(0xFF4ECDC4) else textColor.copy(alpha = 0.3f)
                     )
                 }
             }
@@ -948,34 +948,53 @@ private fun EventCreationDialog(
                 // Time Display
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     val displayDate = formatDateForDisplay(selectedDate, currentLanguage)
-                    Column {
+
+                    // Start Column
+                    Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = "Start:",
                             fontSize = 12.sp,
                             color = textColor.copy(alpha = 0.6f)
                         )
                         Text(
-                            text = "$displayDate $startTime",
+                            text = displayDate,
+                            fontSize = 13.sp,
                             fontWeight = FontWeight.Medium,
                             color = textColor
                         )
+                        Text(
+                            text = startTime,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF4E7CFF)
+                        )
                     }
-                    Column {
+
+                    // End Column
+                    Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = "End:",
                             fontSize = 12.sp,
                             color = textColor.copy(alpha = 0.6f)
                         )
                         Text(
-                            text = "$displayDate $endTime",
+                            text = displayDate,
+                            fontSize = 13.sp,
                             fontWeight = FontWeight.Medium,
                             color = textColor
                         )
+                        Text(
+                            text = endTime,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF4E7CFF)
+                        )
                     }
+
                     IconButton(onClick = { /* Open time picker */ }) {
                         Icon(
                             imageVector = Icons.Default.Edit,
