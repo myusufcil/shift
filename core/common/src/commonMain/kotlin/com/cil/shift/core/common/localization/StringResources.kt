@@ -1289,6 +1289,20 @@ object StringResources {
         zh = "成就"
     )
 
+    val achievementsUnlocked = StringResource(
+        en = "Achievements Unlocked",
+        tr = "Başarı Kazanıldı",
+        es = "Logros Desbloqueados",
+        fr = "Réalisations Débloquées",
+        de = "Erfolge Freigeschaltet",
+        pt = "Conquistas Desbloqueadas",
+        ar = "الإنجازات المفتوحة",
+        ru = "Достижения Разблокированы",
+        hi = "उपलब्धियां अनलॉक",
+        ja = "実績解除済み",
+        zh = "已解锁成就"
+    )
+
     val privacyPolicy = StringResource(
         en = "Privacy Policy",
         tr = "Gizlilik Politikası",
@@ -1371,6 +1385,104 @@ object StringResources {
         hi = "साइन आउट",
         ja = "サインアウト",
         zh = "退出登录"
+    )
+
+    val guest = StringResource(
+        en = "Guest",
+        tr = "Misafir",
+        es = "Invitado",
+        fr = "Invité",
+        de = "Gast",
+        pt = "Convidado",
+        ar = "ضيف",
+        ru = "Гость",
+        hi = "अतिथि",
+        ja = "ゲスト",
+        zh = "访客"
+    )
+
+    val signInSignUp = StringResource(
+        en = "Sign In / Sign Up",
+        tr = "Giriş Yap / Kayıt Ol",
+        es = "Iniciar Sesión / Registrarse",
+        fr = "Se Connecter / S'inscrire",
+        de = "Anmelden / Registrieren",
+        pt = "Entrar / Cadastrar",
+        ar = "تسجيل الدخول / التسجيل",
+        ru = "Войти / Регистрация",
+        hi = "साइन इन / साइन अप",
+        ja = "サインイン / サインアップ",
+        zh = "登录 / 注册"
+    )
+
+    val account = StringResource(
+        en = "Account",
+        tr = "Hesap",
+        es = "Cuenta",
+        fr = "Compte",
+        de = "Konto",
+        pt = "Conta",
+        ar = "الحساب",
+        ru = "Аккаунт",
+        hi = "खाता",
+        ja = "アカウント",
+        zh = "账户"
+    )
+
+    val unlockAllFeatures = StringResource(
+        en = "Unlock all features",
+        tr = "Tüm özelliklerin kilidini aç",
+        es = "Desbloquear todas las funciones",
+        fr = "Débloquer toutes les fonctionnalités",
+        de = "Alle Funktionen freischalten",
+        pt = "Desbloquear todos os recursos",
+        ar = "فتح جميع الميزات",
+        ru = "Разблокировать все функции",
+        hi = "सभी सुविधाएं अनलॉक करें",
+        ja = "すべての機能をロック解除",
+        zh = "解锁所有功能"
+    )
+
+    val appWillRestart = StringResource(
+        en = "App Will Restart",
+        tr = "Uygulama Yeniden Başlatılacak",
+        es = "La aplicación se reiniciará",
+        fr = "L'application va redémarrer",
+        de = "App wird neu gestartet",
+        pt = "O aplicativo será reiniciado",
+        ar = "سيتم إعادة تشغيل التطبيق",
+        ru = "Приложение перезапустится",
+        hi = "ऐप पुनः प्रारंभ होगा",
+        ja = "アプリが再起動されます",
+        zh = "应用将重启"
+    )
+
+    val appWillRestartMessage = StringResource(
+        en = "To apply the new language, the app needs to restart. Do you want to continue?",
+        tr = "Yeni dili uygulamak için uygulamanın yeniden başlatılması gerekiyor. Devam etmek istiyor musunuz?",
+        es = "Para aplicar el nuevo idioma, la aplicación necesita reiniciarse. ¿Desea continuar?",
+        fr = "Pour appliquer la nouvelle langue, l'application doit redémarrer. Voulez-vous continuer?",
+        de = "Um die neue Sprache anzuwenden, muss die App neu gestartet werden. Möchten Sie fortfahren?",
+        pt = "Para aplicar o novo idioma, o aplicativo precisa reiniciar. Deseja continuar?",
+        ar = "لتطبيق اللغة الجديدة، يحتاج التطبيق إلى إعادة التشغيل. هل تريد المتابعة؟",
+        ru = "Чтобы применить новый язык, приложение должно перезапуститься. Хотите продолжить?",
+        hi = "नई भाषा लागू करने के लिए, ऐप को पुनः प्रारंभ करना होगा। क्या आप जारी रखना चाहते हैं?",
+        ja = "新しい言語を適用するには、アプリを再起動する必要があります。続行しますか？",
+        zh = "要应用新语言，应用需要重新启动。是否继续？"
+    )
+
+    val signOutConfirmMessage = StringResource(
+        en = "Are you sure you want to sign out? Your data will remain synced with your account.",
+        tr = "Çıkış yapmak istediğinizden emin misiniz? Verileriniz hesabınızla senkronize kalmaya devam edecek.",
+        es = "¿Estás seguro de que quieres cerrar sesión? Tus datos permanecerán sincronizados con tu cuenta.",
+        fr = "Êtes-vous sûr de vouloir vous déconnecter? Vos données resteront synchronisées avec votre compte.",
+        de = "Sind Sie sicher, dass Sie sich abmelden möchten? Ihre Daten bleiben mit Ihrem Konto synchronisiert.",
+        pt = "Tem certeza de que deseja sair? Seus dados permanecerão sincronizados com sua conta.",
+        ar = "هل أنت متأكد أنك تريد تسجيل الخروج؟ ستبقى بياناتك متزامنة مع حسابك.",
+        ru = "Вы уверены, что хотите выйти? Ваши данные останутся синхронизированными с вашим аккаунтом.",
+        hi = "क्या आप वाकई साइन आउट करना चाहते हैं? आपका डेटा आपके खाते के साथ समन्वयित रहेगा।",
+        ja = "本当にサインアウトしますか？データはアカウントと同期されたままになります。",
+        zh = "您确定要退出登录吗？您的数据将保持与账户同步。"
     )
 
     val version = StringResource(

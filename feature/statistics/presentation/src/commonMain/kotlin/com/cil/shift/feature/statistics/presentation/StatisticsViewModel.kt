@@ -2,6 +2,8 @@ package com.cil.shift.feature.statistics.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.cil.shift.core.common.localization.LocalizationHelpers
+import com.cil.shift.core.common.localization.LocalizationManager
 import com.cil.shift.core.common.onboarding.OnboardingPreferences
 import com.cil.shift.feature.habits.domain.repository.HabitRepository
 import kotlinx.coroutines.flow.*
@@ -10,7 +12,8 @@ import kotlinx.datetime.*
 
 class StatisticsViewModel(
     private val habitRepository: HabitRepository,
-    private val onboardingPreferences: OnboardingPreferences
+    private val onboardingPreferences: OnboardingPreferences,
+    private val localizationManager: LocalizationManager
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(StatisticsState())
@@ -152,11 +155,13 @@ class StatisticsViewModel(
     private suspend fun calculateWeeklyData(habits: List<com.cil.shift.feature.habits.domain.model.Habit>): List<DayCompletion> {
         val weekStart = _state.value.selectedWeekStart ?: com.cil.shift.core.common.currentDate()
         val weekData = mutableListOf<DayCompletion>()
+        val currentLanguage = localizationManager.currentLanguage.value
 
         for (i in 0 until 7) {
             val date = weekStart.plus(i, DateTimeUnit.DAY)
             val dateString = date.toString()
-            val dayName = date.dayOfWeek.name.take(3)
+            // Use localized day name (dayOfWeek.ordinal is 0-based, getDayNameShort expects 1-based)
+            val dayName = LocalizationHelpers.getDayNameShort(date.dayOfWeek.ordinal + 1, currentLanguage)
 
             var completedCount = 0
             habits.forEach { habit ->

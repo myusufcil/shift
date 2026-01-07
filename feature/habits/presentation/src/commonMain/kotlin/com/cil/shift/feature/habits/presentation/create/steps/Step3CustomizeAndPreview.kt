@@ -15,6 +15,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -23,9 +25,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.cil.shift.core.common.localization.LocalizationManager
 import com.cil.shift.core.common.localization.StringResources
 import com.cil.shift.core.common.localization.localized
 import com.cil.shift.feature.habits.domain.model.HabitType
+import org.koin.compose.koinInject
 
 @Composable
 fun Step3CustomizeAndPreview(
@@ -47,6 +51,9 @@ fun Step3CustomizeAndPreview(
     onQuitStartDateChange: (Long?) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    val localizationManager = koinInject<LocalizationManager>()
+    val currentLanguage by localizationManager.currentLanguage.collectAsState()
+
     val textColor = MaterialTheme.colorScheme.onBackground
     val cardColor = MaterialTheme.colorScheme.surface
     val accentColor = Color(0xFF4E7CFF)
@@ -63,14 +70,14 @@ fun Step3CustomizeAndPreview(
             ) {
         // Title
         Text(
-            text = "Make it yours",
+            text = StringResources.makeItYours.get(currentLanguage),
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
             color = textColor
         )
 
         Text(
-            text = "Choose a color to identify your habit and set a goal type.",
+            text = StringResources.chooseColorAndGoalType.get(currentLanguage),
             fontSize = 14.sp,
             color = textColor.copy(alpha = 0.7f),
             lineHeight = 20.sp
@@ -81,7 +88,7 @@ fun Step3CustomizeAndPreview(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                text = "PREVIEW",
+                text = StringResources.preview.get(currentLanguage),
                 fontSize = 11.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = textColor.copy(alpha = 0.5f),
@@ -128,7 +135,7 @@ fun Step3CustomizeAndPreview(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                text = "COLOR PALETTE",
+                text = StringResources.colorPalette.get(currentLanguage),
                 fontSize = 11.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = textColor.copy(alpha = 0.5f),
@@ -159,7 +166,7 @@ fun Step3CustomizeAndPreview(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                text = "HABIT TYPE",
+                text = StringResources.habitType.get(currentLanguage),
                 fontSize = 11.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = textColor.copy(alpha = 0.5f),
@@ -171,7 +178,7 @@ fun Step3CustomizeAndPreview(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 HabitTypeChip(
-                    text = "Simple",
+                    text = StringResources.typeSimple.get(currentLanguage),
                     isSelected = habitType == HabitType.SIMPLE,
                     onClick = { onHabitTypeSelect(HabitType.SIMPLE) },
                     modifier = Modifier.weight(1f),
@@ -181,7 +188,7 @@ fun Step3CustomizeAndPreview(
                 )
 
                 HabitTypeChip(
-                    text = "Measurable",
+                    text = StringResources.typeMeasurable.get(currentLanguage),
                     isSelected = habitType == HabitType.MEASURABLE,
                     onClick = { onHabitTypeSelect(HabitType.MEASURABLE) },
                     modifier = Modifier.weight(1f),
@@ -196,7 +203,7 @@ fun Step3CustomizeAndPreview(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 HabitTypeChip(
-                    text = "Timer",
+                    text = StringResources.typeTimer.get(currentLanguage),
                     isSelected = habitType == HabitType.TIMER,
                     onClick = { onHabitTypeSelect(HabitType.TIMER) },
                     modifier = Modifier.weight(1f),
@@ -206,7 +213,7 @@ fun Step3CustomizeAndPreview(
                 )
 
                 HabitTypeChip(
-                    text = "Quit",
+                    text = StringResources.typeQuit.get(currentLanguage),
                     isSelected = habitType == HabitType.QUIT,
                     onClick = { onHabitTypeSelect(HabitType.QUIT) },
                     modifier = Modifier.weight(1f),
@@ -221,7 +228,7 @@ fun Step3CustomizeAndPreview(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 HabitTypeChip(
-                    text = "Reduce",
+                    text = StringResources.typeReduce.get(currentLanguage),
                     isSelected = habitType == HabitType.NEGATIVE,
                     onClick = { onHabitTypeSelect(HabitType.NEGATIVE) },
                     modifier = Modifier.weight(1f),
@@ -250,11 +257,11 @@ fun Step3CustomizeAndPreview(
         ) {
             Text(
                 text = when (habitType) {
-                    HabitType.SIMPLE -> "Simple checkbox - just mark it done"
-                    HabitType.MEASURABLE -> "Track numbers (e.g., water intake, pages read)"
-                    HabitType.TIMER -> "Track time with start/stop (e.g., meditation, deep work)"
-                    HabitType.QUIT -> "Track days since quitting (e.g., smoke-free, sober)"
-                    HabitType.NEGATIVE -> "Set a daily limit to reduce (e.g., max 2 cups coffee)"
+                    HabitType.SIMPLE -> StringResources.simpleDescription.get(currentLanguage)
+                    HabitType.MEASURABLE -> StringResources.measurableDescription.get(currentLanguage)
+                    HabitType.TIMER -> StringResources.timerDescription.get(currentLanguage)
+                    HabitType.QUIT -> StringResources.quitDescription.get(currentLanguage)
+                    HabitType.NEGATIVE -> StringResources.reduceDescription.get(currentLanguage)
                 },
                 fontSize = 12.sp,
                 color = textColor.copy(alpha = 0.7f),
@@ -270,7 +277,7 @@ fun Step3CustomizeAndPreview(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(
-                    text = "TARGET & UNIT",
+                    text = StringResources.targetAndUnit.get(currentLanguage),
                     fontSize = 11.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = textColor.copy(alpha = 0.5f),
@@ -544,7 +551,7 @@ fun Step3CustomizeAndPreview(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                text = "NOTES (OPTIONAL)",
+                text = StringResources.notesOptional.get(currentLanguage),
                 fontSize = 11.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = textColor.copy(alpha = 0.5f),
@@ -559,7 +566,7 @@ fun Step3CustomizeAndPreview(
                     .height(100.dp),
                 placeholder = {
                     Text(
-                        text = "Add notes or motivation for this habit...",
+                        text = StringResources.addNotesPlaceholder.get(currentLanguage),
                         fontSize = 14.sp,
                         color = textColor.copy(alpha = 0.4f)
                     )

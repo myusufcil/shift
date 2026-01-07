@@ -174,6 +174,14 @@ private fun getIconEmoji(icon: String): String {
         "music", "mus" -> "🎵"
         "art", "palette", "pale", "pal" -> "🎨"
         "briefcase", "bri", "work" -> "💼"
+        "utensils", "ute" -> "🍴"
+        "code", "cod" -> "💻"
+        "tools", "too" -> "🔧"
+        "phone", "pho" -> "📱"
+        "cigarette", "cig" -> "🚬"
+        "wine", "win" -> "🍷"
+        "plant", "pla" -> "🌱"
+        "tooth", "teeth" -> "🦷"
         else -> if (icon.any { it.code >= 0x1F300 }) icon else "📅"
     }
 }

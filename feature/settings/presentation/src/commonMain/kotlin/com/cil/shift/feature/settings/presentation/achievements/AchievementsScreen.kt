@@ -22,6 +22,7 @@ import com.cil.shift.core.common.achievement.AchievementTier
 import com.cil.shift.core.common.achievement.Achievements
 import com.cil.shift.core.common.localization.Language
 import com.cil.shift.core.common.localization.LocalizationManager
+import com.cil.shift.core.common.localization.StringResources
 import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -52,7 +53,7 @@ fun AchievementsScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = if (currentLanguage == Language.TURKISH) "Basarilar" else "Achievements",
+                        text = StringResources.achievements.get(currentLanguage),
                         color = textColor,
                         fontWeight = FontWeight.Bold
                     )
@@ -112,7 +113,7 @@ fun AchievementsScreen(
                             color = Color.White
                         )
                         Text(
-                            text = if (currentLanguage == Language.TURKISH) "Basari Kazanildi" else "Achievements Unlocked",
+                            text = StringResources.achievementsUnlocked.get(currentLanguage),
                             fontSize = 14.sp,
                             color = Color.White.copy(alpha = 0.8f)
                         )

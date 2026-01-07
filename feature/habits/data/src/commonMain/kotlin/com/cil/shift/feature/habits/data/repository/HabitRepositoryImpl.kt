@@ -38,6 +38,12 @@ class HabitRepositoryImpl(
             .map { entities -> entities.map { it.toDomain() } }
     }
 
+    override suspend fun getHabitCount(): Int {
+        return withContext(Dispatchers.IO) {
+            habitQueries.getAll().executeAsList().size
+        }
+    }
+
     override suspend fun getHabitById(id: String): Habit? {
         return withContext(Dispatchers.IO) {
             habitQueries.getById(id).executeAsOneOrNull()?.toDomain()

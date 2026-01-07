@@ -24,9 +24,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.cil.shift.core.common.localization.LocalizationHelpers
+import com.cil.shift.core.common.localization.LocalizationManager
+import com.cil.shift.core.common.localization.StringResources
 import com.cil.shift.feature.onboarding.presentation.suggestions.HabitSuggestion
 import com.cil.shift.feature.onboarding.presentation.suggestions.SuggestionCategory
 import com.cil.shift.feature.onboarding.presentation.suggestions.habitSuggestions
+import org.koin.compose.koinInject
 
 @Composable
 fun Step1NameAndIcon(
@@ -37,6 +41,9 @@ fun Step1NameAndIcon(
     onSuggestionSelect: (HabitSuggestion) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    val localizationManager = koinInject<LocalizationManager>()
+    val currentLanguage by localizationManager.currentLanguage.collectAsState()
+
     val textColor = MaterialTheme.colorScheme.onBackground
     val cardColor = MaterialTheme.colorScheme.surface
     val borderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
@@ -66,7 +73,7 @@ fun Step1NameAndIcon(
     ) {
         // Title
         Text(
-            text = "Name your habit",
+            text = StringResources.nameYourHabit.get(currentLanguage),
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
             color = textColor
@@ -82,7 +89,8 @@ fun Step1NameAndIcon(
             onSuggestionSelected = onSuggestionSelect,
             cardColor = cardColor,
             borderColor = borderColor,
-            textColor = textColor
+            textColor = textColor,
+            currentLanguage = currentLanguage
         )
 
         // Habit name input card
@@ -96,7 +104,7 @@ fun Step1NameAndIcon(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                text = "Habit Name",
+                text = StringResources.habitName.get(currentLanguage),
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Medium,
                 color = textColor.copy(alpha = 0.6f),
@@ -113,7 +121,7 @@ fun Step1NameAndIcon(
                     .border(1.dp, borderColor, RoundedCornerShape(12.dp)),
                 placeholder = {
                     Text(
-                        text = "e.g., Read 10 pages...",
+                        text = StringResources.habitNamePlaceholder.get(currentLanguage),
                         fontSize = 15.sp,
                         color = textColor.copy(alpha = 0.35f)
                     )
@@ -132,7 +140,7 @@ fun Step1NameAndIcon(
             )
 
             Text(
-                text = "💡 Be specific, it helps stick to the plan.",
+                text = "💡 ${StringResources.beSpecific.get(currentLanguage)}",
                 fontSize = 12.sp,
                 color = textColor.copy(alpha = 0.45f)
             )
@@ -149,7 +157,7 @@ fun Step1NameAndIcon(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
-                text = "Choose an icon",
+                text = StringResources.chooseAnIcon.get(currentLanguage),
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Medium,
                 color = textColor.copy(alpha = 0.6f),
@@ -323,6 +331,7 @@ private fun QuickSuggestions(
     cardColor: Color,
     borderColor: Color,
     textColor: Color,
+    currentLanguage: com.cil.shift.core.common.localization.Language,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -335,7 +344,7 @@ private fun QuickSuggestions(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text(
-            text = "Quick Suggestions",
+            text = StringResources.quickSuggestions.get(currentLanguage),
             fontSize = 13.sp,
             fontWeight = FontWeight.Medium,
             color = textColor.copy(alpha = 0.6f),
@@ -353,7 +362,8 @@ private fun QuickSuggestions(
                 CategoryChip(
                     category = category,
                     isSelected = selectedCategory == category,
-                    onClick = { onCategorySelected(category) }
+                    onClick = { onCategorySelected(category) },
+                    currentLanguage = currentLanguage
                 )
             }
         }
@@ -372,6 +382,7 @@ private fun QuickSuggestions(
                         SuggestionChip(
                             suggestion = suggestion,
                             onClick = { onSuggestionSelected(suggestion) },
+                            currentLanguage = currentLanguage,
                             modifier = Modifier.weight(1f)
                         )
                     }
@@ -390,6 +401,7 @@ private fun CategoryChip(
     category: SuggestionCategory,
     isSelected: Boolean,
     onClick: () -> Unit,
+    currentLanguage: com.cil.shift.core.common.localization.Language,
     modifier: Modifier = Modifier
 ) {
     val chipColor = try {
@@ -398,16 +410,28 @@ private fun CategoryChip(
         Color(0xFF4E7CFF)
     }
 
+    // Get localized category name
+    val localizedCategoryName = when (category) {
+        SuggestionCategory.HEALTH -> StringResources.health.get(currentLanguage)
+        SuggestionCategory.PRODUCTIVITY -> StringResources.productivity.get(currentLanguage)
+        SuggestionCategory.MINDFULNESS -> StringResources.mindfulness.get(currentLanguage)
+        SuggestionCategory.LEARNING -> StringResources.learning.get(currentLanguage)
+        SuggestionCategory.LIFESTYLE -> StringResources.lifestyle.get(currentLanguage)
+        SuggestionCategory.QUIT -> StringResources.quit.get(currentLanguage)
+        SuggestionCategory.REDUCE -> StringResources.reduce.get(currentLanguage)
+        SuggestionCategory.CHORES -> StringResources.chores.get(currentLanguage)
+    }
+
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(20.dp))
             .background(
-                if (isSelected) chipColor.copy(alpha = 0.2f)
-                else chipColor.copy(alpha = 0.08f)
+                if (isSelected) chipColor.copy(alpha = 0.25f)
+                else chipColor.copy(alpha = 0.15f)
             )
             .border(
-                width = if (isSelected) 1.5.dp else 0.dp,
-                color = if (isSelected) chipColor else Color.Transparent,
+                width = if (isSelected) 1.5.dp else 1.dp,
+                color = if (isSelected) chipColor else chipColor.copy(alpha = 0.3f),
                 shape = RoundedCornerShape(20.dp)
             )
             .clickable(onClick = onClick)
@@ -423,10 +447,10 @@ private fun CategoryChip(
                 fontSize = 14.sp
             )
             Text(
-                text = category.displayName,
+                text = localizedCategoryName,
                 fontSize = 13.sp,
                 fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
-                color = if (isSelected) chipColor else Color.Gray
+                color = if (isSelected) chipColor else chipColor.copy(alpha = 0.85f)
             )
         }
     }
@@ -436,6 +460,7 @@ private fun CategoryChip(
 private fun SuggestionChip(
     suggestion: HabitSuggestion,
     onClick: () -> Unit,
+    currentLanguage: com.cil.shift.core.common.localization.Language,
     modifier: Modifier = Modifier
 ) {
     val chipColor = try {
@@ -444,19 +469,27 @@ private fun SuggestionChip(
         Color(0xFF4E7CFF)
     }
 
+    // Get localized habit name
+    val localizedName = LocalizationHelpers.getLocalizedHabitName(suggestion.name, currentLanguage)
+
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))
-            .background(chipColor.copy(alpha = 0.12f))
+            .background(chipColor.copy(alpha = 0.18f))
+            .border(
+                width = 1.dp,
+                color = chipColor.copy(alpha = 0.25f),
+                shape = RoundedCornerShape(12.dp)
+            )
             .clickable(onClick = onClick)
             .padding(horizontal = 12.dp, vertical = 10.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = suggestion.name,
+            text = localizedName,
             fontSize = 12.sp,
-            fontWeight = FontWeight.Medium,
-            color = chipColor,
+            fontWeight = FontWeight.SemiBold,
+            color = chipColor.copy(alpha = 0.9f),
             maxLines = 1
         )
     }

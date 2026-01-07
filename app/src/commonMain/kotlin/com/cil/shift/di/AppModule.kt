@@ -1,5 +1,6 @@
 package com.cil.shift.di
 
+import com.cil.shift.core.common.honey.HoneyManager
 import com.cil.shift.core.common.localization.LocalizationManager
 import com.cil.shift.core.common.notification.NotificationHistoryRepository
 import com.cil.shift.core.common.premium.PremiumManager
@@ -64,4 +65,7 @@ val domainModule = module {
 
     // Premium
     single { PremiumManager(get()) }
+
+    // Honey System
+    single { HoneyManager(get(), get()) }
 }

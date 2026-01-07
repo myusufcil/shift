@@ -23,8 +23,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.cil.shift.core.common.localization.LocalizationManager
+import com.cil.shift.core.common.localization.StringResources
 import com.cil.shift.feature.habits.domain.model.Frequency
 import kotlinx.datetime.DayOfWeek
+import org.koin.compose.koinInject
 
 @Composable
 fun Step2Schedule(
@@ -41,6 +44,9 @@ fun Step2Schedule(
     onReminderTimeRemoved: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val localizationManager = koinInject<LocalizationManager>()
+    val currentLanguage by localizationManager.currentLanguage.collectAsState()
+
     val textColor = MaterialTheme.colorScheme.onBackground
     val cardColor = MaterialTheme.colorScheme.surface
     val accentColor = Color(0xFF4E7CFF)
@@ -56,14 +62,14 @@ fun Step2Schedule(
             ) {
         // Title
         Text(
-            text = "Set your schedule",
+            text = StringResources.setYourSchedule.get(currentLanguage),
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
             color = textColor
         )
 
         Text(
-            text = "Consistency is key. Choose a rhythm that works for you.",
+            text = StringResources.consistencyIsKey.get(currentLanguage),
             fontSize = 14.sp,
             color = textColor.copy(alpha = 0.7f),
             lineHeight = 20.sp
@@ -74,7 +80,7 @@ fun Step2Schedule(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                text = "Frequency",
+                text = StringResources.frequency.get(currentLanguage),
                 fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = textColor
@@ -85,7 +91,7 @@ fun Step2Schedule(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 FrequencyChip(
-                    text = "Everyday",
+                    text = StringResources.everyday.get(currentLanguage),
                     isSelected = frequency is Frequency.Daily,
                     onClick = { onFrequencyChange(Frequency.Daily) },
                     modifier = Modifier.weight(1f),
@@ -95,7 +101,7 @@ fun Step2Schedule(
                 )
 
                 FrequencyChip(
-                    text = "Specific Days",
+                    text = StringResources.specificDays.get(currentLanguage),
                     isSelected = frequency is Frequency.Weekly,
                     onClick = {
                         onFrequencyChange(Frequency.Weekly(listOf(DayOfWeek.MONDAY)))
@@ -107,7 +113,7 @@ fun Step2Schedule(
                 )
 
                 FrequencyChip(
-                    text = "Weekdays",
+                    text = StringResources.weekdays.get(currentLanguage),
                     isSelected = false,
                     onClick = {
                         onFrequencyChange(
@@ -170,7 +176,7 @@ fun Step2Schedule(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                text = "TIME OF DAY",
+                text = StringResources.timeOfDay.get(currentLanguage),
                 fontSize = 11.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = textColor.copy(alpha = 0.5f),
@@ -189,7 +195,8 @@ fun Step2Schedule(
                         modifier = Modifier.weight(1f),
                         textColor = textColor,
                         cardColor = cardColor,
-                        accentColor = accentColor
+                        accentColor = accentColor,
+                        currentLanguage = currentLanguage
                     )
                 }
             }
@@ -209,13 +216,13 @@ fun Step2Schedule(
         ) {
             Column {
                 Text(
-                    text = "Reminder",
+                    text = StringResources.reminder.get(currentLanguage),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = textColor
                 )
                 Text(
-                    text = "Get notified to stay on track",
+                    text = StringResources.getNotifiedToStayOnTrack.get(currentLanguage),
                     fontSize = 12.sp,
                     color = textColor.copy(alpha = 0.5f)
                 )
@@ -429,8 +436,17 @@ private fun TimeOfDayChip(
     modifier: Modifier = Modifier,
     textColor: Color = Color.White,
     cardColor: Color = Color(0xFF1A2942),
-    accentColor: Color = Color(0xFF4E7CFF)
+    accentColor: Color = Color(0xFF4E7CFF),
+    currentLanguage: com.cil.shift.core.common.localization.Language = com.cil.shift.core.common.localization.Language.ENGLISH
 ) {
+    // Get localized time of day name
+    val localizedName = when (timeOfDay) {
+        com.cil.shift.feature.habits.presentation.create.TimeOfDay.ANYTIME -> StringResources.anytime.get(currentLanguage)
+        com.cil.shift.feature.habits.presentation.create.TimeOfDay.MORNING -> StringResources.morning.get(currentLanguage)
+        com.cil.shift.feature.habits.presentation.create.TimeOfDay.AFTERNOON -> StringResources.afternoon.get(currentLanguage)
+        com.cil.shift.feature.habits.presentation.create.TimeOfDay.EVENING -> StringResources.evening.get(currentLanguage)
+    }
+
     Box(
         modifier = modifier
             .height(64.dp)
@@ -456,7 +472,7 @@ private fun TimeOfDayChip(
                 fontSize = 18.sp
             )
             Text(
-                text = timeOfDay.displayName,
+                text = localizedName,
                 fontSize = 11.sp,
                 fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
                 color = if (isSelected) Color.White else textColor

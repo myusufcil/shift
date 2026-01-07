@@ -266,29 +266,69 @@ private fun formatTimestamp(timestamp: Long, language: com.cil.shift.core.common
 
     return when {
         seconds < 60 -> when (language) {
-            com.cil.shift.core.common.localization.Language.ENGLISH -> "Just now"
             com.cil.shift.core.common.localization.Language.TURKISH -> "Şimdi"
             com.cil.shift.core.common.localization.Language.SPANISH -> "Ahora"
+            com.cil.shift.core.common.localization.Language.FRENCH -> "À l'instant"
+            com.cil.shift.core.common.localization.Language.GERMAN -> "Gerade eben"
+            com.cil.shift.core.common.localization.Language.PORTUGUESE -> "Agora"
+            com.cil.shift.core.common.localization.Language.ARABIC -> "الآن"
+            com.cil.shift.core.common.localization.Language.RUSSIAN -> "Только что"
+            com.cil.shift.core.common.localization.Language.HINDI -> "अभी"
+            com.cil.shift.core.common.localization.Language.JAPANESE -> "たった今"
+            com.cil.shift.core.common.localization.Language.CHINESE -> "刚刚"
+            else -> "Just now"
         }
         minutes < 60 -> when (language) {
-            com.cil.shift.core.common.localization.Language.ENGLISH -> "$minutes min ago"
             com.cil.shift.core.common.localization.Language.TURKISH -> "$minutes dk önce"
             com.cil.shift.core.common.localization.Language.SPANISH -> "Hace $minutes min"
+            com.cil.shift.core.common.localization.Language.FRENCH -> "Il y a $minutes min"
+            com.cil.shift.core.common.localization.Language.GERMAN -> "Vor $minutes Min."
+            com.cil.shift.core.common.localization.Language.PORTUGUESE -> "Há $minutes min"
+            com.cil.shift.core.common.localization.Language.ARABIC -> "قبل $minutes دقيقة"
+            com.cil.shift.core.common.localization.Language.RUSSIAN -> "$minutes мин. назад"
+            com.cil.shift.core.common.localization.Language.HINDI -> "$minutes मिनट पहले"
+            com.cil.shift.core.common.localization.Language.JAPANESE -> "${minutes}分前"
+            com.cil.shift.core.common.localization.Language.CHINESE -> "${minutes}分钟前"
+            else -> "$minutes min ago"
         }
         hours < 24 -> when (language) {
-            com.cil.shift.core.common.localization.Language.ENGLISH -> "$hours hours ago"
             com.cil.shift.core.common.localization.Language.TURKISH -> "$hours saat önce"
             com.cil.shift.core.common.localization.Language.SPANISH -> "Hace $hours horas"
+            com.cil.shift.core.common.localization.Language.FRENCH -> "Il y a $hours heures"
+            com.cil.shift.core.common.localization.Language.GERMAN -> "Vor $hours Std."
+            com.cil.shift.core.common.localization.Language.PORTUGUESE -> "Há $hours horas"
+            com.cil.shift.core.common.localization.Language.ARABIC -> "قبل $hours ساعة"
+            com.cil.shift.core.common.localization.Language.RUSSIAN -> "$hours ч. назад"
+            com.cil.shift.core.common.localization.Language.HINDI -> "$hours घंटे पहले"
+            com.cil.shift.core.common.localization.Language.JAPANESE -> "${hours}時間前"
+            com.cil.shift.core.common.localization.Language.CHINESE -> "${hours}小时前"
+            else -> "$hours hours ago"
         }
         days < 7 -> when (language) {
-            com.cil.shift.core.common.localization.Language.ENGLISH -> "$days days ago"
             com.cil.shift.core.common.localization.Language.TURKISH -> "$days gün önce"
             com.cil.shift.core.common.localization.Language.SPANISH -> "Hace $days días"
+            com.cil.shift.core.common.localization.Language.FRENCH -> "Il y a $days jours"
+            com.cil.shift.core.common.localization.Language.GERMAN -> "Vor $days Tagen"
+            com.cil.shift.core.common.localization.Language.PORTUGUESE -> "Há $days dias"
+            com.cil.shift.core.common.localization.Language.ARABIC -> "قبل $days أيام"
+            com.cil.shift.core.common.localization.Language.RUSSIAN -> "$days дн. назад"
+            com.cil.shift.core.common.localization.Language.HINDI -> "$days दिन पहले"
+            com.cil.shift.core.common.localization.Language.JAPANESE -> "${days}日前"
+            com.cil.shift.core.common.localization.Language.CHINESE -> "${days}天前"
+            else -> "$days days ago"
         }
         else -> when (language) {
-            com.cil.shift.core.common.localization.Language.ENGLISH -> "${days / 7} weeks ago"
             com.cil.shift.core.common.localization.Language.TURKISH -> "${days / 7} hafta önce"
             com.cil.shift.core.common.localization.Language.SPANISH -> "Hace ${days / 7} semanas"
+            com.cil.shift.core.common.localization.Language.FRENCH -> "Il y a ${days / 7} semaines"
+            com.cil.shift.core.common.localization.Language.GERMAN -> "Vor ${days / 7} Wochen"
+            com.cil.shift.core.common.localization.Language.PORTUGUESE -> "Há ${days / 7} semanas"
+            com.cil.shift.core.common.localization.Language.ARABIC -> "قبل ${days / 7} أسابيع"
+            com.cil.shift.core.common.localization.Language.RUSSIAN -> "${days / 7} нед. назад"
+            com.cil.shift.core.common.localization.Language.HINDI -> "${days / 7} सप्ताह पहले"
+            com.cil.shift.core.common.localization.Language.JAPANESE -> "${days / 7}週間前"
+            com.cil.shift.core.common.localization.Language.CHINESE -> "${days / 7}周前"
+            else -> "${days / 7} weeks ago"
         }
     }
 }

@@ -3,6 +3,8 @@ package com.cil.shift.feature.habits.presentation.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cil.shift.core.common.achievement.AchievementManager
+import com.cil.shift.core.common.honey.HoneyManager
+import com.cil.shift.core.common.honey.HoneyReason
 import com.cil.shift.core.common.onboarding.OnboardingPreferences
 import com.cil.shift.feature.habits.domain.usecase.GetHabitsUseCase
 import com.cil.shift.feature.habits.domain.usecase.ToggleHabitCompletionUseCase
@@ -15,7 +17,8 @@ class HomeViewModel(
     private val toggleHabitCompletionUseCase: ToggleHabitCompletionUseCase,
     private val habitRepository: com.cil.shift.feature.habits.domain.repository.HabitRepository,
     private val achievementManager: AchievementManager,
-    private val onboardingPreferences: OnboardingPreferences
+    private val onboardingPreferences: OnboardingPreferences,
+    private val honeyManager: HoneyManager
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(HomeState())
@@ -156,6 +159,31 @@ class HomeViewModel(
                         val newStreak = calculateStreak(habitWithCompletion.habit, targetLocalDate)
                         if (newStreak > 0) {
                             achievementManager.checkStreakAchievements(newStreak)
+                        }
+
+                        // Award honey for completing a habit
+                        val honeyEarned = honeyManager.addHoney(HoneyReason.HABIT_COMPLETED)
+                        if (honeyEarned > 0) {
+                            _state.update { it.copy(
+                                lastHoneyEarned = honeyEarned,
+                                lastHoneyReason = "Habit completed!"
+                            ) }
+                        }
+
+                        // Check for streak bonus
+                        if (newStreak == 7 || newStreak == 30 || newStreak == 100) {
+                            val streakBonus = honeyManager.awardStreakBonus(newStreak)
+                            if (streakBonus != null && streakBonus > 0) {
+                                _state.update { it.copy(
+                                    lastHoneyEarned = streakBonus,
+                                    lastHoneyReason = when (newStreak) {
+                                        7 -> "7-day streak bonus!"
+                                        30 -> "30-day streak bonus!"
+                                        100 -> "100-day streak bonus!"
+                                        else -> "Streak bonus!"
+                                    }
+                                ) }
+                            }
                         }
                     }
 
@@ -354,6 +382,9 @@ class HomeViewModel(
                 loadScheduledEvents()
                 loadWeeklyChartData()
             }
+            is HomeEvent.ClearHoneyEarned -> {
+                _state.update { it.copy(lastHoneyEarned = 0, lastHoneyReason = "") }
+            }
         }
     }
 
@@ -482,4 +513,5 @@ sealed interface HomeEvent {
     data class TimerTick(val habitId: String) : HomeEvent
     data class ResetTimer(val habitId: String) : HomeEvent
     data object ResetToToday : HomeEvent
+    data object ClearHoneyEarned : HomeEvent
 }

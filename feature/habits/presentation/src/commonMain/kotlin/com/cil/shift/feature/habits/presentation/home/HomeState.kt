@@ -26,7 +26,10 @@ data class HomeState(
     val runningTimers: Set<String> = emptySet(), // Set of habit IDs with running timers
     val isLoading: Boolean = true,
     val error: String? = null,
-    val confettiShownForDate: String? = null // Track which date confetti was shown to prevent repeating
+    val confettiShownForDate: String? = null, // Track which date confetti was shown to prevent repeating
+    // Honey system
+    val lastHoneyEarned: Int = 0, // Amount of honey earned (triggers popup when > 0)
+    val lastHoneyReason: String = "" // Reason for earning honey
 )
 
 data class HabitWithCompletion(

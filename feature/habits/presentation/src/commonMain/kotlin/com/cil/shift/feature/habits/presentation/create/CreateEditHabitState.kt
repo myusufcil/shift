@@ -29,10 +29,18 @@ data class CreateEditHabitState(
     val error: String? = null,
     val isSaved: Boolean = false,
     val isNegative: Boolean = false,      // For NEGATIVE/reduce type habits
-    val quitStartDate: Long? = null       // For QUIT type habits (null = today)
+    val quitStartDate: Long? = null,      // For QUIT type habits (null = today)
+    // Honey system
+    val honeyRequired: Int? = null,       // null = free, value = honey cost to create
+    val honeyBalance: Int = 0,            // Current user honey balance
+    val showNotEnoughHoneyDialog: Boolean = false,
+    val isPremium: Boolean = false        // Premium users bypass honey
 ) {
     val isValid: Boolean
         get() = name.isNotBlank()
+
+    val canAffordHabit: Boolean
+        get() = honeyRequired == null || isPremium || honeyBalance >= (honeyRequired ?: 0)
 }
 
 val availableIcons = listOf(

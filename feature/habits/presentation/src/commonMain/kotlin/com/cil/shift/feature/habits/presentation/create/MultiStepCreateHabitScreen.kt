@@ -17,6 +17,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.cil.shift.core.common.localization.LocalizationHelpers
+import com.cil.shift.core.common.localization.LocalizationManager
+import com.cil.shift.core.common.localization.StringResources
+import org.koin.compose.koinInject
+import com.cil.shift.core.designsystem.components.HoneyBottomSheetStrings
+import com.cil.shift.core.designsystem.components.NotEnoughHoneyBottomSheet
 import com.cil.shift.feature.habits.presentation.create.steps.Step1NameAndIcon
 import com.cil.shift.feature.habits.presentation.create.steps.Step2Schedule
 import com.cil.shift.feature.habits.presentation.create.steps.Step3CustomizeAndPreview
@@ -24,6 +30,7 @@ import com.cil.shift.feature.habits.presentation.create.steps.Step3CustomizeAndP
 @Composable
 fun MultiStepCreateHabitScreen(
     onNavigateBack: () -> Unit,
+    onNavigateToPremium: () -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: CreateEditHabitViewModel = viewModel {
         throw IllegalStateException("ViewModel should be provided via DI")
@@ -31,6 +38,9 @@ fun MultiStepCreateHabitScreen(
 ) {
     val state by viewModel.state.collectAsState()
     var currentStep by remember { mutableStateOf(0) }
+
+    val localizationManager = koinInject<LocalizationManager>()
+    val currentLanguage by localizationManager.currentLanguage.collectAsState()
 
     val backgroundColor = MaterialTheme.colorScheme.background
     val textColor = MaterialTheme.colorScheme.onBackground
@@ -109,7 +119,12 @@ fun MultiStepCreateHabitScreen(
                         selectedIcon = state.selectedIcon,
                         onNameChange = { viewModel.onEvent(CreateEditHabitEvent.NameChanged(it)) },
                         onIconSelect = { viewModel.onEvent(CreateEditHabitEvent.IconSelected(it)) },
-                        onSuggestionSelect = { viewModel.onEvent(CreateEditHabitEvent.SuggestionSelected(it)) }
+                        onSuggestionSelect = { suggestion ->
+                            // Pass the suggestion with localized name
+                            val localizedName = LocalizationHelpers.getLocalizedHabitName(suggestion.name, currentLanguage)
+                            val localizedSuggestion = suggestion.copy(name = localizedName)
+                            viewModel.onEvent(CreateEditHabitEvent.SuggestionSelected(localizedSuggestion))
+                        }
                     )
 
                     1 -> Step2Schedule(
@@ -157,6 +172,41 @@ fun MultiStepCreateHabitScreen(
                 )
             }
 
+            // Honey requirement banner (show on last step)
+            if (currentStep == 2 && state.honeyRequired != null && !state.isPremium && state.habitId == null) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color(0xFFFFD700))
+                        .padding(12.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = "\uD83C\uDF6F",
+                            fontSize = 18.sp
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = StringResources.thisHabitCosts.get(currentLanguage).replace("%d", state.honeyRequired.toString()),
+                            color = Color.Black,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 14.sp
+                        )
+                        if (!state.canAffordHabit) {
+                            Text(
+                                text = " (${state.honeyRequired!! - state.honeyBalance} ${StringResources.missing.get(currentLanguage)})",
+                                color = Color.Black.copy(alpha = 0.7f),
+                                fontSize = 12.sp
+                            )
+                        }
+                    }
+                }
+            }
+
             // Next/Create button
             Button(
                 onClick = {
@@ -171,7 +221,9 @@ fun MultiStepCreateHabitScreen(
                     .padding(24.dp)
                     .height(56.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF4E7CFF)
+                    containerColor = if (currentStep == 2 && state.honeyRequired != null && !state.canAffordHabit)
+                        Color(0xFFFF6B6B) // Red if can't afford
+                    else Color(0xFF4E7CFF)
                 ),
                 shape = RoundedCornerShape(16.dp),
                 enabled = !state.isLoading && when (currentStep) {
@@ -191,15 +243,21 @@ fun MultiStepCreateHabitScreen(
                     ) {
                         Text(
                             text = when (currentStep) {
-                                0 -> "Next Step"
-                                1 -> "Next"
-                                else -> if (state.habitId != null) "Update Habit" else "Create Habit"
+                                0 -> StringResources.nextStep.get(currentLanguage)
+                                1 -> StringResources.next.get(currentLanguage)
+                                else -> {
+                                    if (state.habitId != null) StringResources.editHabit.get(currentLanguage)
+                                    else if (state.honeyRequired != null && !state.isPremium) {
+                                        if (state.canAffordHabit) StringResources.createWithHoney.get(currentLanguage).replace("%d", state.honeyRequired.toString())
+                                        else StringResources.honeyNotEnough.get(currentLanguage)
+                                    } else StringResources.createHabit.get(currentLanguage)
+                                }
                             },
                             fontSize = 16.sp,
                             fontWeight = FontWeight.SemiBold
                         )
 
-                        if (currentStep == 2) {
+                        if (currentStep == 2 && (state.honeyRequired == null || state.canAffordHabit)) {
                             Icon(
                                 imageVector = Icons.Default.Check,
                                 contentDescription = null,
@@ -210,5 +268,33 @@ fun MultiStepCreateHabitScreen(
                 }
             }
         }
+
+        // Not Enough Honey BottomSheet
+        NotEnoughHoneyBottomSheet(
+            visible = state.showNotEnoughHoneyDialog,
+            featureName = StringResources.newHabit.get(currentLanguage),
+            cost = state.honeyRequired ?: 0,
+            currentBalance = state.honeyBalance,
+            strings = HoneyBottomSheetStrings(
+                title = StringResources.honeyNotEnough.get(currentLanguage),
+                yourBalance = StringResources.yourBalance.get(currentLanguage),
+                needed = StringResources.needed.get(currentLanguage),
+                howToEarn = StringResources.howToEarnHoney.get(currentLanguage),
+                dailyLogin = StringResources.dailyLogin.get(currentLanguage),
+                completeHabit = StringResources.completeHabit.get(currentLanguage),
+                sevenDayStreak = StringResources.sevenDayStreak.get(currentLanguage),
+                getPremium = StringResources.getPremiumUnlimited.get(currentLanguage),
+                watchAd = StringResources.watchAdForHoney.get(currentLanguage),
+                later = StringResources.earnMoreLater.get(currentLanguage)
+            ),
+            onGetPremium = {
+                viewModel.onEvent(CreateEditHabitEvent.DismissNotEnoughHoneyDialog)
+                onNavigateToPremium()
+            },
+            onWatchAd = null, // TODO: Implement ad watching
+            onDismiss = {
+                viewModel.onEvent(CreateEditHabitEvent.DismissNotEnoughHoneyDialog)
+            }
+        )
     }
 }

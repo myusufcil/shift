@@ -6,22 +6,24 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Description
-import androidx.compose.material.icons.filled.ExitToApp
-import androidx.compose.material.icons.filled.Help
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Language
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Palette
-import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Login
+import androidx.compose.material.icons.outlined.Description
+import androidx.compose.material.icons.outlined.EmojiEvents
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Language
+import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -30,6 +32,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -52,12 +55,6 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.*
 import org.koin.compose.koinInject
 
-data class ProfileMenuItem(
-    val icon: ImageVector,
-    val title: String,
-    val onClick: () -> Unit
-)
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
@@ -70,6 +67,7 @@ fun ProfileScreen(
     onNavigateToPremium: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val uriHandler = LocalUriHandler.current
     val localizationManager = koinInject<LocalizationManager>()
     val currentLanguage by localizationManager.currentLanguage.collectAsState()
     val habitRepository = koinInject<HabitRepository>()
@@ -218,7 +216,7 @@ fun ProfileScreen(
                 val displayName = user?.displayName
                     ?: user?.email?.substringBefore("@")?.replaceFirstChar { it.uppercase() }
                     ?: onboardingName
-                    ?: if (currentLanguage == Language.TURKISH) "Misafir" else "Guest"
+                    ?: StringResources.guest.get(currentLanguage)
                 val email = user?.email
                 val initial = displayName.firstOrNull()?.uppercase() ?: "?"
 
@@ -259,7 +257,7 @@ fun ProfileScreen(
                         // Not logged in - show login prompt
                         TextButton(onClick = onNavigateToLogin) {
                             Text(
-                                text = if (currentLanguage == Language.TURKISH) "Giriş Yap / Kayıt Ol" else "Sign In / Sign Up",
+                                text = StringResources.signInSignUp.get(currentLanguage),
                                 fontSize = 14.sp,
                                 color = Color(0xFF4E7CFF)
                             )
@@ -290,13 +288,13 @@ fun ProfileScreen(
                         ) {
                             Column {
                                 Text(
-                                    text = if (currentLanguage == Language.TURKISH) "Premium'a Yukselt" else "Upgrade to Premium",
+                                    text = StringResources.upgradeToPremium.get(currentLanguage),
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = Color.White
                                 )
                                 Text(
-                                    text = if (currentLanguage == Language.TURKISH) "Tum ozelliklerin kilidini ac" else "Unlock all features",
+                                    text = StringResources.unlockAllFeatures.get(currentLanguage),
                                     fontSize = 12.sp,
                                     color = Color.White.copy(alpha = 0.8f)
                                 )
@@ -356,7 +354,8 @@ fun ProfileScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     ProfileMenuItem(
-                        icon = Icons.Default.Language,
+                        icon = Icons.Outlined.Language,
+                        iconColor = Color(0xFF4E7CFF),
                         title = StringResources.language.localized(),
                         subtitle = currentLanguage.nativeName,
                         onClick = { showLanguageDialog = true }
@@ -369,29 +368,36 @@ fun ProfileScreen(
                         onMoreOptions = { showThemeDialog = true }
                     )
                     ProfileMenuItem(
-                        icon = Icons.Default.EmojiEvents,
+                        icon = Icons.Outlined.EmojiEvents,
+                        iconColor = Color(0xFFFFD700),
                         title = StringResources.achievements.localized(),
                         onClick = onNavigateToAchievements
                     )
                     ProfileMenuItem(
-                        icon = Icons.Default.Info,
+                        icon = Icons.Outlined.Info,
+                        iconColor = Color(0xFF4ECDC4),
                         title = StringResources.about.localized(),
                         onClick = onNavigateToAbout
                     )
                     ProfileMenuItem(
-                        icon = Icons.Default.Lock,
+                        icon = Icons.Outlined.Lock,
+                        iconColor = Color(0xFF9B59B6),
                         title = StringResources.privacyPolicy.localized(),
                         onClick = onNavigateToPrivacy
                     )
                     ProfileMenuItem(
-                        icon = Icons.Default.Description,
+                        icon = Icons.Outlined.Description,
+                        iconColor = Color(0xFF3498DB),
                         title = StringResources.termsOfService.localized(),
                         onClick = onNavigateToTerms
                     )
                     ProfileMenuItem(
-                        icon = Icons.Default.Help,
+                        icon = Icons.AutoMirrored.Outlined.HelpOutline,
+                        iconColor = Color(0xFFE67E22),
                         title = StringResources.helpSupport.localized(),
-                        onClick = { /* TODO */ }
+                        onClick = {
+                            uriHandler.openUri("mailto:contact.shiftapp@gmail.com?subject=Shift App Support")
+                        }
                     )
                 }
             }
@@ -402,7 +408,7 @@ fun ProfileScreen(
 
                 item {
                     Text(
-                        text = (if (currentLanguage == Language.TURKISH) "Hesap" else if (currentLanguage == Language.SPANISH) "Cuenta" else "Account").uppercase(),
+                        text = StringResources.account.get(currentLanguage).uppercase(),
                         fontSize = 11.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = textColor.copy(alpha = 0.5f),
@@ -468,7 +474,7 @@ fun ProfileScreen(
                         Spacer(modifier = Modifier.height(8.dp))
 
                         ProfileMenuItem(
-                            icon = Icons.Default.ExitToApp,
+                            icon = Icons.AutoMirrored.Filled.ExitToApp,
                             title = StringResources.signOut.localized(),
                             onClick = { showSignOutDialog = true },
                             isDanger = true
@@ -523,16 +529,13 @@ fun ProfileScreen(
                 },
                 title = {
                     Text(
-                        text = if (currentLanguage == Language.TURKISH) "Uygulama Yeniden Başlatılacak" else "App Will Restart",
+                        text = StringResources.appWillRestart.get(currentLanguage),
                         fontWeight = FontWeight.Bold
                     )
                 },
                 text = {
                     Text(
-                        text = if (currentLanguage == Language.TURKISH)
-                            "Bu değişikliğin uygulanması için uygulama kapatılacak. Devam etmek istiyor musunuz?"
-                        else
-                            "The app will close to apply this change. Do you want to continue?"
+                        text = StringResources.appWillRestartMessage.get(currentLanguage)
                     )
                 },
                 confirmButton = {
@@ -554,7 +557,7 @@ fun ProfileScreen(
                         }
                     ) {
                         Text(
-                            text = if (currentLanguage == Language.TURKISH) "Tamam" else "OK",
+                            text = StringResources.ok.get(currentLanguage),
                             color = Color(0xFF4E7CFF)
                         )
                     }
@@ -568,7 +571,7 @@ fun ProfileScreen(
                         }
                     ) {
                         Text(
-                            text = if (currentLanguage == Language.TURKISH) "İptal" else "Cancel"
+                            text = StringResources.cancel.get(currentLanguage)
                         )
                     }
                 }
@@ -580,16 +583,13 @@ fun ProfileScreen(
                 onDismissRequest = { showSignOutDialog = false },
                 title = {
                     Text(
-                        text = if (currentLanguage == Language.TURKISH) "Çıkış Yap" else "Sign Out",
+                        text = StringResources.signOut.get(currentLanguage),
                         fontWeight = FontWeight.Bold
                     )
                 },
                 text = {
                     Text(
-                        text = if (currentLanguage == Language.TURKISH)
-                            "Hesabınızdan çıkış yapmak istediğinize emin misiniz?"
-                        else
-                            "Are you sure you want to sign out?"
+                        text = StringResources.signOutConfirmMessage.get(currentLanguage)
                     )
                 },
                 confirmButton = {
@@ -605,7 +605,7 @@ fun ProfileScreen(
                         }
                     ) {
                         Text(
-                            text = if (currentLanguage == Language.TURKISH) "Çıkış Yap" else "Sign Out",
+                            text = StringResources.signOut.get(currentLanguage),
                             color = Color(0xFFFF6B6B)
                         )
                     }
@@ -613,7 +613,7 @@ fun ProfileScreen(
                 dismissButton = {
                     TextButton(onClick = { showSignOutDialog = false }) {
                         Text(
-                            text = if (currentLanguage == Language.TURKISH) "İptal" else "Cancel"
+                            text = StringResources.cancel.get(currentLanguage)
                         )
                     }
                 }
@@ -669,10 +669,16 @@ private fun ProfileMenuItem(
     onClick: () -> Unit,
     isDanger: Boolean = false,
     subtitle: String? = null,
+    iconColor: Color? = null,
     modifier: Modifier = Modifier
 ) {
     val cardColor = MaterialTheme.colorScheme.surface
     val textColor = MaterialTheme.colorScheme.onBackground
+    val effectiveIconColor = when {
+        isDanger -> Color(0xFFFF6B6B)
+        iconColor != null -> iconColor
+        else -> Color(0xFF4E7CFF)
+    }
 
     Row(
         modifier = modifier
@@ -693,12 +699,21 @@ private fun ProfileMenuItem(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = title,
-                tint = if (isDanger) Color(0xFFFF6B6B) else textColor.copy(alpha = 0.7f),
-                modifier = Modifier.size(20.dp)
-            )
+            // Icon with colored background
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(effectiveIconColor.copy(alpha = 0.15f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = title,
+                    tint = effectiveIconColor,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
             Column(
                 verticalArrangement = Arrangement.spacedBy(2.dp)
             ) {
@@ -721,7 +736,7 @@ private fun ProfileMenuItem(
         Icon(
             imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
             contentDescription = null,
-            tint = textColor.copy(alpha = 0.3f),
+            tint = textColor.copy(alpha = 0.4f),
             modifier = Modifier.size(20.dp)
         )
     }
@@ -738,6 +753,7 @@ private fun ThemeToggleMenuItem(
     val textColor = MaterialTheme.colorScheme.onBackground
     val isDark = currentTheme == AppTheme.DARK ||
                  (currentTheme == AppTheme.SYSTEM && isSystemInDarkTheme())
+    val iconColor = Color(0xFFE91E63)
 
     Row(
         modifier = modifier
@@ -758,12 +774,21 @@ private fun ThemeToggleMenuItem(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                imageVector = Icons.Default.Palette,
-                contentDescription = StringResources.theme.localized(),
-                tint = textColor.copy(alpha = 0.7f),
-                modifier = Modifier.size(20.dp)
-            )
+            // Icon with colored background
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(iconColor.copy(alpha = 0.15f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Palette,
+                    contentDescription = StringResources.theme.localized(),
+                    tint = iconColor,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
             Column(
                 verticalArrangement = Arrangement.spacedBy(2.dp)
             ) {
@@ -838,7 +863,11 @@ private fun LanguageSelectionDialog(
             )
         },
         text = {
+            val scrollState = rememberScrollState()
             Column(
+                modifier = Modifier
+                    .heightIn(max = 400.dp)
+                    .verticalScroll(scrollState),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Language.entries.forEach { language ->

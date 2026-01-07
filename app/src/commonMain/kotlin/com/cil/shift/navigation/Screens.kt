@@ -92,8 +92,8 @@ object ProfileScreenNav : Screen {
         ProfileScreen(
             onNavigateBack = { navigator.pop() },
             onNavigateToAbout = { navigator.push(AboutScreenNav) },
-            onNavigateToPrivacy = { navigator.push(PrivacyPolicyScreenNav) },
-            onNavigateToTerms = { navigator.push(TermsOfServiceScreenNav) },
+            onNavigateToPrivacy = { navigator.push(PrivacyPolicyWebViewNav) },
+            onNavigateToTerms = { navigator.push(TermsOfServiceWebViewNav) },
             onNavigateToAchievements = { navigator.push(AchievementsScreenNav) },
             onNavigateToLogin = { navigator.push(LoginScreenNav) },
             onNavigateToPremium = { navigator.push(PremiumScreenNav) }
@@ -119,7 +119,7 @@ object AboutScreenNav : Screen {
     }
 }
 
-object PrivacyPolicyScreenNav : Screen {
+object PrivacyPolicyWebViewNav : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
@@ -131,13 +131,15 @@ object PrivacyPolicyScreenNav : Screen {
             }
         }
 
-        PrivacyPolicyScreen(
+        WebViewScreen(
+            title = "Privacy Policy",
+            url = "https://myusufcil.github.io/shift/privacy.html",
             onNavigateBack = { navigator.pop() }
         )
     }
 }
 
-object TermsOfServiceScreenNav : Screen {
+object TermsOfServiceWebViewNav : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
@@ -149,7 +151,9 @@ object TermsOfServiceScreenNav : Screen {
             }
         }
 
-        TermsOfServiceScreen(
+        WebViewScreen(
+            title = "Terms of Service",
+            url = "https://myusufcil.github.io/shift/terms.html",
             onNavigateBack = { navigator.pop() }
         )
     }

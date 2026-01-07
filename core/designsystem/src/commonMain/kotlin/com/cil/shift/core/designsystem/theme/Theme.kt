@@ -1,5 +1,8 @@
 package com.cil.shift.core.designsystem.theme
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
@@ -64,6 +67,54 @@ private val LightColorScheme = lightColorScheme(
 )
 
 /**
+ * Animates a color change with smooth transition.
+ */
+@Composable
+private fun animateColor(targetValue: Color): Color {
+    return animateColorAsState(
+        targetValue = targetValue,
+        animationSpec = tween(durationMillis = 400)
+    ).value
+}
+
+/**
+ * Creates an animated ColorScheme that smoothly transitions between colors.
+ */
+@Composable
+private fun animateColorScheme(targetColorScheme: ColorScheme): ColorScheme {
+    return targetColorScheme.copy(
+        primary = animateColor(targetColorScheme.primary),
+        onPrimary = animateColor(targetColorScheme.onPrimary),
+        primaryContainer = animateColor(targetColorScheme.primaryContainer),
+        onPrimaryContainer = animateColor(targetColorScheme.onPrimaryContainer),
+        secondary = animateColor(targetColorScheme.secondary),
+        onSecondary = animateColor(targetColorScheme.onSecondary),
+        secondaryContainer = animateColor(targetColorScheme.secondaryContainer),
+        onSecondaryContainer = animateColor(targetColorScheme.onSecondaryContainer),
+        tertiary = animateColor(targetColorScheme.tertiary),
+        onTertiary = animateColor(targetColorScheme.onTertiary),
+        tertiaryContainer = animateColor(targetColorScheme.tertiaryContainer),
+        onTertiaryContainer = animateColor(targetColorScheme.onTertiaryContainer),
+        error = animateColor(targetColorScheme.error),
+        onError = animateColor(targetColorScheme.onError),
+        errorContainer = animateColor(targetColorScheme.errorContainer),
+        onErrorContainer = animateColor(targetColorScheme.onErrorContainer),
+        background = animateColor(targetColorScheme.background),
+        onBackground = animateColor(targetColorScheme.onBackground),
+        surface = animateColor(targetColorScheme.surface),
+        onSurface = animateColor(targetColorScheme.onSurface),
+        surfaceVariant = animateColor(targetColorScheme.surfaceVariant),
+        onSurfaceVariant = animateColor(targetColorScheme.onSurfaceVariant),
+        outline = animateColor(targetColorScheme.outline),
+        outlineVariant = animateColor(targetColorScheme.outlineVariant),
+        scrim = animateColor(targetColorScheme.scrim),
+        inverseSurface = animateColor(targetColorScheme.inverseSurface),
+        inverseOnSurface = animateColor(targetColorScheme.inverseOnSurface),
+        inversePrimary = animateColor(targetColorScheme.inversePrimary)
+    )
+}
+
+/**
  * Shift app theme.
  * Applies Material3 theming with custom colors, typography, and shapes.
  *
@@ -75,13 +126,16 @@ fun ShiftTheme(
     darkTheme: Boolean = true,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
+    val targetColorScheme = when {
         darkTheme -> DarkColorScheme
         else -> LightColorScheme
     }
 
+    // Animate the color scheme for smooth transitions
+    val animatedColorScheme = animateColorScheme(targetColorScheme)
+
     MaterialTheme(
-        colorScheme = colorScheme,
+        colorScheme = animatedColorScheme,
         typography = ShiftTypography,
         shapes = ShiftShapes,
         content = content

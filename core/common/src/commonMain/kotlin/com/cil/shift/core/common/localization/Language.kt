@@ -7,7 +7,15 @@ enum class Language(
 ) {
     ENGLISH("en", "English", "English"),
     TURKISH("tr", "Turkish", "Türkçe"),
-    SPANISH("es", "Spanish", "Español"); // Third language
+    SPANISH("es", "Spanish", "Español"),
+    FRENCH("fr", "French", "Français"),
+    GERMAN("de", "German", "Deutsch"),
+    PORTUGUESE("pt", "Portuguese", "Português"),
+    ARABIC("ar", "Arabic", "العربية"),
+    RUSSIAN("ru", "Russian", "Русский"),
+    HINDI("hi", "Hindi", "हिन्दी"),
+    JAPANESE("ja", "Japanese", "日本語"),
+    CHINESE("zh", "Chinese", "中文");
 
     companion object {
         fun fromCode(code: String): Language {

@@ -19,6 +19,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.cil.shift.core.designsystem.components.NotEnoughHoneyDialog
 import com.cil.shift.feature.habits.presentation.create.components.ColorPicker
 import com.cil.shift.feature.habits.presentation.create.components.FrequencySelector
 import com.cil.shift.feature.habits.presentation.create.components.CategorizedIconPicker
@@ -218,6 +219,57 @@ fun CreateEditHabitScreen(
 
                 Spacer(modifier = Modifier.height(32.dp))
             }
+
+            // Honey requirement banner
+            if (state.honeyRequired != null && !state.isPremium && state.habitId == null) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.BottomCenter)
+                        .background(Color(0xFFFFD700).copy(alpha = 0.9f))
+                        .padding(16.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = "\uD83C\uDF6F",
+                            fontSize = 20.sp
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "This habit costs ${state.honeyRequired} honey",
+                            color = Color.Black,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        if (!state.canAffordHabit) {
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "(Need ${state.honeyRequired!! - state.honeyBalance} more)",
+                                color = Color.Black.copy(alpha = 0.7f),
+                                fontSize = 12.sp
+                            )
+                        }
+                    }
+                }
+            }
         }
+
+        // Not Enough Honey Dialog
+        NotEnoughHoneyDialog(
+            visible = state.showNotEnoughHoneyDialog,
+            featureName = "Create New Habit",
+            cost = state.honeyRequired ?: 0,
+            currentBalance = state.honeyBalance,
+            onGetPremium = {
+                viewModel.onEvent(CreateEditHabitEvent.DismissNotEnoughHoneyDialog)
+                // TODO: Navigate to premium screen
+            },
+            onDismiss = {
+                viewModel.onEvent(CreateEditHabitEvent.DismissNotEnoughHoneyDialog)
+            }
+        )
     }
 }

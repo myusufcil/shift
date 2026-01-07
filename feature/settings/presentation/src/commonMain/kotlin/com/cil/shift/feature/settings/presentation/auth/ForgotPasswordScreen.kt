@@ -250,6 +250,78 @@ private data class ForgotPasswordStrings(
                     enterEmail = "Por favor ingresa tu correo",
                     emailSent = "Se ha enviado un enlace a tu correo"
                 )
+                Language.FRENCH -> ForgotPasswordStrings(
+                    title = "Mot de passe oublié",
+                    subtitle = "Entrez votre e-mail et nous vous enverrons un lien pour réinitialiser votre mot de passe",
+                    email = "E-mail",
+                    sendResetLink = "Envoyer le lien",
+                    backToLogin = "Retour à la connexion",
+                    enterEmail = "Veuillez entrer votre e-mail",
+                    emailSent = "Un lien de réinitialisation a été envoyé à votre e-mail"
+                )
+                Language.GERMAN -> ForgotPasswordStrings(
+                    title = "Passwort vergessen",
+                    subtitle = "Geben Sie Ihre E-Mail ein und wir senden Ihnen einen Link zum Zurücksetzen",
+                    email = "E-Mail",
+                    sendResetLink = "Link senden",
+                    backToLogin = "Zurück zur Anmeldung",
+                    enterEmail = "Bitte geben Sie Ihre E-Mail ein",
+                    emailSent = "Ein Link wurde an Ihre E-Mail gesendet"
+                )
+                Language.PORTUGUESE -> ForgotPasswordStrings(
+                    title = "Esqueci a Senha",
+                    subtitle = "Digite seu e-mail e enviaremos um link para redefinir sua senha",
+                    email = "E-mail",
+                    sendResetLink = "Enviar Link",
+                    backToLogin = "Voltar ao login",
+                    enterEmail = "Por favor insira seu e-mail",
+                    emailSent = "Link de redefinição enviado para seu e-mail"
+                )
+                Language.ARABIC -> ForgotPasswordStrings(
+                    title = "نسيت كلمة المرور",
+                    subtitle = "أدخل بريدك الإلكتروني وسنرسل لك رابطًا لإعادة تعيين كلمة المرور",
+                    email = "البريد الإلكتروني",
+                    sendResetLink = "إرسال الرابط",
+                    backToLogin = "العودة لتسجيل الدخول",
+                    enterEmail = "يرجى إدخال بريدك الإلكتروني",
+                    emailSent = "تم إرسال رابط إعادة التعيين إلى بريدك الإلكتروني"
+                )
+                Language.RUSSIAN -> ForgotPasswordStrings(
+                    title = "Забыли пароль",
+                    subtitle = "Введите вашу эл. почту и мы отправим ссылку для сброса пароля",
+                    email = "Эл. почта",
+                    sendResetLink = "Отправить ссылку",
+                    backToLogin = "Вернуться к входу",
+                    enterEmail = "Пожалуйста, введите вашу эл. почту",
+                    emailSent = "Ссылка для сброса отправлена на вашу эл. почту"
+                )
+                Language.HINDI -> ForgotPasswordStrings(
+                    title = "पासवर्ड भूल गए",
+                    subtitle = "अपना ईमेल दर्ज करें और हम आपको पासवर्ड रीसेट लिंक भेजेंगे",
+                    email = "ईमेल",
+                    sendResetLink = "लिंक भेजें",
+                    backToLogin = "लॉगिन पर वापस जाएं",
+                    enterEmail = "कृपया अपना ईमेल दर्ज करें",
+                    emailSent = "पासवर्ड रीसेट लिंक आपके ईमेल पर भेजा गया"
+                )
+                Language.JAPANESE -> ForgotPasswordStrings(
+                    title = "パスワードをお忘れですか",
+                    subtitle = "メールアドレスを入力すると、パスワードリセットのリンクをお送りします",
+                    email = "メール",
+                    sendResetLink = "リンクを送信",
+                    backToLogin = "ログインに戻る",
+                    enterEmail = "メールアドレスを入力してください",
+                    emailSent = "パスワードリセットリンクがメールに送信されました"
+                )
+                Language.CHINESE -> ForgotPasswordStrings(
+                    title = "忘记密码",
+                    subtitle = "输入您的电子邮件，我们将向您发送重置密码的链接",
+                    email = "电子邮件",
+                    sendResetLink = "发送链接",
+                    backToLogin = "返回登录",
+                    enterEmail = "请输入您的电子邮件",
+                    emailSent = "密码重置链接已发送到您的电子邮件"
+                )
                 else -> ForgotPasswordStrings(
                     title = "Forgot Password",
                     subtitle = "Enter your email and we'll send you a link to reset your password",

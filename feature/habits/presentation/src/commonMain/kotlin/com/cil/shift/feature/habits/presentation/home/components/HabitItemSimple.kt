@@ -105,7 +105,12 @@ fun HabitItemSimple(
                 .clip(CircleShape)
                 .background(
                     if (isCompleted) Color(0xFF4ECDC4)
-                    else textColor.copy(alpha = 0.1f)
+                    else Color.White
+                )
+                .border(
+                    width = if (isCompleted) 0.dp else 1.5.dp,
+                    color = textColor.copy(alpha = 0.2f),
+                    shape = CircleShape
                 )
                 .clickable(onClick = onToggle),
             contentAlignment = Alignment.Center
@@ -129,19 +134,20 @@ private fun getIconEmoji(icon: String): String {
         "fruit", "fru" -> "🍉"
         "cooking", "coo" -> "🍳"
         "breakfast", "bre", "kahvaltı", "kah" -> "🍳"
+        "utensils", "ute" -> "🍴"
         "sunrise", "sun" -> "🌅"
         "sunset" -> "🌇"
-        "pill", "med" -> "💊"
+        "pill" -> "💊"
         "journal", "jou" -> "✍️"
         "pray", "pra" -> "🙏"
-        "meditation", "me", "med" -> "🧘"
+        "meditation", "med" -> "🧘"
         "relaxed", "rel" -> "😌"
         "detox", "det" -> "🚫"
         "books", "book", "boo" -> "📚"
         "course", "cou" -> "📝"
         "instrument", "ins" -> "🎷"
         "study", "stu" -> "🧑‍🎓"
-        "flute", "flu", "ute" -> "🎺"
+        "flute", "flu" -> "🎺"
         "running", "run" -> "🏃"
         "walking", "wal" -> "🚶"
         "dance", "dan" -> "💃"
@@ -176,6 +182,15 @@ private fun getIconEmoji(icon: String): String {
         "music", "mus" -> "🎵"
         "art", "palette", "pale", "pal" -> "🎨"
         "briefcase", "bri", "work" -> "💼"
-        else -> if (icon.any { it.code >= 0x1F300 }) icon else "✓"
+        "code", "cod" -> "💻"
+        "tools", "too" -> "🔧"
+        "phone", "pho" -> "📱"
+        "cigarette", "cig" -> "🚬"
+        "wine", "win" -> "🍷"
+        "plant", "pla" -> "🌱"
+        "tooth", "teeth" -> "🦷"
+        "no_drinks", "no_alcohol" -> "🚫🍺"
+        "no_phone" -> "📵"
+        else -> if (icon.any { it.code >= 0x1F300 }) icon else "⭐"
     }
 }

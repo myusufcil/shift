@@ -488,6 +488,110 @@ private data class LoginStrings(
                     continueWithGoogle = "Continuar con Google",
                     continueWithApple = "Continuar con Apple"
                 )
+                Language.FRENCH -> LoginStrings(
+                    welcomeBack = "Bon retour!",
+                    email = "E-mail",
+                    password = "Mot de passe",
+                    forgotPassword = "Mot de passe oublié?",
+                    signIn = "Se Connecter",
+                    or = "ou",
+                    noAccount = "Pas de compte?",
+                    signUp = "S'inscrire",
+                    fillAllFields = "Veuillez remplir tous les champs",
+                    continueWithGoogle = "Continuer avec Google",
+                    continueWithApple = "Continuer avec Apple"
+                )
+                Language.GERMAN -> LoginStrings(
+                    welcomeBack = "Willkommen zurück!",
+                    email = "E-Mail",
+                    password = "Passwort",
+                    forgotPassword = "Passwort vergessen?",
+                    signIn = "Anmelden",
+                    or = "oder",
+                    noAccount = "Kein Konto?",
+                    signUp = "Registrieren",
+                    fillAllFields = "Bitte alle Felder ausfüllen",
+                    continueWithGoogle = "Weiter mit Google",
+                    continueWithApple = "Weiter mit Apple"
+                )
+                Language.PORTUGUESE -> LoginStrings(
+                    welcomeBack = "Bem-vindo de volta!",
+                    email = "E-mail",
+                    password = "Senha",
+                    forgotPassword = "Esqueceu a senha?",
+                    signIn = "Entrar",
+                    or = "ou",
+                    noAccount = "Não tem conta?",
+                    signUp = "Cadastrar",
+                    fillAllFields = "Por favor preencha todos os campos",
+                    continueWithGoogle = "Continuar com Google",
+                    continueWithApple = "Continuar com Apple"
+                )
+                Language.ARABIC -> LoginStrings(
+                    welcomeBack = "!مرحباً بعودتك",
+                    email = "البريد الإلكتروني",
+                    password = "كلمة المرور",
+                    forgotPassword = "نسيت كلمة المرور؟",
+                    signIn = "تسجيل الدخول",
+                    or = "أو",
+                    noAccount = "ليس لديك حساب؟",
+                    signUp = "إنشاء حساب",
+                    fillAllFields = "يرجى ملء جميع الحقول",
+                    continueWithGoogle = "المتابعة مع Google",
+                    continueWithApple = "المتابعة مع Apple"
+                )
+                Language.RUSSIAN -> LoginStrings(
+                    welcomeBack = "С возвращением!",
+                    email = "Эл. почта",
+                    password = "Пароль",
+                    forgotPassword = "Забыли пароль?",
+                    signIn = "Войти",
+                    or = "или",
+                    noAccount = "Нет аккаунта?",
+                    signUp = "Регистрация",
+                    fillAllFields = "Пожалуйста, заполните все поля",
+                    continueWithGoogle = "Продолжить с Google",
+                    continueWithApple = "Продолжить с Apple"
+                )
+                Language.HINDI -> LoginStrings(
+                    welcomeBack = "वापसी पर स्वागत है!",
+                    email = "ईमेल",
+                    password = "पासवर्ड",
+                    forgotPassword = "पासवर्ड भूल गए?",
+                    signIn = "साइन इन करें",
+                    or = "या",
+                    noAccount = "खाता नहीं है?",
+                    signUp = "साइन अप करें",
+                    fillAllFields = "कृपया सभी फ़ील्ड भरें",
+                    continueWithGoogle = "Google से जारी रखें",
+                    continueWithApple = "Apple से जारी रखें"
+                )
+                Language.JAPANESE -> LoginStrings(
+                    welcomeBack = "おかえりなさい！",
+                    email = "メール",
+                    password = "パスワード",
+                    forgotPassword = "パスワードをお忘れですか？",
+                    signIn = "サインイン",
+                    or = "または",
+                    noAccount = "アカウントをお持ちでないですか？",
+                    signUp = "サインアップ",
+                    fillAllFields = "すべての項目を入力してください",
+                    continueWithGoogle = "Googleで続ける",
+                    continueWithApple = "Appleで続ける"
+                )
+                Language.CHINESE -> LoginStrings(
+                    welcomeBack = "欢迎回来！",
+                    email = "电子邮件",
+                    password = "密码",
+                    forgotPassword = "忘记密码？",
+                    signIn = "登录",
+                    or = "或",
+                    noAccount = "没有账户？",
+                    signUp = "注册",
+                    fillAllFields = "请填写所有字段",
+                    continueWithGoogle = "使用 Google 继续",
+                    continueWithApple = "使用 Apple 继续"
+                )
                 else -> LoginStrings(
                     welcomeBack = "Welcome back!",
                     email = "Email",

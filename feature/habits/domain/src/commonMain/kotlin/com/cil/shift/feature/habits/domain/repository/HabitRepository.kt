@@ -18,6 +18,13 @@ interface HabitRepository {
     fun getHabits(): Flow<List<Habit>>
 
     /**
+     * Gets the count of active (non-archived) habits.
+     *
+     * @return The number of active habits
+     */
+    suspend fun getHabitCount(): Int
+
+    /**
      * Gets a specific habit by ID.
      *
      * @param id The habit ID

@@ -5,6 +5,9 @@ import androidx.lifecycle.viewModelScope
 import com.cil.shift.core.common.Result
 import com.cil.shift.core.common.achievement.AchievementManager
 import com.cil.shift.core.common.currentTimestamp
+import com.cil.shift.core.common.honey.HoneyCheckResult
+import com.cil.shift.core.common.honey.HoneyFeature
+import com.cil.shift.core.common.honey.HoneyManager
 import com.cil.shift.feature.habits.domain.model.Frequency
 import com.cil.shift.feature.habits.domain.model.Habit
 import com.cil.shift.feature.habits.domain.model.HabitType
@@ -21,7 +24,8 @@ class CreateEditHabitViewModel(
     private val habitId: String? = null,
     private val createHabitUseCase: CreateHabitUseCase,
     private val habitRepository: com.cil.shift.feature.habits.domain.repository.HabitRepository? = null,
-    private val achievementManager: AchievementManager? = null
+    private val achievementManager: AchievementManager? = null,
+    private val honeyManager: HoneyManager? = null
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(CreateEditHabitState(habitId = habitId))
@@ -31,6 +35,44 @@ class CreateEditHabitViewModel(
         // Load habit if editing
         if (habitId != null && habitRepository != null) {
             loadHabit(habitId)
+        }
+
+        // Load honey status
+        loadHoneyRequirements()
+    }
+
+    private fun loadHoneyRequirements() {
+        viewModelScope.launch {
+            // If editing an existing habit, no honey check needed
+            if (habitId != null) {
+                _state.update { it.copy(honeyRequired = null, isPremium = honeyManager?.isPremium() ?: false) }
+                return@launch
+            }
+
+            // Get current habit count
+            val habitCount = habitRepository?.getHabitCount() ?: 0
+
+            // Check honey requirements
+            val isPremium = honeyManager?.isPremium() ?: false
+            val checkResult = honeyManager?.checkHabitCreation(habitCount) ?: HoneyCheckResult.Free
+
+            val honeyRequired = when (checkResult) {
+                is HoneyCheckResult.Free -> null
+                is HoneyCheckResult.PremiumUser -> null
+                is HoneyCheckResult.AlreadyUnlocked -> null
+                is HoneyCheckResult.CanAfford -> checkResult.feature.cost
+                is HoneyCheckResult.NotEnoughHoney -> checkResult.feature.cost
+            }
+
+            val honeyBalance = honeyManager?.honeyStatus?.value?.balance ?: 0
+
+            _state.update {
+                it.copy(
+                    honeyRequired = honeyRequired,
+                    honeyBalance = honeyBalance,
+                    isPremium = isPremium
+                )
+            }
         }
     }
 
@@ -124,6 +166,9 @@ class CreateEditHabitViewModel(
             is CreateEditHabitEvent.SaveHabit -> {
                 saveHabit()
             }
+            is CreateEditHabitEvent.DismissNotEnoughHoneyDialog -> {
+                _state.update { it.copy(showNotEnoughHoneyDialog = false) }
+            }
         }
     }
 
@@ -148,6 +193,27 @@ class CreateEditHabitViewModel(
         if (!currentState.isValid) {
             _state.update { it.copy(error = "Habit name is required") }
             return
+        }
+
+        // Check honey requirements for new habits
+        if (currentState.habitId == null && currentState.honeyRequired != null && !currentState.isPremium) {
+            if (!currentState.canAffordHabit) {
+                _state.update { it.copy(showNotEnoughHoneyDialog = true) }
+                return
+            }
+
+            // Spend honey for creating this habit
+            val habitCount = honeyManager?.honeyStatus?.value?.balance ?: 0
+            val feature = when (currentState.honeyRequired) {
+                HoneyFeature.CREATE_HABIT_4TH.cost -> HoneyFeature.CREATE_HABIT_4TH
+                HoneyFeature.CREATE_HABIT_5TH.cost -> HoneyFeature.CREATE_HABIT_5TH
+                else -> HoneyFeature.CREATE_HABIT_6TH_PLUS
+            }
+            val spent = honeyManager?.spendHoney(feature) ?: true
+            if (!spent) {
+                _state.update { it.copy(showNotEnoughHoneyDialog = true) }
+                return
+            }
         }
 
         viewModelScope.launch {
@@ -209,4 +275,5 @@ sealed interface CreateEditHabitEvent {
     data class QuitStartDateChanged(val date: Long?) : CreateEditHabitEvent
     data class SuggestionSelected(val suggestion: HabitSuggestion) : CreateEditHabitEvent
     data object SaveHabit : CreateEditHabitEvent
+    data object DismissNotEnoughHoneyDialog : CreateEditHabitEvent
 }

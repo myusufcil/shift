@@ -323,6 +323,253 @@ object Achievements {
             icon = "heart",
             requiredValue = 100,
             tier = AchievementTier.GOLD
+        ),
+        Achievement(
+            id = "dedicated_365",
+            type = AchievementType.DEDICATED,
+            title = "Year Long Journey",
+            titleTr = "Bir Yillik Yolculuk",
+            description = "Use the app for 365 days",
+            descriptionTr = "Uygulamayi 365 gun kullan",
+            icon = "heart",
+            requiredValue = 365,
+            tier = AchievementTier.DIAMOND
+        ),
+
+        // Weekend Warrior achievements
+        Achievement(
+            id = "weekend_warrior_4",
+            type = AchievementType.WEEKEND_WARRIOR,
+            title = "Weekend Starter",
+            titleTr = "Hafta Sonu Baslangici",
+            description = "Complete all habits on 4 weekends",
+            descriptionTr = "4 hafta sonu tum aliskanliklari tamamla",
+            icon = "sun",
+            requiredValue = 4,
+            tier = AchievementTier.BRONZE
+        ),
+        Achievement(
+            id = "weekend_warrior_12",
+            type = AchievementType.WEEKEND_WARRIOR,
+            title = "Weekend Warrior",
+            titleTr = "Hafta Sonu Savascisi",
+            description = "Complete all habits on 12 weekends",
+            descriptionTr = "12 hafta sonu tum aliskanliklari tamamla",
+            icon = "sun",
+            requiredValue = 12,
+            tier = AchievementTier.SILVER
+        ),
+        Achievement(
+            id = "weekend_warrior_52",
+            type = AchievementType.WEEKEND_WARRIOR,
+            title = "Weekend Legend",
+            titleTr = "Hafta Sonu Efsanesi",
+            description = "Complete all habits on 52 weekends",
+            descriptionTr = "52 hafta sonu tum aliskanliklari tamamla",
+            icon = "sun",
+            requiredValue = 52,
+            tier = AchievementTier.GOLD
+        ),
+
+        // Variety achievements
+        Achievement(
+            id = "variety_3",
+            type = AchievementType.VARIETY,
+            title = "Diverse Habits",
+            titleTr = "Cesitli Aliskanliklar",
+            description = "Have habits in 3 different categories",
+            descriptionTr = "3 farkli kategoride aliskanlik olustur",
+            icon = "grid",
+            requiredValue = 3,
+            tier = AchievementTier.BRONZE
+        ),
+        Achievement(
+            id = "variety_5",
+            type = AchievementType.VARIETY,
+            title = "Well Rounded",
+            titleTr = "Cok Yonlu",
+            description = "Have habits in 5 different categories",
+            descriptionTr = "5 farkli kategoride aliskanlik olustur",
+            icon = "grid",
+            requiredValue = 5,
+            tier = AchievementTier.SILVER
+        ),
+
+        // Early Bird achievements
+        Achievement(
+            id = "early_bird_50",
+            type = AchievementType.EARLY_BIRD,
+            title = "Morning Person",
+            titleTr = "Sabah Insani",
+            description = "Complete 50 habits before 8 AM",
+            descriptionTr = "Sabah 8'den once 50 aliskanlik tamamla",
+            icon = "sunrise",
+            requiredValue = 50,
+            tier = AchievementTier.GOLD
+        ),
+        Achievement(
+            id = "early_bird_100",
+            type = AchievementType.EARLY_BIRD,
+            title = "Dawn Champion",
+            titleTr = "Safak Sampiyonu",
+            description = "Complete 100 habits before 8 AM",
+            descriptionTr = "Sabah 8'den once 100 aliskanlik tamamla",
+            icon = "sunrise",
+            requiredValue = 100,
+            tier = AchievementTier.PLATINUM
+        ),
+
+        // Night Owl achievements
+        Achievement(
+            id = "night_owl_50",
+            type = AchievementType.NIGHT_OWL,
+            title = "Night Person",
+            titleTr = "Gece Insani",
+            description = "Complete 50 habits after 10 PM",
+            descriptionTr = "Gece 10'dan sonra 50 aliskanlik tamamla",
+            icon = "moon",
+            requiredValue = 50,
+            tier = AchievementTier.GOLD
+        ),
+        Achievement(
+            id = "night_owl_100",
+            type = AchievementType.NIGHT_OWL,
+            title = "Midnight Master",
+            titleTr = "Gece Yarisi Ustasi",
+            description = "Complete 100 habits after 10 PM",
+            descriptionTr = "Gece 10'dan sonra 100 aliskanlik tamamla",
+            icon = "moon",
+            requiredValue = 100,
+            tier = AchievementTier.PLATINUM
+        ),
+
+        // Perfect weeks
+        Achievement(
+            id = "perfect_week_4",
+            type = AchievementType.PERFECT_WEEK,
+            title = "Monthly Perfectionist",
+            titleTr = "Aylik Mukemmeliyetci",
+            description = "Complete 4 perfect weeks",
+            descriptionTr = "4 mukemmel hafta tamamla",
+            icon = "star",
+            requiredValue = 4,
+            tier = AchievementTier.PLATINUM
+        ),
+        Achievement(
+            id = "perfect_week_12",
+            type = AchievementType.PERFECT_WEEK,
+            title = "Quarterly Champion",
+            titleTr = "Ceyreklik Sampiyon",
+            description = "Complete 12 perfect weeks",
+            descriptionTr = "12 mukemmel hafta tamamla",
+            icon = "star",
+            requiredValue = 12,
+            tier = AchievementTier.DIAMOND
+        ),
+
+        // Hydration Hero
+        Achievement(
+            id = "hydration_10",
+            type = AchievementType.HYDRATION_HERO,
+            title = "Hydration Starter",
+            titleTr = "Hidrasyon Baslangici",
+            description = "Complete water drinking habit 10 times",
+            descriptionTr = "Su icme aliskanligini 10 kez tamamla",
+            icon = "droplet",
+            requiredValue = 10,
+            tier = AchievementTier.BRONZE
+        ),
+        Achievement(
+            id = "hydration_50",
+            type = AchievementType.HYDRATION_HERO,
+            title = "Hydration Hero",
+            titleTr = "Hidrasyon Kahramani",
+            description = "Complete water drinking habit 50 times",
+            descriptionTr = "Su icme aliskanligini 50 kez tamamla",
+            icon = "droplet",
+            requiredValue = 50,
+            tier = AchievementTier.SILVER
+        ),
+        Achievement(
+            id = "hydration_100",
+            type = AchievementType.HYDRATION_HERO,
+            title = "Hydration Master",
+            titleTr = "Hidrasyon Ustasi",
+            description = "Complete water drinking habit 100 times",
+            descriptionTr = "Su icme aliskanligini 100 kez tamamla",
+            icon = "droplet",
+            requiredValue = 100,
+            tier = AchievementTier.GOLD
+        ),
+
+        // Fitness Fanatic
+        Achievement(
+            id = "fitness_10",
+            type = AchievementType.FITNESS_FANATIC,
+            title = "Fitness Starter",
+            titleTr = "Fitness Baslangici",
+            description = "Complete fitness habits 10 times",
+            descriptionTr = "Fitness aliskanliklarini 10 kez tamamla",
+            icon = "dumbbell",
+            requiredValue = 10,
+            tier = AchievementTier.BRONZE
+        ),
+        Achievement(
+            id = "fitness_50",
+            type = AchievementType.FITNESS_FANATIC,
+            title = "Fitness Fanatic",
+            titleTr = "Fitness Fanatigi",
+            description = "Complete fitness habits 50 times",
+            descriptionTr = "Fitness aliskanliklarini 50 kez tamamla",
+            icon = "dumbbell",
+            requiredValue = 50,
+            tier = AchievementTier.SILVER
+        ),
+        Achievement(
+            id = "fitness_100",
+            type = AchievementType.FITNESS_FANATIC,
+            title = "Fitness Legend",
+            titleTr = "Fitness Efsanesi",
+            description = "Complete fitness habits 100 times",
+            descriptionTr = "Fitness aliskanliklarini 100 kez tamamla",
+            icon = "dumbbell",
+            requiredValue = 100,
+            tier = AchievementTier.GOLD
+        ),
+
+        // Mindfulness Master
+        Achievement(
+            id = "mindfulness_10",
+            type = AchievementType.MINDFULNESS_MASTER,
+            title = "Mindful Beginner",
+            titleTr = "Farkindaliginiz Baslangici",
+            description = "Complete meditation habits 10 times",
+            descriptionTr = "Meditasyon aliskanliklarini 10 kez tamamla",
+            icon = "peace",
+            requiredValue = 10,
+            tier = AchievementTier.BRONZE
+        ),
+        Achievement(
+            id = "mindfulness_50",
+            type = AchievementType.MINDFULNESS_MASTER,
+            title = "Mindfulness Practitioner",
+            titleTr = "Farkindalik Uygulayicisi",
+            description = "Complete meditation habits 50 times",
+            descriptionTr = "Meditasyon aliskanliklarini 50 kez tamamla",
+            icon = "peace",
+            requiredValue = 50,
+            tier = AchievementTier.SILVER
+        ),
+        Achievement(
+            id = "mindfulness_100",
+            type = AchievementType.MINDFULNESS_MASTER,
+            title = "Mindfulness Master",
+            titleTr = "Farkindalik Ustasi",
+            description = "Complete meditation habits 100 times",
+            descriptionTr = "Meditasyon aliskanliklarini 100 kez tamamla",
+            icon = "peace",
+            requiredValue = 100,
+            tier = AchievementTier.GOLD
         )
     )
 

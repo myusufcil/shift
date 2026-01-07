@@ -5,6 +5,8 @@ import com.cil.shift.core.common.achievement.AchievementPreferences
 import com.cil.shift.core.common.achievement.IOSAchievementPreferences
 import com.cil.shift.core.common.auth.AuthManager
 import com.cil.shift.core.common.auth.SocialSignInProvider
+import com.cil.shift.core.common.honey.HoneyPreferences
+import com.cil.shift.core.common.honey.IOSHoneyPreferences
 import com.cil.shift.core.common.purchase.PurchaseManager
 import com.cil.shift.core.common.localization.IOSLanguagePreferences
 import com.cil.shift.core.common.localization.LanguagePreferences
@@ -28,6 +30,7 @@ actual fun platformModule(): Module = module {
     single<OnboardingPreferences> { IOSOnboardingPreferences() }
     single<ThemePreferences> { IOSThemePreferences() }
     single<SettingsPreferences> { IOSSettingsPreferences() }
+    single<HoneyPreferences> { IOSHoneyPreferences() }
     single { NotificationManager() }
     single<AchievementPreferences> { IOSAchievementPreferences() }
     single { AchievementManager(get()) }

@@ -5,6 +5,8 @@ import com.cil.shift.core.common.achievement.AchievementPreferences
 import com.cil.shift.core.common.achievement.AndroidAchievementPreferences
 import com.cil.shift.core.common.auth.AuthManager
 import com.cil.shift.core.common.auth.SocialSignInProvider
+import com.cil.shift.core.common.honey.AndroidHoneyPreferences
+import com.cil.shift.core.common.honey.HoneyPreferences
 import com.cil.shift.core.common.purchase.PurchaseManager
 import com.cil.shift.core.common.localization.AndroidLanguagePreferences
 import com.cil.shift.core.common.localization.LanguagePreferences
@@ -33,6 +35,7 @@ actual fun platformModule(): Module = module {
     single<OnboardingPreferences> { AndroidOnboardingPreferences(androidContext()) }
     single<ThemePreferences> { AndroidThemePreferences(androidContext()) }
     single<SettingsPreferences> { AndroidSettingsPreferences(androidContext()) }
+    single<HoneyPreferences> { AndroidHoneyPreferences(androidContext()) }
     single { NotificationManager(androidContext()) }
     single<AchievementPreferences> { AndroidAchievementPreferences(androidContext()) }
     single { AchievementManager(get()) }

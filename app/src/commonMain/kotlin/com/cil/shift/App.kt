@@ -62,7 +62,12 @@ fun App() {
 
         val currentTheme by themeManager.currentTheme.collectAsState()
         val isSystemInDarkTheme = isSystemInDarkTheme()
-        val isDarkTheme = themeManager.isDarkTheme(isSystemInDarkTheme)
+        // Directly derive isDarkTheme from currentTheme state to ensure reactivity
+        val isDarkTheme = when (currentTheme) {
+            com.cil.shift.core.common.theme.AppTheme.DARK -> true
+            com.cil.shift.core.common.theme.AppTheme.LIGHT -> false
+            com.cil.shift.core.common.theme.AppTheme.SYSTEM -> isSystemInDarkTheme
+        }
 
         ProvideLocalization(localizationManager = localizationManager) {
             ProvideTheme(themeManager = themeManager) {

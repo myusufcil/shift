@@ -24,6 +24,9 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
+import com.cil.shift.core.common.localization.Language
+import com.cil.shift.core.common.localization.LocalizationHelpers
+import com.cil.shift.core.common.localization.LocalizationManager
 import com.cil.shift.core.common.localization.StringResources
 import com.cil.shift.core.common.localization.localized
 import com.cil.shift.feature.statistics.presentation.components.LineChart
@@ -38,6 +41,8 @@ fun StatisticsScreen(
     modifier: Modifier = Modifier,
     viewModel: StatisticsViewModel = koinInject()
 ) {
+    val localizationManager = koinInject<LocalizationManager>()
+    val currentLanguage by localizationManager.currentLanguage.collectAsState()
     val state by viewModel.state.collectAsState()
     val scrollState = rememberScrollState()
 
@@ -98,6 +103,7 @@ fun StatisticsScreen(
                         selectedMonthStart = state.selectedMonthStart,
                         chartPeriod = state.chartPeriod,
                         chartType = if (state.chartPeriod == ChartPeriod.WEEKLY) state.weeklyChartType else state.monthlyChartType,
+                        currentLanguage = currentLanguage,
                         onPreviousPeriod = {
                             if (state.chartPeriod == ChartPeriod.WEEKLY) {
                                 viewModel.onEvent(StatisticsEvent.PreviousWeek)
@@ -340,6 +346,7 @@ private fun WeeklyDistributionCard(
     weeklyData: List<DayCompletion>,
     selectedWeekStart: kotlinx.datetime.LocalDate?,
     chartType: ChartType,
+    currentLanguage: Language,
     onPreviousWeek: () -> Unit,
     onNextWeek: () -> Unit,
     onChartTypeChange: (ChartType) -> Unit
@@ -383,8 +390,8 @@ private fun WeeklyDistributionCard(
                     Text(
                         text = selectedWeekStart?.let { weekStart ->
                             val weekEnd = weekStart.plus(6, DateTimeUnit.DAY)
-                            val startMonth = weekStart.month.name.lowercase().replaceFirstChar { it.uppercase() }.take(3)
-                            val endMonth = weekEnd.month.name.lowercase().replaceFirstChar { it.uppercase() }.take(3)
+                            val startMonth = LocalizationHelpers.getMonthName(weekStart.monthNumber, currentLanguage).take(3)
+                            val endMonth = LocalizationHelpers.getMonthName(weekEnd.monthNumber, currentLanguage).take(3)
                             val yearInfo = if (weekStart.year != weekEnd.year) {
                                 " ${weekStart.year} - $endMonth ${weekEnd.dayOfMonth} ${weekEnd.year}"
                             } else {
@@ -410,7 +417,8 @@ private fun WeeklyDistributionCard(
             ) {
                 ChartTypeSelector(
                     selectedType = chartType,
-                    onTypeSelected = onChartTypeChange
+                    onTypeSelected = onChartTypeChange,
+                    currentLanguage = currentLanguage
                 )
             }
 
@@ -559,23 +567,24 @@ private fun StreakCard(currentStreak: Int) {
 @Composable
 private fun ChartTypeSelector(
     selectedType: ChartType,
-    onTypeSelected: (ChartType) -> Unit
+    onTypeSelected: (ChartType) -> Unit,
+    currentLanguage: Language
 ) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         ChartTypeSelectorButton(
-            text = "Line",
+            text = StringResources.chartLine.get(currentLanguage),
             isSelected = selectedType == ChartType.LINE,
             onClick = { onTypeSelected(ChartType.LINE) }
         )
         ChartTypeSelectorButton(
-            text = "Bar",
+            text = StringResources.chartBar.get(currentLanguage),
             isSelected = selectedType == ChartType.BAR,
             onClick = { onTypeSelected(ChartType.BAR) }
         )
         ChartTypeSelectorButton(
-            text = "Pie",
+            text = StringResources.chartPie.get(currentLanguage),
             isSelected = selectedType == ChartType.PIE,
             onClick = { onTypeSelected(ChartType.PIE) }
         )
@@ -910,6 +919,7 @@ private fun UnifiedProgressChart(
     selectedMonthStart: kotlinx.datetime.LocalDate?,
     chartPeriod: ChartPeriod,
     chartType: ChartType,
+    currentLanguage: Language,
     onPreviousPeriod: () -> Unit,
     onNextPeriod: () -> Unit,
     onPeriodChange: (ChartPeriod) -> Unit,
@@ -953,12 +963,12 @@ private fun UnifiedProgressChart(
                         horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         PeriodToggleButton(
-                            text = "Weekly",
+                            text = StringResources.weekly.get(currentLanguage),
                             isSelected = chartPeriod == ChartPeriod.WEEKLY,
                             onClick = { onPeriodChange(ChartPeriod.WEEKLY) }
                         )
                         PeriodToggleButton(
-                            text = "Monthly",
+                            text = StringResources.monthly.get(currentLanguage),
                             isSelected = chartPeriod == ChartPeriod.MONTHLY,
                             onClick = { onPeriodChange(ChartPeriod.MONTHLY) }
                         )
@@ -971,8 +981,8 @@ private fun UnifiedProgressChart(
                         text = if (chartPeriod == ChartPeriod.WEEKLY) {
                             selectedWeekStart?.let { weekStart ->
                                 val weekEnd = weekStart.plus(6, DateTimeUnit.DAY)
-                                val startMonth = weekStart.month.name.lowercase().replaceFirstChar { it.uppercase() }.take(3)
-                                val endMonth = weekEnd.month.name.lowercase().replaceFirstChar { it.uppercase() }.take(3)
+                                val startMonth = LocalizationHelpers.getMonthName(weekStart.monthNumber, currentLanguage).take(3)
+                                val endMonth = LocalizationHelpers.getMonthName(weekEnd.monthNumber, currentLanguage).take(3)
                                 if (startMonth == endMonth) {
                                     "$startMonth ${weekStart.dayOfMonth} - ${weekEnd.dayOfMonth}"
                                 } else {
@@ -981,7 +991,7 @@ private fun UnifiedProgressChart(
                             } ?: ""
                         } else {
                             selectedMonthStart?.let {
-                                "${it.month.name.lowercase().replaceFirstChar { it.uppercase() }} ${it.year}"
+                                "${LocalizationHelpers.getMonthName(it.monthNumber, currentLanguage)} ${it.year}"
                             } ?: ""
                         },
                         fontSize = 14.sp,
@@ -1002,7 +1012,8 @@ private fun UnifiedProgressChart(
             ) {
                 ChartTypeSelector(
                     selectedType = chartType,
-                    onTypeSelected = onChartTypeChange
+                    onTypeSelected = onChartTypeChange,
+                    currentLanguage = currentLanguage
                 )
             }
 
