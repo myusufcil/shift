@@ -23,3 +23,4 @@ iosApp/iosApp/GoogleService-Info.plist
 iosApp/Pods/
 *.keystore
 *.jks
+app/debug/
