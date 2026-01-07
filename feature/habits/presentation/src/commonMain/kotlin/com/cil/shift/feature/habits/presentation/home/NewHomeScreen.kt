@@ -23,6 +23,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.cil.shift.core.common.achievement.Achievement
 import com.cil.shift.core.common.achievement.AchievementManager
+import com.cil.shift.core.common.auth.AuthManager
+import com.cil.shift.core.common.auth.AuthState
 import com.cil.shift.core.common.haptic.HapticType
 import com.cil.shift.core.common.haptic.getHapticFeedbackManager
 import com.cil.shift.core.common.honey.HoneyManager
@@ -31,6 +33,8 @@ import com.cil.shift.core.common.localization.LocalizationHelpers
 import com.cil.shift.core.common.localization.LocalizationManager
 import com.cil.shift.core.common.localization.StringResources
 import com.cil.shift.core.common.localization.localized
+import com.cil.shift.core.designsystem.components.CoachMarkController
+import com.cil.shift.core.designsystem.components.coachMarkTarget
 import com.cil.shift.core.designsystem.components.HoneyCounter
 import com.cil.shift.core.designsystem.components.HoneyEarnedPopup
 import com.cil.shift.feature.habits.domain.model.HabitSchedule
@@ -49,6 +53,8 @@ fun NewHomeScreen(
     onNavigateToNotifications: () -> Unit = {},
     onNavigateToProfile: () -> Unit = {},
     onNavigateToPremium: () -> Unit = {},
+    onNavigateToLogin: () -> Unit = {},
+    coachMarkController: CoachMarkController? = null,
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = viewModel {
         throw IllegalStateException("ViewModel should be provided via DI")
@@ -63,6 +69,10 @@ fun NewHomeScreen(
 
     // Achievement manager
     val achievementManager = koinInject<AchievementManager>()
+
+    // Auth manager for login check
+    val authManager = koinInject<AuthManager>()
+    val authState by authManager.authState.collectAsState()
 
     // Honey system
     val honeyManager = koinInject<HoneyManager>()
@@ -187,7 +197,11 @@ fun NewHomeScreen(
                 ) {
                     Column(
                         verticalArrangement = Arrangement.spacedBy(2.dp),
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier
+                            .weight(1f)
+                            .let { mod ->
+                                coachMarkController?.let { mod.coachMarkTarget(it, HomeTutorialTargets.GREETING_HEADER) } ?: mod
+                            }
                     ) {
                         Text(
                             text = state.currentDate.uppercase(),
@@ -212,7 +226,14 @@ fun NewHomeScreen(
                         if (!honeyManager.isPremium()) {
                             HoneyCounter(
                                 balance = honeyStatus.balance,
-                                onClick = onNavigateToPremium,
+                                onClick = {
+                                    // Check if user is logged in before navigating to premium
+                                    if (authState is AuthState.Authenticated) {
+                                        onNavigateToPremium()
+                                    } else {
+                                        onNavigateToLogin()
+                                    }
+                                },
                                 isLow = honeyStatus.isLowBalance,
                                 isCritical = honeyStatus.isCriticalBalance
                             )
@@ -224,6 +245,9 @@ fun NewHomeScreen(
                                 .size(40.dp)
                                 .clip(CircleShape)
                                 .background(cardColor)
+                                .let { mod ->
+                                    coachMarkController?.let { mod.coachMarkTarget(it, HomeTutorialTargets.NOTIFICATION_BUTTON) } ?: mod
+                                }
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Notifications,
@@ -238,14 +262,20 @@ fun NewHomeScreen(
 
             // Weekly Calendar
             item {
-                WeeklyCalendar(
-                    currentDayOfWeek = 3, // Wednesday = 3
-                    selectedDate = state.selectedDate,
-                    onDaySelected = { date ->
-                        viewModel.onEvent(HomeEvent.DaySelected(date))
-                    },
-                    currentLanguage = currentLanguage
-                )
+                Box(
+                    modifier = Modifier.let { mod ->
+                        coachMarkController?.let { mod.coachMarkTarget(it, HomeTutorialTargets.WEEKLY_CALENDAR) } ?: mod
+                    }
+                ) {
+                    WeeklyCalendar(
+                        currentDayOfWeek = 3, // Wednesday = 3
+                        selectedDate = state.selectedDate,
+                        onDaySelected = { date ->
+                            viewModel.onEvent(HomeEvent.DaySelected(date))
+                        },
+                        currentLanguage = currentLanguage
+                    )
+                }
             }
 
             // Daily Goal Progress
@@ -254,7 +284,13 @@ fun NewHomeScreen(
                 val totalHabits = state.habits.size
                 val progress = if (totalHabits > 0) completedHabits.toFloat() / totalHabits else 0f
 
-                DailyGoalProgress(progress = progress)
+                Box(
+                    modifier = Modifier.let { mod ->
+                        coachMarkController?.let { mod.coachMarkTarget(it, HomeTutorialTargets.DAILY_PROGRESS) } ?: mod
+                    }
+                ) {
+                    DailyGoalProgress(progress = progress)
+                }
             }
 
             // Weekly Progress Chart
@@ -318,9 +354,16 @@ fun NewHomeScreen(
             // Habits list - different UI based on habit type
             if (state.habits.isEmpty()) {
                 item {
-                    EmptyStateComponent()
+                    Box(
+                        modifier = Modifier.let { mod ->
+                            coachMarkController?.let { mod.coachMarkTarget(it, HomeTutorialTargets.FIRST_HABIT) } ?: mod
+                        }
+                    ) {
+                        EmptyStateComponent()
+                    }
                 }
             } else {
+                val firstHabitId = habitsToShow.firstOrNull()?.habit?.id
                 items(
                     items = habitsToShow,
                     key = { it.habit.id }
@@ -331,6 +374,12 @@ fun NewHomeScreen(
                     ) { isDragging ->
                         val habit = habitWithCompletion.habit
                         val habitColor = habit.color.toComposeColor()
+                        val isFirstHabit = habit.id == firstHabitId
+                        val habitModifier = if (isFirstHabit && coachMarkController != null) {
+                            Modifier.coachMarkTarget(coachMarkController, HomeTutorialTargets.FIRST_HABIT)
+                        } else {
+                            Modifier
+                        }
 
                         when (habit.habitType) {
                             HabitType.TIMER -> {
@@ -355,7 +404,7 @@ fun NewHomeScreen(
                                         viewModel.onEvent(HomeEvent.ResetTimer(habit.id))
                                     },
                                     onClick = { onNavigateToHabitDetail(habit.id, state.selectedDate?.toString()) },
-                                    modifier = Modifier.longPressDraggableHandle()
+                                    modifier = habitModifier.then(Modifier.longPressDraggableHandle())
                                 )
                             }
 
@@ -378,7 +427,7 @@ fun NewHomeScreen(
                                         viewModel.onEvent(HomeEvent.DecrementHabit(habit.id, 250))
                                     },
                                     onClick = { onNavigateToHabitDetail(habit.id, state.selectedDate?.toString()) },
-                                    modifier = Modifier.longPressDraggableHandle()
+                                    modifier = habitModifier.then(Modifier.longPressDraggableHandle())
                                 )
                             }
 
@@ -397,7 +446,7 @@ fun NewHomeScreen(
                                         viewModel.onEvent(HomeEvent.ToggleHabit(habit.id))
                                     },
                                     onClick = { onNavigateToHabitDetail(habit.id, state.selectedDate?.toString()) },
-                                    modifier = Modifier.longPressDraggableHandle()
+                                    modifier = habitModifier.then(Modifier.longPressDraggableHandle())
                                 )
                             }
 
@@ -408,7 +457,7 @@ fun NewHomeScreen(
                                     icon = habit.icon,
                                     color = habitColor,
                                     onClick = { onNavigateToHabitDetail(habit.id, state.selectedDate?.toString()) },
-                                    modifier = Modifier.longPressDraggableHandle()
+                                    modifier = habitModifier.then(Modifier.longPressDraggableHandle())
                                 )
                             }
 
@@ -425,7 +474,7 @@ fun NewHomeScreen(
                                         viewModel.onEvent(HomeEvent.IncrementHabit(habit.id, amount))
                                     },
                                     onClick = { onNavigateToHabitDetail(habit.id, state.selectedDate?.toString()) },
-                                    modifier = Modifier.longPressDraggableHandle()
+                                    modifier = habitModifier.then(Modifier.longPressDraggableHandle())
                                 )
                             }
                         }

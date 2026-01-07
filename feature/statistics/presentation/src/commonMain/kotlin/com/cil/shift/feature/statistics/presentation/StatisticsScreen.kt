@@ -92,7 +92,8 @@ fun StatisticsScreen(
                         completedDates = state.completedDates,
                         completionRatesByDate = state.completionRatesByDate,
                         currentStreak = state.currentStreak,
-                        longestStreak = state.longestStreak
+                        longestStreak = state.longestStreak,
+                        currentLanguage = currentLanguage
                     )
 
                     // Unified Progress Chart (Weekly/Monthly Toggle)
@@ -144,7 +145,8 @@ private fun StreakCalendarCard(
     completedDates: Set<kotlinx.datetime.LocalDate>,
     completionRatesByDate: Map<kotlinx.datetime.LocalDate, Float>,
     currentStreak: Int,
-    longestStreak: Int
+    longestStreak: Int,
+    currentLanguage: com.cil.shift.core.common.localization.Language
 ) {
     val today = com.cil.shift.core.common.currentDate()
     val cardColor = MaterialTheme.colorScheme.surface
@@ -214,7 +216,7 @@ private fun StreakCalendarCard(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            text = "${month.name.take(3).lowercase().replaceFirstChar { it.uppercase() }} ${year}",
+                            text = "${LocalizationHelpers.getMonthName(month.ordinal + 1, currentLanguage).take(3)} ${year}",
                             fontSize = 10.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = textColor.copy(alpha = 0.8f)

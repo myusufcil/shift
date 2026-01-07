@@ -3,6 +3,7 @@ package com.cil.shift.feature.habits.domain.usecase
 import com.cil.shift.core.common.Result
 import com.cil.shift.core.common.currentDate
 import com.cil.shift.core.common.currentTimestamp
+import com.cil.shift.core.common.notification.NotificationHistoryRepository
 import com.cil.shift.core.common.notification.NotificationManager
 import com.cil.shift.feature.habits.domain.model.Habit
 import com.cil.shift.feature.habits.domain.repository.HabitRepository
@@ -14,10 +15,12 @@ import kotlin.uuid.Uuid
  *
  * @property repository The habit repository
  * @property notificationManager The notification manager for scheduling reminders
+ * @property notificationHistoryRepository The notification history repository for saving notifications
  */
 class CreateHabitUseCase(
     private val repository: HabitRepository,
-    private val notificationManager: NotificationManager
+    private val notificationManager: NotificationManager,
+    private val notificationHistoryRepository: NotificationHistoryRepository
 ) {
     /**
      * Creates a new habit with validation.
@@ -61,6 +64,14 @@ class CreateHabitUseCase(
                     habitId = habitWithId.id,
                     habitName = habitWithId.name,
                     reminderTime = reminderTime
+                )
+
+                // Save to notification history (important for iOS)
+                notificationHistoryRepository.saveNotification(
+                    habitId = habitWithId.id,
+                    habitName = habitWithId.name,
+                    title = "Time for ${habitWithId.name}!",
+                    message = "Daily reminder at $reminderTime"
                 )
             }
 

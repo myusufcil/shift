@@ -23,6 +23,7 @@ import androidx.compose.material.icons.outlined.EmojiEvents
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -190,7 +191,7 @@ fun ProfileScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = StringResources.profile.localized(),
+                        text = StringResources.profile.get(currentLanguage),
                         fontWeight = FontWeight.Bold,
                         color = textColor
                     )
@@ -309,27 +310,27 @@ fun ProfileScreen(
             }
 
             // Stats
-            item {
+            item(key = "stats_$currentLanguage") {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     StatCard(
-                        title = StringResources.activeHabits.localized(),
+                        title = StringResources.activeHabits.get(currentLanguage),
                         value = activeHabitsCount.size.toString(),
                         cardColor = cardColor,
                         textColor = textColor,
                         modifier = Modifier.weight(1f)
                     )
                     StatCard(
-                        title = StringResources.totalStreak.localized(),
+                        title = StringResources.totalStreak.get(currentLanguage),
                         value = totalStreakDays.toString(),
                         cardColor = cardColor,
                         textColor = textColor,
                         modifier = Modifier.weight(1f)
                     )
                     StatCard(
-                        title = StringResources.completed.localized(),
+                        title = StringResources.completed.get(currentLanguage),
                         value = totalCompletedCount.toString(),
                         cardColor = cardColor,
                         textColor = textColor,
@@ -339,9 +340,9 @@ fun ProfileScreen(
             }
 
             // Settings section
-            item {
+            item(key = "settings_header_$currentLanguage") {
                 Text(
-                    text = StringResources.settings.localized().uppercase(),
+                    text = StringResources.settings.get(currentLanguage).uppercase(),
                     fontSize = 11.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = textColor.copy(alpha = 0.5f),
@@ -349,19 +350,20 @@ fun ProfileScreen(
                 )
             }
 
-            item {
+            item(key = "settings_items_$currentLanguage") {
                 Column(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     ProfileMenuItem(
                         icon = Icons.Outlined.Language,
                         iconColor = Color(0xFF4E7CFF),
-                        title = StringResources.language.localized(),
+                        title = StringResources.language.get(currentLanguage),
                         subtitle = currentLanguage.nativeName,
                         onClick = { showLanguageDialog = true }
                     )
                     ThemeToggleMenuItem(
                         currentTheme = currentTheme,
+                        currentLanguage = currentLanguage,
                         onThemeToggle = { isDark ->
                             themeManager.setTheme(if (isDark) AppTheme.DARK else AppTheme.LIGHT)
                         },
@@ -370,31 +372,31 @@ fun ProfileScreen(
                     ProfileMenuItem(
                         icon = Icons.Outlined.EmojiEvents,
                         iconColor = Color(0xFFFFD700),
-                        title = StringResources.achievements.localized(),
+                        title = StringResources.achievements.get(currentLanguage),
                         onClick = onNavigateToAchievements
                     )
                     ProfileMenuItem(
                         icon = Icons.Outlined.Info,
                         iconColor = Color(0xFF4ECDC4),
-                        title = StringResources.about.localized(),
+                        title = StringResources.about.get(currentLanguage),
                         onClick = onNavigateToAbout
                     )
                     ProfileMenuItem(
                         icon = Icons.Outlined.Lock,
                         iconColor = Color(0xFF9B59B6),
-                        title = StringResources.privacyPolicy.localized(),
+                        title = StringResources.privacyPolicy.get(currentLanguage),
                         onClick = onNavigateToPrivacy
                     )
                     ProfileMenuItem(
                         icon = Icons.Outlined.Description,
                         iconColor = Color(0xFF3498DB),
-                        title = StringResources.termsOfService.localized(),
+                        title = StringResources.termsOfService.get(currentLanguage),
                         onClick = onNavigateToTerms
                     )
                     ProfileMenuItem(
                         icon = Icons.AutoMirrored.Outlined.HelpOutline,
                         iconColor = Color(0xFFE67E22),
-                        title = StringResources.helpSupport.localized(),
+                        title = StringResources.helpSupport.get(currentLanguage),
                         onClick = {
                             uriHandler.openUri("mailto:contact.shiftapp@gmail.com?subject=Shift App Support")
                         }
@@ -484,9 +486,9 @@ fun ProfileScreen(
             }
 
             // Version info
-            item {
+            item(key = "version_$currentLanguage") {
                 Text(
-                    text = StringResources.version.localized() + " 1.0.0",
+                    text = StringResources.version.get(currentLanguage) + " 1.0.0",
                     fontSize = 12.sp,
                     color = textColor.copy(alpha = 0.4f),
                     modifier = Modifier
@@ -745,6 +747,7 @@ private fun ProfileMenuItem(
 @Composable
 private fun ThemeToggleMenuItem(
     currentTheme: AppTheme,
+    currentLanguage: Language,
     onThemeToggle: (isDark: Boolean) -> Unit,
     onMoreOptions: () -> Unit,
     modifier: Modifier = Modifier
@@ -784,7 +787,7 @@ private fun ThemeToggleMenuItem(
             ) {
                 Icon(
                     imageVector = Icons.Outlined.Palette,
-                    contentDescription = StringResources.theme.localized(),
+                    contentDescription = StringResources.theme.get(currentLanguage),
                     tint = iconColor,
                     modifier = Modifier.size(20.dp)
                 )
@@ -793,16 +796,16 @@ private fun ThemeToggleMenuItem(
                 verticalArrangement = Arrangement.spacedBy(2.dp)
             ) {
                 Text(
-                    text = StringResources.theme.localized(),
+                    text = StringResources.theme.get(currentLanguage),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = textColor
                 )
                 Text(
                     text = when (currentTheme) {
-                        AppTheme.DARK -> StringResources.dark.localized()
-                        AppTheme.LIGHT -> StringResources.light.localized()
-                        AppTheme.SYSTEM -> StringResources.systemDefault.localized()
+                        AppTheme.DARK -> StringResources.dark.get(currentLanguage)
+                        AppTheme.LIGHT -> StringResources.light.get(currentLanguage)
+                        AppTheme.SYSTEM -> StringResources.systemDefault.get(currentLanguage)
                     },
                     fontSize = 12.sp,
                     color = textColor.copy(alpha = 0.5f)
@@ -857,60 +860,104 @@ private fun LanguageSelectionDialog(
         containerColor = cardColor,
         title = {
             Text(
-                text = StringResources.selectLanguage.localized(),
+                text = StringResources.selectLanguage.get(currentLanguage),
                 color = textColor,
                 fontWeight = FontWeight.Bold
             )
         },
         text = {
             val scrollState = rememberScrollState()
-            Column(
-                modifier = Modifier
-                    .heightIn(max = 400.dp)
-                    .verticalScroll(scrollState),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+            val showTopFade = scrollState.value > 0
+            val showBottomFade = scrollState.value < scrollState.maxValue
+
+            Box(
+                modifier = Modifier.heightIn(max = 450.dp)
             ) {
-                Language.entries.forEach { language ->
-                    Row(
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(scrollState),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Language.entries.forEach { language ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(
+                                    if (language == currentLanguage)
+                                        Color(0xFF4E7CFF).copy(alpha = 0.2f)
+                                    else
+                                        Color.Transparent
+                                )
+                                .clickable {
+                                    if (language != currentLanguage) {
+                                        onLanguageSelected(language)
+                                    }
+                                }
+                                .padding(horizontal = 12.dp, vertical = 12.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column {
+                                Text(
+                                    text = language.nativeName,
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = textColor
+                                )
+                                Text(
+                                    text = language.displayName,
+                                    fontSize = 11.sp,
+                                    color = textColor.copy(alpha = 0.6f)
+                                )
+                            }
+                            if (language == currentLanguage) {
+                                Icon(
+                                    imageVector = Icons.Default.Check,
+                                    contentDescription = null,
+                                    tint = Color(0xFF4E7CFF),
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // Top fade indicator
+                if (showTopFade) {
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(8.dp))
+                            .height(24.dp)
+                            .align(Alignment.TopCenter)
                             .background(
-                                if (language == currentLanguage)
-                                    Color(0xFF4E7CFF).copy(alpha = 0.2f)
-                                else
-                                    Color.Transparent
+                                Brush.verticalGradient(
+                                    colors = listOf(cardColor, cardColor.copy(alpha = 0f))
+                                )
                             )
-                            .clickable {
-                                if (language != currentLanguage) {
-                                    onLanguageSelected(language)
-                                }
-                            }
-                            .padding(16.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                    )
+                }
+
+                // Bottom fade indicator with scroll hint
+                if (showBottomFade) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(32.dp)
+                            .align(Alignment.BottomCenter)
+                            .background(
+                                Brush.verticalGradient(
+                                    colors = listOf(cardColor.copy(alpha = 0f), cardColor)
+                                )
+                            ),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Column {
-                            Text(
-                                text = language.nativeName,
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = textColor
-                            )
-                            Text(
-                                text = language.displayName,
-                                fontSize = 12.sp,
-                                color = textColor.copy(alpha = 0.6f)
-                            )
-                        }
-                        if (language == currentLanguage) {
-                            Icon(
-                                imageVector = Icons.Default.Check,
-                                contentDescription = null,
-                                tint = Color(0xFF4E7CFF),
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
+                        Text(
+                            text = "↓",
+                            fontSize = 16.sp,
+                            color = textColor.copy(alpha = 0.5f)
+                        )
                     }
                 }
             }
@@ -922,7 +969,7 @@ private fun LanguageSelectionDialog(
                     contentColor = Color(0xFF4E7CFF)
                 )
             ) {
-                Text(StringResources.cancel.localized())
+                Text(StringResources.cancel.get(currentLanguage))
             }
         }
     )

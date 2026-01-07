@@ -26,4 +26,12 @@ interface OnboardingPreferences {
     // Confetti tracking
     fun getLastConfettiDate(): String?
     fun setLastConfettiDate(date: String?)
+
+    // Product walkthrough tracking
+    fun hasSeenProductWalkthrough(): Boolean
+    fun setProductWalkthroughSeen(seen: Boolean)
+
+    // Calendar walkthrough tracking
+    fun hasSeenCalendarWalkthrough(): Boolean
+    fun setCalendarWalkthroughSeen(seen: Boolean)
 }

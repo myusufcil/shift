@@ -344,12 +344,8 @@ fun LoginScreen(
                         strokeWidth = 2.dp
                     )
                 } else {
-                    Text(
-                        text = "G",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFFDB4437)
-                    )
+                    // Google logo with multicolor G
+                    GoogleLogo(size = 20.dp)
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
                         text = strings.continueWithGoogle,
@@ -443,6 +439,83 @@ fun LoginScreen(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun GoogleLogo(
+    size: androidx.compose.ui.unit.Dp,
+    modifier: Modifier = Modifier
+) {
+    // Google brand colors
+    val blue = Color(0xFF4285F4)
+    val red = Color(0xFFEA4335)
+    val yellow = Color(0xFFFBBC05)
+    val green = Color(0xFF34A853)
+
+    androidx.compose.foundation.Canvas(
+        modifier = modifier.size(size)
+    ) {
+        val strokeWidth = size.toPx() * 0.18f
+        val radius = (size.toPx() - strokeWidth) / 2
+        val center = androidx.compose.ui.geometry.Offset(size.toPx() / 2, size.toPx() / 2)
+
+        // Draw colored arcs to form the G
+        // Blue arc (right side, top)
+        drawArc(
+            color = blue,
+            startAngle = -45f,
+            sweepAngle = 90f,
+            useCenter = false,
+            topLeft = androidx.compose.ui.geometry.Offset(strokeWidth / 2, strokeWidth / 2),
+            size = androidx.compose.ui.geometry.Size(size.toPx() - strokeWidth, size.toPx() - strokeWidth),
+            style = androidx.compose.ui.graphics.drawscope.Stroke(width = strokeWidth, cap = androidx.compose.ui.graphics.StrokeCap.Butt)
+        )
+
+        // Green arc (bottom right)
+        drawArc(
+            color = green,
+            startAngle = 45f,
+            sweepAngle = 90f,
+            useCenter = false,
+            topLeft = androidx.compose.ui.geometry.Offset(strokeWidth / 2, strokeWidth / 2),
+            size = androidx.compose.ui.geometry.Size(size.toPx() - strokeWidth, size.toPx() - strokeWidth),
+            style = androidx.compose.ui.graphics.drawscope.Stroke(width = strokeWidth, cap = androidx.compose.ui.graphics.StrokeCap.Butt)
+        )
+
+        // Yellow arc (bottom left)
+        drawArc(
+            color = yellow,
+            startAngle = 135f,
+            sweepAngle = 90f,
+            useCenter = false,
+            topLeft = androidx.compose.ui.geometry.Offset(strokeWidth / 2, strokeWidth / 2),
+            size = androidx.compose.ui.geometry.Size(size.toPx() - strokeWidth, size.toPx() - strokeWidth),
+            style = androidx.compose.ui.graphics.drawscope.Stroke(width = strokeWidth, cap = androidx.compose.ui.graphics.StrokeCap.Butt)
+        )
+
+        // Red arc (top left)
+        drawArc(
+            color = red,
+            startAngle = 225f,
+            sweepAngle = 90f,
+            useCenter = false,
+            topLeft = androidx.compose.ui.geometry.Offset(strokeWidth / 2, strokeWidth / 2),
+            size = androidx.compose.ui.geometry.Size(size.toPx() - strokeWidth, size.toPx() - strokeWidth),
+            style = androidx.compose.ui.graphics.drawscope.Stroke(width = strokeWidth, cap = androidx.compose.ui.graphics.StrokeCap.Butt)
+        )
+
+        // Draw the horizontal bar of the G (blue)
+        val barY = size.toPx() / 2
+        val barStartX = size.toPx() / 2
+        val barEndX = size.toPx() - strokeWidth / 2
+        drawLine(
+            color = blue,
+            start = androidx.compose.ui.geometry.Offset(barStartX, barY),
+            end = androidx.compose.ui.geometry.Offset(barEndX, barY),
+            strokeWidth = strokeWidth,
+            cap = androidx.compose.ui.graphics.StrokeCap.Butt
+        )
     }
 }
 

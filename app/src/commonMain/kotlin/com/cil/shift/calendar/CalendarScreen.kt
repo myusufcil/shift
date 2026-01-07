@@ -38,6 +38,10 @@ import com.cil.shift.core.common.localization.LocalizationHelpers
 import com.cil.shift.core.common.localization.LocalizationManager
 import com.cil.shift.core.common.localization.StringResources
 import com.cil.shift.core.common.localization.localized
+import com.cil.shift.core.common.notification.NotificationHistoryRepository
+import com.cil.shift.core.common.notification.NotificationManager
+import com.cil.shift.core.designsystem.components.CoachMarkController
+import com.cil.shift.core.designsystem.components.coachMarkTarget
 import com.cil.shift.feature.habits.domain.model.Habit
 import com.cil.shift.feature.habits.domain.model.HabitSchedule
 import com.cil.shift.feature.habits.domain.model.RepeatType
@@ -58,11 +62,14 @@ enum class ScheduleViewMode {
 @Composable
 fun CalendarScreen(
     onNavigateToCreateHabit: (LocalDate) -> Unit,
+    coachMarkController: CoachMarkController? = null,
     modifier: Modifier = Modifier
 ) {
     val localizationManager = koinInject<LocalizationManager>()
     val currentLanguage by localizationManager.currentLanguage.collectAsState()
     val habitRepository = koinInject<HabitRepository>()
+    val notificationManager = koinInject<NotificationManager>()
+    val notificationHistoryRepository = koinInject<NotificationHistoryRepository>()
     val scope = rememberCoroutineScope()
 
     val today = currentDate()
@@ -196,7 +203,13 @@ fun CalendarScreen(
                     }
                 } else {
                     // View Mode Toggle
-                    Box {
+                    Box(
+                        modifier = Modifier.let { mod ->
+                            coachMarkController?.let {
+                                mod.coachMarkTarget(it, CalendarTutorialTargets.VIEW_MODE_BUTTON)
+                            } ?: mod
+                        }
+                    ) {
                         IconButton(
                             onClick = { showViewModeMenu = true },
                             modifier = Modifier
@@ -215,19 +228,19 @@ fun CalendarScreen(
                         onDismissRequest = { showViewModeMenu = false },
                         containerColor = cardColor
                     ) {
-                        ViewModeMenuItem("1-Day", Icons.Default.ViewDay, viewMode == ScheduleViewMode.DAY_1) {
+                        ViewModeMenuItem(StringResources.viewDay1.localized(), Icons.Default.ViewDay, viewMode == ScheduleViewMode.DAY_1) {
                             viewMode = ScheduleViewMode.DAY_1
                             showViewModeMenu = false
                         }
-                        ViewModeMenuItem("3-Day", Icons.Default.ViewWeek, viewMode == ScheduleViewMode.DAY_3) {
+                        ViewModeMenuItem(StringResources.viewDay3.localized(), Icons.Default.ViewWeek, viewMode == ScheduleViewMode.DAY_3) {
                             viewMode = ScheduleViewMode.DAY_3
                             showViewModeMenu = false
                         }
-                        ViewModeMenuItem("Week", Icons.Default.ViewWeek, viewMode == ScheduleViewMode.WEEK) {
+                        ViewModeMenuItem(StringResources.viewWeek.localized(), Icons.Default.ViewWeek, viewMode == ScheduleViewMode.WEEK) {
                             viewMode = ScheduleViewMode.WEEK
                             showViewModeMenu = false
                         }
-                        ViewModeMenuItem("Month", Icons.Default.CalendarMonth, viewMode == ScheduleViewMode.MONTH) {
+                        ViewModeMenuItem(StringResources.viewMonth.localized(), Icons.Default.CalendarMonth, viewMode == ScheduleViewMode.MONTH) {
                             viewMode = ScheduleViewMode.MONTH
                             showViewModeMenu = false
                         }
@@ -272,7 +285,12 @@ fun CalendarScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .let { mod ->
+                        coachMarkController?.let {
+                            mod.coachMarkTarget(it, CalendarTutorialTargets.DATE_NAVIGATION)
+                        } ?: mod
+                    },
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -453,6 +471,11 @@ fun CalendarScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .weight(1f)
+                    .let { mod ->
+                        coachMarkController?.let {
+                            mod.coachMarkTarget(it, CalendarTutorialTargets.CALENDAR_GRID)
+                        } ?: mod
+                    }
             ) {
                 items(24) { hour ->
                     TimeRow(
@@ -533,6 +556,10 @@ fun CalendarScreen(
                         }
                     }
 
+                    // Get habit name for notifications
+                    val habit = allHabits.find { it.id == habitId }
+                    val habitName = habit?.name ?: ""
+
                     // Create schedule for each date
                     datesToCreate.forEach { date ->
                         val schedule = HabitSchedule(
@@ -550,6 +577,24 @@ fun CalendarScreen(
                             createdAt = currentTimestamp()
                         )
                         habitRepository.createSchedule(schedule)
+
+                        // Schedule notification if reminder is enabled
+                        if (hasReminder && habitName.isNotBlank()) {
+                            // Use a unique ID for each scheduled event notification
+                            val notificationId = "${habitId}_${formatDate(date)}_${startTime}"
+                            notificationManager.scheduleHabitReminder(
+                                habitId = notificationId,
+                                habitName = habitName,
+                                reminderTime = startTime
+                            )
+                            // Save to notification history (important for iOS)
+                            notificationHistoryRepository.saveNotification(
+                                habitId = notificationId,
+                                habitName = habitName,
+                                title = "Time for $habitName!",
+                                message = "Scheduled for ${formatDate(date)} at $startTime"
+                            )
+                        }
                     }
 
                     showEventDialog = false
@@ -567,15 +612,38 @@ fun CalendarScreen(
             onDismiss = { tooltipSchedule = null },
             onDelete = {
                 scope.launch {
-                    habitRepository.deleteSchedule(tooltipSchedule!!.id)
+                    val schedule = tooltipSchedule!!
+                    // Cancel any notification for this schedule
+                    val notificationId = "${schedule.habitId}_${schedule.date}_${schedule.startTime}"
+                    notificationManager.cancelHabitReminder(notificationId)
+
+                    habitRepository.deleteSchedule(schedule.id)
                     tooltipSchedule = null
                 }
             },
             onMuteToggle = { isMuted ->
                 scope.launch {
                     // Update the schedule's hasReminder field
-                    val updatedSchedule = tooltipSchedule!!.copy(hasReminder = !isMuted)
+                    val schedule = tooltipSchedule!!
+                    val updatedSchedule = schedule.copy(hasReminder = !isMuted)
                     habitRepository.updateSchedule(updatedSchedule)
+
+                    // Handle notification scheduling
+                    val notificationId = "${schedule.habitId}_${schedule.date}_${schedule.startTime}"
+                    if (isMuted) {
+                        // Cancel notification when muting
+                        notificationManager.cancelHabitReminder(notificationId)
+                    } else {
+                        // Schedule notification when unmuting
+                        val habit = allHabits.find { it.id == schedule.habitId }
+                        if (habit != null) {
+                            notificationManager.scheduleHabitReminder(
+                                habitId = notificationId,
+                                habitName = habit.name,
+                                reminderTime = schedule.startTime
+                            )
+                        }
+                    }
                 }
             }
         )
@@ -1582,38 +1650,8 @@ private fun getMonthYearText(startDate: LocalDate, endDate: LocalDate, language:
 }
 
 private fun getDayAbbreviation(dayOfWeek: DayOfWeek, language: Language): String {
-    return when (language) {
-        Language.TURKISH -> when (dayOfWeek) {
-            DayOfWeek.MONDAY -> "Pzt"
-            DayOfWeek.TUESDAY -> "Sal"
-            DayOfWeek.WEDNESDAY -> "Çar"
-            DayOfWeek.THURSDAY -> "Per"
-            DayOfWeek.FRIDAY -> "Cum"
-            DayOfWeek.SATURDAY -> "Cmt"
-            DayOfWeek.SUNDAY -> "Paz"
-            else -> "?"
-        }
-        Language.SPANISH -> when (dayOfWeek) {
-            DayOfWeek.MONDAY -> "L"
-            DayOfWeek.TUESDAY -> "M"
-            DayOfWeek.WEDNESDAY -> "X"
-            DayOfWeek.THURSDAY -> "J"
-            DayOfWeek.FRIDAY -> "V"
-            DayOfWeek.SATURDAY -> "S"
-            DayOfWeek.SUNDAY -> "D"
-            else -> "?"
-        }
-        else -> when (dayOfWeek) {
-            DayOfWeek.MONDAY -> "M"
-            DayOfWeek.TUESDAY -> "T"
-            DayOfWeek.WEDNESDAY -> "W"
-            DayOfWeek.THURSDAY -> "Th"
-            DayOfWeek.FRIDAY -> "F"
-            DayOfWeek.SATURDAY -> "S"
-            DayOfWeek.SUNDAY -> "Su"
-            else -> "?"
-        }
-    }
+    // dayOfWeek.ordinal is 0-based (Monday=0), getDayNameShort expects 1-based (Monday=1)
+    return LocalizationHelpers.getDayNameShort(dayOfWeek.ordinal + 1, language)
 }
 
 @Composable
@@ -1695,11 +1733,11 @@ private fun TimePickerDialog(
                         modifier = Modifier.padding(horizontal = 8.dp)
                     )
 
-                    // Minute picker
+                    // Minute picker (1 minute increments)
                     NumberPicker(
                         value = currentMinute,
                         range = 0..59,
-                        step = 5,
+                        step = 1,
                         onValueChange = { minute ->
                             if (editingStart) {
                                 onStartTimeChanged(currentHour, minute)
@@ -1761,6 +1799,7 @@ private fun NumberPicker(
 ) {
     val textColor = MaterialTheme.colorScheme.onBackground
     val validValues = range.filter { it % step == 0 || it == value }
+    var showInputDialog by remember { mutableStateOf(false) }
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally
@@ -1779,12 +1818,16 @@ private fun NumberPicker(
             )
         }
 
-        // Value
+        // Value - clickable for manual entry
         Text(
             text = value.toString().padStart(2, '0'),
             fontSize = 32.sp,
             fontWeight = FontWeight.Bold,
-            color = textColor
+            color = textColor,
+            modifier = Modifier
+                .clip(RoundedCornerShape(8.dp))
+                .clickable { showInputDialog = true }
+                .padding(horizontal = 8.dp, vertical = 4.dp)
         )
 
         // Down button
@@ -1801,4 +1844,96 @@ private fun NumberPicker(
             )
         }
     }
+
+    // Manual input dialog
+    if (showInputDialog) {
+        NumberInputDialog(
+            currentValue = value,
+            range = range,
+            onValueConfirmed = { newValue ->
+                onValueChange(newValue)
+                showInputDialog = false
+            },
+            onDismiss = { showInputDialog = false }
+        )
+    }
+}
+
+@Composable
+private fun NumberInputDialog(
+    currentValue: Int,
+    range: IntRange,
+    onValueConfirmed: (Int) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var inputText by remember { mutableStateOf(currentValue.toString()) }
+    val cardColor = MaterialTheme.colorScheme.surface
+    val textColor = MaterialTheme.colorScheme.onBackground
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = cardColor,
+        title = {
+            Text(
+                text = "Enter Value",
+                color = textColor,
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OutlinedTextField(
+                    value = inputText,
+                    onValueChange = { newValue ->
+                        // Only allow digits
+                        if (newValue.all { it.isDigit() } && newValue.length <= 2) {
+                            inputText = newValue
+                        }
+                    },
+                    singleLine = true,
+                    textStyle = androidx.compose.ui.text.TextStyle(
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center,
+                        color = textColor
+                    ),
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color(0xFF4E7CFF),
+                        unfocusedBorderColor = textColor.copy(alpha = 0.3f),
+                        cursorColor = Color(0xFF4E7CFF)
+                    )
+                )
+                Text(
+                    text = "Range: ${range.first} - ${range.last}",
+                    fontSize = 12.sp,
+                    color = textColor.copy(alpha = 0.5f)
+                )
+            }
+        },
+        confirmButton = {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                TextButton(onClick = onDismiss) {
+                    Text("Cancel", color = textColor.copy(alpha = 0.7f))
+                }
+                TextButton(
+                    onClick = {
+                        val parsedValue = inputText.toIntOrNull()
+                        if (parsedValue != null && parsedValue in range) {
+                            onValueConfirmed(parsedValue)
+                        } else {
+                            // If invalid, keep current value
+                            onDismiss()
+                        }
+                    }
+                ) {
+                    Text("OK", color = Color(0xFF4E7CFF))
+                }
+            }
+        }
+    )
 }

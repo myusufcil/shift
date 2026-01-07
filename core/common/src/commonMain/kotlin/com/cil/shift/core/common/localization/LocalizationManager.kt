@@ -2,6 +2,7 @@ package com.cil.shift.core.common.localization
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -48,10 +49,12 @@ fun ProvideLocalization(
 }
 
 // Convenience extension function to get strings in Composables
+// This properly reacts to language changes by collecting the StateFlow as Compose state
 @Composable
 fun StringResource.localized(): String {
     val localizationManager = LocalLocalization.current
-    return localizationManager.getString(this)
+    val currentLanguage by localizationManager.currentLanguage.collectAsState()
+    return this.get(currentLanguage)
 }
 
 // Interface for platform-specific language preferences storage

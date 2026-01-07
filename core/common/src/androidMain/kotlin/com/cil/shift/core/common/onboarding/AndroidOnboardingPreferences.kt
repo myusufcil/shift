@@ -73,6 +73,22 @@ class AndroidOnboardingPreferences(context: Context) : OnboardingPreferences {
         prefs.edit().putString(KEY_LAST_CONFETTI_DATE, date).commit()
     }
 
+    override fun hasSeenProductWalkthrough(): Boolean {
+        return prefs.getBoolean(KEY_PRODUCT_WALKTHROUGH_SEEN, false)
+    }
+
+    override fun setProductWalkthroughSeen(seen: Boolean) {
+        prefs.edit().putBoolean(KEY_PRODUCT_WALKTHROUGH_SEEN, seen).apply()
+    }
+
+    override fun hasSeenCalendarWalkthrough(): Boolean {
+        return prefs.getBoolean(KEY_CALENDAR_WALKTHROUGH_SEEN, false)
+    }
+
+    override fun setCalendarWalkthroughSeen(seen: Boolean) {
+        prefs.edit().putBoolean(KEY_CALENDAR_WALKTHROUGH_SEEN, seen).apply()
+    }
+
     companion object {
         private const val KEY_ONBOARDING_COMPLETED = "onboarding_completed"
         private const val KEY_USER_NAME = "user_name"
@@ -82,5 +98,7 @@ class AndroidOnboardingPreferences(context: Context) : OnboardingPreferences {
         private const val KEY_WEEKLY_GOAL = "weekly_goal"
         private const val KEY_STARTING_HABIT_COUNT = "starting_habit_count"
         private const val KEY_LAST_CONFETTI_DATE = "last_confetti_date"
+        private const val KEY_PRODUCT_WALKTHROUGH_SEEN = "product_walkthrough_seen"
+        private const val KEY_CALENDAR_WALKTHROUGH_SEEN = "calendar_walkthrough_seen"
     }
 }

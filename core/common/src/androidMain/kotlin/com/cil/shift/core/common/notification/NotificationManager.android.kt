@@ -7,6 +7,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.media.RingtoneManager
 import android.os.Build
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
@@ -162,7 +163,9 @@ actual class NotificationManager(private val context: Context) {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val notification = NotificationCompat.Builder(context, CHANNEL_ID)
+        val soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+
+        val notificationBuilder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(NOTIFICATION_ICON)
             .setContentTitle("Time for $habitName!")
             .setContentText("Don't forget to complete your habit today.")
@@ -170,9 +173,9 @@ actual class NotificationManager(private val context: Context) {
             .setCategory(NotificationCompat.CATEGORY_REMINDER)
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
-            .build()
+            .setSound(soundUri)
 
-        NotificationManagerCompat.from(context).notify(habitId.hashCode(), notification)
+        NotificationManagerCompat.from(context).notify(habitId.hashCode(), notificationBuilder.build())
     }
 }
 

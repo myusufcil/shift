@@ -28,6 +28,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.cil.shift.core.common.auth.AuthManager
+import com.cil.shift.core.common.auth.AuthState
 import com.cil.shift.core.common.localization.Language
 import com.cil.shift.core.common.localization.LocalizationManager
 import com.cil.shift.core.common.purchase.PurchaseManager
@@ -41,18 +43,34 @@ import org.koin.compose.koinInject
 @Composable
 fun PremiumScreen(
     onNavigateBack: () -> Unit,
+    onNavigateToLogin: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val purchaseManager = koinInject<PurchaseManager>()
     val localizationManager = koinInject<LocalizationManager>()
+    val authManager = koinInject<AuthManager>()
+    val authState by authManager.authState.collectAsState()
     val currentLanguage by localizationManager.currentLanguage.collectAsState()
     val premiumState by purchaseManager.premiumState.collectAsState()
     val packages by purchaseManager.packages.collectAsState()
+    val sdkError by purchaseManager.errorMessage.collectAsState()
     val scope = rememberCoroutineScope()
 
     var selectedPackage by remember { mutableStateOf<Package?>(null) }
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    var debugInfo by remember { mutableStateOf("Initializing...") }
+
+    // Load offerings on screen open
+    LaunchedEffect(Unit) {
+        debugInfo = "Loading offerings..."
+        try {
+            purchaseManager.initialize()
+            debugInfo = "Offerings loaded: ${purchaseManager.packages.value}"
+        } catch (e: Exception) {
+            debugInfo = "Error: ${e.message}"
+        }
+    }
 
     val backgroundColor = MaterialTheme.colorScheme.background
     val textColor = MaterialTheme.colorScheme.onBackground
@@ -71,6 +89,18 @@ fun PremiumScreen(
     if (premiumState is PremiumState.Premium) {
         PremiumActiveScreen(
             onNavigateBack = onNavigateBack,
+            strings = strings,
+            textColor = textColor,
+            backgroundColor = backgroundColor
+        )
+        return
+    }
+
+    // If not logged in, show login required screen
+    if (authState !is AuthState.Authenticated) {
+        LoginRequiredScreen(
+            onNavigateBack = onNavigateBack,
+            onNavigateToLogin = onNavigateToLogin,
             strings = strings,
             textColor = textColor,
             backgroundColor = backgroundColor
@@ -204,6 +234,15 @@ fun PremiumScreen(
             }
 
             Spacer(modifier = Modifier.height(32.dp))
+
+            // Debug: Show state info
+            Text(
+                text = "packages=${packages != null}\nstate=$premiumState\nerror=$sdkError",
+                fontSize = 10.sp,
+                color = Color(0xFFFF6B6B),
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
 
             // Package selection
             if (packages != null) {
@@ -522,6 +561,104 @@ private fun PremiumActiveScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun LoginRequiredScreen(
+    onNavigateBack: () -> Unit,
+    onNavigateToLogin: () -> Unit,
+    strings: PremiumStrings,
+    textColor: Color,
+    backgroundColor: Color
+) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = textColor
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = backgroundColor
+                )
+            )
+        },
+        containerColor = backgroundColor
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(100.dp)
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(
+                        Brush.linearGradient(
+                            colors = listOf(Color(0xFF4E7CFF), Color(0xFF6B5CE7))
+                        )
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Star,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(50.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Text(
+                text = strings.loginRequired,
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                color = textColor,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Text(
+                text = strings.loginRequiredDesc,
+                fontSize = 14.sp,
+                color = textColor.copy(alpha = 0.6f),
+                textAlign = TextAlign.Center,
+                lineHeight = 20.sp
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            Button(
+                onClick = onNavigateToLogin,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF4E7CFF)
+                )
+            ) {
+                Text(
+                    text = strings.loginButton,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+        }
+    }
+}
+
 private data class PremiumStrings(
     val title: String,
     val subtitle: String,
@@ -540,7 +677,10 @@ private data class PremiumStrings(
     val restore: String,
     val terms: String,
     val alreadyPremium: String,
-    val enjoyFeatures: String
+    val enjoyFeatures: String,
+    val loginRequired: String,
+    val loginRequiredDesc: String,
+    val loginButton: String
 ) {
     companion object {
         fun get(language: Language): PremiumStrings {
@@ -563,7 +703,10 @@ private data class PremiumStrings(
                     restore = "Satin Alimlari Geri Yukle",
                     terms = "Abonelik otomatik olarak yenilenir. Istediginiz zaman iptal edebilirsiniz.",
                     alreadyPremium = "Zaten Premium Uyesiniz!",
-                    enjoyFeatures = "Tum premium ozelliklerden yararlanabilirsiniz"
+                    enjoyFeatures = "Tum premium ozelliklerden yararlanabilirsiniz",
+                    loginRequired = "Giris Yapmaniz Gerekiyor",
+                    loginRequiredDesc = "Premium satin almak icin once hesabiniza giris yapin. Bu sayede satin aliminiz hesabiniza baglanir ve tum cihazlarinizda kullanabilirsiniz.",
+                    loginButton = "Giris Yap"
                 )
                 else -> PremiumStrings(
                     title = "Shift Premium",
@@ -583,7 +726,10 @@ private data class PremiumStrings(
                     restore = "Restore Purchases",
                     terms = "Subscription automatically renews. You can cancel anytime.",
                     alreadyPremium = "You're Already Premium!",
-                    enjoyFeatures = "Enjoy all premium features"
+                    enjoyFeatures = "Enjoy all premium features",
+                    loginRequired = "Login Required",
+                    loginRequiredDesc = "Please sign in to purchase Premium. This ensures your purchase is linked to your account and available on all your devices.",
+                    loginButton = "Sign In"
                 )
             }
         }

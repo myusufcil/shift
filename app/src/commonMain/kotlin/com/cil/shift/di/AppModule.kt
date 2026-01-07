@@ -4,6 +4,7 @@ import com.cil.shift.core.common.honey.HoneyManager
 import com.cil.shift.core.common.localization.LocalizationManager
 import com.cil.shift.core.common.notification.NotificationHistoryRepository
 import com.cil.shift.core.common.premium.PremiumManager
+import com.cil.shift.core.common.purchase.PurchaseManager
 import com.cil.shift.core.common.theme.ThemeManager
 import com.cil.shift.feature.habits.data.repository.HabitRepositoryImpl
 import com.cil.shift.feature.habits.data.repository.NotificationHistoryRepositoryImpl
@@ -65,6 +66,9 @@ val domainModule = module {
 
     // Premium
     single { PremiumManager(get()) }
+
+    // Purchase (RevenueCat)
+    single { PurchaseManager() }
 
     // Honey System
     single { HoneyManager(get(), get()) }

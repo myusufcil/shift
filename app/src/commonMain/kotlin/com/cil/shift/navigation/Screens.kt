@@ -19,6 +19,8 @@ import com.cil.shift.feature.settings.presentation.auth.LoginScreen
 import com.cil.shift.feature.settings.presentation.auth.SignUpScreen
 import com.cil.shift.feature.settings.presentation.auth.ForgotPasswordScreen
 import com.cil.shift.feature.settings.presentation.premium.PremiumScreen
+import com.cil.shift.feature.onboarding.presentation.walkthrough.ProductWalkthroughScreen
+import com.cil.shift.core.common.onboarding.OnboardingPreferences
 import org.koin.compose.koinInject
 import org.koin.core.parameter.parametersOf
 
@@ -251,7 +253,30 @@ object PremiumScreenNav : Screen {
         }
 
         PremiumScreen(
-            onNavigateBack = { navigator.pop() }
+            onNavigateBack = { navigator.pop() },
+            onNavigateToLogin = { navigator.push(LoginScreenNav) }
+        )
+    }
+}
+
+object ProductWalkthroughScreenNav : Screen {
+    @Composable
+    override fun Content() {
+        val navigator = LocalNavigator.currentOrThrow
+        val onboardingPreferences = koinInject<OnboardingPreferences>()
+
+        DisposableEffect(Unit) {
+            GlobalNavigationEvents.isFullScreenActive = true
+            onDispose {
+                GlobalNavigationEvents.isFullScreenActive = false
+            }
+        }
+
+        ProductWalkthroughScreen(
+            onComplete = {
+                onboardingPreferences.setProductWalkthroughSeen(true)
+                navigator.pop()
+            }
         )
     }
 }

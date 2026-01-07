@@ -1261,6 +1261,20 @@ object StringResources {
         zh = "设置"
     )
 
+    val appTour = StringResource(
+        en = "App Tour",
+        tr = "Uygulama Turu",
+        es = "Tour de la App",
+        fr = "Visite de l'App",
+        de = "App-Tour",
+        pt = "Tour do App",
+        ar = "جولة التطبيق",
+        ru = "Тур по приложению",
+        hi = "ऐप टूर",
+        ja = "アプリツアー",
+        zh = "应用导览"
+    )
+
     val about = StringResource(
         en = "About",
         tr = "Hakkında",
@@ -2097,85 +2111,267 @@ object StringResources {
     )
 
     // Day names (short)
-    val monday = StringResource(en = "Mon", tr = "Pzt", es = "Lun")
-    val tuesday = StringResource(en = "Tue", tr = "Sal", es = "Mar")
-    val wednesday = StringResource(en = "Wed", tr = "Çar", es = "Mié")
-    val thursday = StringResource(en = "Thu", tr = "Per", es = "Jue")
-    val friday = StringResource(en = "Fri", tr = "Cum", es = "Vie")
-    val saturday = StringResource(en = "Sat", tr = "Cmt", es = "Sáb")
-    val sunday = StringResource(en = "Sun", tr = "Paz", es = "Dom")
+    val monday = StringResource(
+        en = "Mon", tr = "Pzt", es = "Lun", fr = "Lun", de = "Mo",
+        pt = "Seg", ar = "إث", ru = "Пн", hi = "सोम", ja = "月", zh = "一"
+    )
+    val tuesday = StringResource(
+        en = "Tue", tr = "Sal", es = "Mar", fr = "Mar", de = "Di",
+        pt = "Ter", ar = "ثل", ru = "Вт", hi = "मंग", ja = "火", zh = "二"
+    )
+    val wednesday = StringResource(
+        en = "Wed", tr = "Çar", es = "Mié", fr = "Mer", de = "Mi",
+        pt = "Qua", ar = "أر", ru = "Ср", hi = "बुध", ja = "水", zh = "三"
+    )
+    val thursday = StringResource(
+        en = "Thu", tr = "Per", es = "Jue", fr = "Jeu", de = "Do",
+        pt = "Qui", ar = "خم", ru = "Чт", hi = "गुरु", ja = "木", zh = "四"
+    )
+    val friday = StringResource(
+        en = "Fri", tr = "Cum", es = "Vie", fr = "Ven", de = "Fr",
+        pt = "Sex", ar = "جم", ru = "Пт", hi = "शुक्र", ja = "金", zh = "五"
+    )
+    val saturday = StringResource(
+        en = "Sat", tr = "Cmt", es = "Sáb", fr = "Sam", de = "Sa",
+        pt = "Sáb", ar = "سب", ru = "Сб", hi = "शनि", ja = "土", zh = "六"
+    )
+    val sunday = StringResource(
+        en = "Sun", tr = "Paz", es = "Dom", fr = "Dim", de = "So",
+        pt = "Dom", ar = "أح", ru = "Вс", hi = "रवि", ja = "日", zh = "日"
+    )
 
     // Day names (full)
-    val mondayFull = StringResource(en = "Monday", tr = "Pazartesi", es = "Lunes")
-    val tuesdayFull = StringResource(en = "Tuesday", tr = "Salı", es = "Martes")
-    val wednesdayFull = StringResource(en = "Wednesday", tr = "Çarşamba", es = "Miércoles")
-    val thursdayFull = StringResource(en = "Thursday", tr = "Perşembe", es = "Jueves")
-    val fridayFull = StringResource(en = "Friday", tr = "Cuma", es = "Viernes")
-    val saturdayFull = StringResource(en = "Saturday", tr = "Cumartesi", es = "Sábado")
-    val sundayFull = StringResource(en = "Sunday", tr = "Pazar", es = "Domingo")
+    val mondayFull = StringResource(
+        en = "Monday", tr = "Pazartesi", es = "Lunes", fr = "Lundi", de = "Montag",
+        pt = "Segunda-feira", ar = "الإثنين", ru = "Понедельник", hi = "सोमवार", ja = "月曜日", zh = "星期一"
+    )
+    val tuesdayFull = StringResource(
+        en = "Tuesday", tr = "Salı", es = "Martes", fr = "Mardi", de = "Dienstag",
+        pt = "Terça-feira", ar = "الثلاثاء", ru = "Вторник", hi = "मंगलवार", ja = "火曜日", zh = "星期二"
+    )
+    val wednesdayFull = StringResource(
+        en = "Wednesday", tr = "Çarşamba", es = "Miércoles", fr = "Mercredi", de = "Mittwoch",
+        pt = "Quarta-feira", ar = "الأربعاء", ru = "Среда", hi = "बुधवार", ja = "水曜日", zh = "星期三"
+    )
+    val thursdayFull = StringResource(
+        en = "Thursday", tr = "Perşembe", es = "Jueves", fr = "Jeudi", de = "Donnerstag",
+        pt = "Quinta-feira", ar = "الخميس", ru = "Четверг", hi = "गुरुवार", ja = "木曜日", zh = "星期四"
+    )
+    val fridayFull = StringResource(
+        en = "Friday", tr = "Cuma", es = "Viernes", fr = "Vendredi", de = "Freitag",
+        pt = "Sexta-feira", ar = "الجمعة", ru = "Пятница", hi = "शुक्रवार", ja = "金曜日", zh = "星期五"
+    )
+    val saturdayFull = StringResource(
+        en = "Saturday", tr = "Cumartesi", es = "Sábado", fr = "Samedi", de = "Samstag",
+        pt = "Sábado", ar = "السبت", ru = "Суббота", hi = "शनिवार", ja = "土曜日", zh = "星期六"
+    )
+    val sundayFull = StringResource(
+        en = "Sunday", tr = "Pazar", es = "Domingo", fr = "Dimanche", de = "Sonntag",
+        pt = "Domingo", ar = "الأحد", ru = "Воскресенье", hi = "रविवार", ja = "日曜日", zh = "星期日"
+    )
 
     // Month names
-    val january = StringResource(en = "January", tr = "Ocak", es = "Enero")
-    val february = StringResource(en = "February", tr = "Şubat", es = "Febrero")
-    val march = StringResource(en = "March", tr = "Mart", es = "Marzo")
-    val april = StringResource(en = "April", tr = "Nisan", es = "Abril")
-    val may = StringResource(en = "May", tr = "Mayıs", es = "Mayo")
-    val june = StringResource(en = "June", tr = "Haziran", es = "Junio")
-    val july = StringResource(en = "July", tr = "Temmuz", es = "Julio")
-    val august = StringResource(en = "August", tr = "Ağustos", es = "Agosto")
-    val september = StringResource(en = "September", tr = "Eylül", es = "Septiembre")
-    val october = StringResource(en = "October", tr = "Ekim", es = "Octubre")
-    val november = StringResource(en = "November", tr = "Kasım", es = "Noviembre")
-    val december = StringResource(en = "December", tr = "Aralık", es = "Diciembre")
+    val january = StringResource(
+        en = "January", tr = "Ocak", es = "Enero", fr = "Janvier", de = "Januar",
+        pt = "Janeiro", ar = "يناير", ru = "Январь", hi = "जनवरी", ja = "1月", zh = "一月"
+    )
+    val february = StringResource(
+        en = "February", tr = "Şubat", es = "Febrero", fr = "Février", de = "Februar",
+        pt = "Fevereiro", ar = "فبراير", ru = "Февраль", hi = "फरवरी", ja = "2月", zh = "二月"
+    )
+    val march = StringResource(
+        en = "March", tr = "Mart", es = "Marzo", fr = "Mars", de = "März",
+        pt = "Março", ar = "مارس", ru = "Март", hi = "मार्च", ja = "3月", zh = "三月"
+    )
+    val april = StringResource(
+        en = "April", tr = "Nisan", es = "Abril", fr = "Avril", de = "April",
+        pt = "Abril", ar = "أبريل", ru = "Апрель", hi = "अप्रैल", ja = "4月", zh = "四月"
+    )
+    val may = StringResource(
+        en = "May", tr = "Mayıs", es = "Mayo", fr = "Mai", de = "Mai",
+        pt = "Maio", ar = "مايو", ru = "Май", hi = "मई", ja = "5月", zh = "五月"
+    )
+    val june = StringResource(
+        en = "June", tr = "Haziran", es = "Junio", fr = "Juin", de = "Juni",
+        pt = "Junho", ar = "يونيو", ru = "Июнь", hi = "जून", ja = "6月", zh = "六月"
+    )
+    val july = StringResource(
+        en = "July", tr = "Temmuz", es = "Julio", fr = "Juillet", de = "Juli",
+        pt = "Julho", ar = "يوليو", ru = "Июль", hi = "जुलाई", ja = "7月", zh = "七月"
+    )
+    val august = StringResource(
+        en = "August", tr = "Ağustos", es = "Agosto", fr = "Août", de = "August",
+        pt = "Agosto", ar = "أغسطس", ru = "Август", hi = "अगस्त", ja = "8月", zh = "八月"
+    )
+    val september = StringResource(
+        en = "September", tr = "Eylül", es = "Septiembre", fr = "Septembre", de = "September",
+        pt = "Setembro", ar = "سبتمبر", ru = "Сентябрь", hi = "सितंबर", ja = "9月", zh = "九月"
+    )
+    val october = StringResource(
+        en = "October", tr = "Ekim", es = "Octubre", fr = "Octobre", de = "Oktober",
+        pt = "Outubro", ar = "أكتوبر", ru = "Октябрь", hi = "अक्टूबर", ja = "10月", zh = "十月"
+    )
+    val november = StringResource(
+        en = "November", tr = "Kasım", es = "Noviembre", fr = "Novembre", de = "November",
+        pt = "Novembro", ar = "نوفمبر", ru = "Ноябрь", hi = "नवंबर", ja = "11月", zh = "十一月"
+    )
+    val december = StringResource(
+        en = "December", tr = "Aralık", es = "Diciembre", fr = "Décembre", de = "Dezember",
+        pt = "Dezembro", ar = "ديسمبر", ru = "Декабрь", hi = "दिसंबर", ja = "12月", zh = "十二月"
+    )
 
     // Time units
     val minLeft = StringResource(
         en = "min left",
         tr = "dk kaldı",
-        es = "min restantes"
+        es = "min restantes",
+        fr = "min restantes",
+        de = "Min übrig",
+        pt = "min restantes",
+        ar = "دقيقة متبقية",
+        ru = "мин осталось",
+        hi = "मिनट बाकी",
+        ja = "分残り",
+        zh = "分钟剩余"
     )
 
     val minCompleted = StringResource(
         en = "min completed",
         tr = "dk tamamlandı",
-        es = "min completados"
+        es = "min completados",
+        fr = "min terminées",
+        de = "Min abgeschlossen",
+        pt = "min concluídos",
+        ar = "دقيقة مكتملة",
+        ru = "мин завершено",
+        hi = "मिनट पूर्ण",
+        ja = "分完了",
+        zh = "分钟完成"
     )
 
     val hoursLeft = StringResource(
         en = "hours left",
         tr = "saat kaldı",
-        es = "horas restantes"
+        es = "horas restantes",
+        fr = "heures restantes",
+        de = "Std übrig",
+        pt = "horas restantes",
+        ar = "ساعات متبقية",
+        ru = "ч осталось",
+        hi = "घंटे बाकी",
+        ja = "時間残り",
+        zh = "小时剩余"
     )
 
     // Time units
     val hours = StringResource(
         en = "hours",
         tr = "saat",
-        es = "horas"
+        es = "horas",
+        fr = "heures",
+        de = "Stunden",
+        pt = "horas",
+        ar = "ساعات",
+        ru = "часов",
+        hi = "घंटे",
+        ja = "時間",
+        zh = "小时"
     )
 
     val minutes = StringResource(
         en = "minutes",
         tr = "dakika",
-        es = "minutos"
+        es = "minutos",
+        fr = "minutes",
+        de = "Minuten",
+        pt = "minutos",
+        ar = "دقائق",
+        ru = "минут",
+        hi = "मिनट",
+        ja = "分",
+        zh = "分钟"
     )
 
     val seconds = StringResource(
         en = "seconds",
         tr = "saniye",
-        es = "segundos"
+        es = "segundos",
+        fr = "secondes",
+        de = "Sekunden",
+        pt = "segundos",
+        ar = "ثواني",
+        ru = "секунд",
+        hi = "सेकंड",
+        ja = "秒",
+        zh = "秒"
     )
 
     val hr = StringResource(
         en = "hr",
         tr = "sa",
-        es = "hr"
+        es = "hr",
+        fr = "h",
+        de = "Std",
+        pt = "hr",
+        ar = "س",
+        ru = "ч",
+        hi = "घं",
+        ja = "時",
+        zh = "时"
     )
 
     val sec = StringResource(
         en = "sec",
         tr = "sn",
-        es = "seg"
+        es = "seg",
+        fr = "sec",
+        de = "Sek",
+        pt = "seg",
+        ar = "ث",
+        ru = "сек",
+        hi = "से",
+        ja = "秒",
+        zh = "秒"
+    )
+
+    // Unit labels for habits
+    val unitCups = StringResource(
+        en = "cups", tr = "bardak", es = "tazas", fr = "tasses", de = "Tassen",
+        pt = "xícaras", ar = "أكواب", ru = "чашек", hi = "कप", ja = "杯", zh = "杯"
+    )
+    val unitGlasses = StringResource(
+        en = "glasses", tr = "bardak", es = "vasos", fr = "verres", de = "Gläser",
+        pt = "copos", ar = "أكواب", ru = "стаканов", hi = "गिलास", ja = "杯", zh = "杯"
+    )
+    val unitTimes = StringResource(
+        en = "times", tr = "kez", es = "veces", fr = "fois", de = "Mal",
+        pt = "vezes", ar = "مرات", ru = "раз", hi = "बार", ja = "回", zh = "次"
+    )
+    val unitCigarettes = StringResource(
+        en = "cigarettes", tr = "sigara", es = "cigarrillos", fr = "cigarettes", de = "Zigaretten",
+        pt = "cigarros", ar = "سجائر", ru = "сигарет", hi = "सिगरेट", ja = "本", zh = "支"
+    )
+    val unitDrinks = StringResource(
+        en = "drinks", tr = "içecek", es = "bebidas", fr = "boissons", de = "Getränke",
+        pt = "bebidas", ar = "مشروبات", ru = "напитков", hi = "पेय", ja = "杯", zh = "杯"
+    )
+    val unitHours = StringResource(
+        en = "hours", tr = "saat", es = "horas", fr = "heures", de = "Stunden",
+        pt = "horas", ar = "ساعات", ru = "часов", hi = "घंटे", ja = "時間", zh = "小时"
+    )
+    val unitSnacks = StringResource(
+        en = "snacks", tr = "atıştırmalık", es = "bocadillos", fr = "collations", de = "Snacks",
+        pt = "lanches", ar = "وجبات", ru = "перекусов", hi = "स्नैक्स", ja = "個", zh = "份"
+    )
+    val unitServings = StringResource(
+        en = "servings", tr = "porsiyon", es = "porciones", fr = "portions", de = "Portionen",
+        pt = "porções", ar = "حصص", ru = "порций", hi = "सर्विंग", ja = "人前", zh = "份"
+    )
+
+    // Log Usage button
+    val logUsage = StringResource(
+        en = "Log Usage", tr = "Kullanım Kaydet", es = "Registrar Uso", fr = "Enregistrer", de = "Nutzung",
+        pt = "Registrar", ar = "تسجيل", ru = "Записать", hi = "उपयोग दर्ज", ja = "記録", zh = "记录"
     )
 
     // Predefined Habit Names
@@ -2722,49 +2918,170 @@ object StringResources {
     val schedule = StringResource(
         en = "Schedule",
         tr = "Program",
-        es = "Programa"
+        es = "Programa",
+        fr = "Planning",
+        de = "Zeitplan",
+        pt = "Agenda",
+        ar = "الجدول",
+        ru = "Расписание",
+        hi = "अनुसूची",
+        ja = "スケジュール",
+        zh = "日程"
     )
 
     val today = StringResource(
         en = "Today",
         tr = "Bugün",
-        es = "Hoy"
+        es = "Hoy",
+        fr = "Aujourd'hui",
+        de = "Heute",
+        pt = "Hoje",
+        ar = "اليوم",
+        ru = "Сегодня",
+        hi = "आज",
+        ja = "今日",
+        zh = "今天"
     )
 
     val newEvent = StringResource(
         en = "New Event",
         tr = "Yeni Etkinlik",
-        es = "Nuevo Evento"
+        es = "Nuevo Evento",
+        fr = "Nouvel événement",
+        de = "Neues Ereignis",
+        pt = "Novo Evento",
+        ar = "حدث جديد",
+        ru = "Новое событие",
+        hi = "नई घटना",
+        ja = "新しいイベント",
+        zh = "新事件"
     )
 
     val selectHabit = StringResource(
         en = "Select Habit",
         tr = "Alışkanlık Seç",
-        es = "Seleccionar Hábito"
+        es = "Seleccionar Hábito",
+        fr = "Sélectionner habitude",
+        de = "Gewohnheit auswählen",
+        pt = "Selecionar Hábito",
+        ar = "اختر عادة",
+        ru = "Выбрать привычку",
+        hi = "आदत चुनें",
+        ja = "習慣を選択",
+        zh = "选择习惯"
     )
 
     val noHabits = StringResource(
         en = "No Habits",
         tr = "Alışkanlık Yok",
-        es = "Sin Hábitos"
+        es = "Sin Hábitos",
+        fr = "Pas d'habitudes",
+        de = "Keine Gewohnheiten",
+        pt = "Sem Hábitos",
+        ar = "لا توجد عادات",
+        ru = "Нет привычек",
+        hi = "कोई आदत नहीं",
+        ja = "習慣なし",
+        zh = "没有习惯"
     )
 
     val repeats = StringResource(
         en = "Repeats",
         tr = "Tekrar",
-        es = "Repetir"
+        es = "Repetir",
+        fr = "Répétition",
+        de = "Wiederholung",
+        pt = "Repetir",
+        ar = "تكرار",
+        ru = "Повтор",
+        hi = "दोहराव",
+        ja = "繰り返し",
+        zh = "重复"
+    )
+
+    // View mode strings
+    val viewDay1 = StringResource(
+        en = "1-Day",
+        tr = "1 Gün",
+        es = "1 Día",
+        fr = "1 Jour",
+        de = "1 Tag",
+        pt = "1 Dia",
+        ar = "يوم واحد",
+        ru = "1 День",
+        hi = "1 दिन",
+        ja = "1日",
+        zh = "1天"
+    )
+
+    val viewDay3 = StringResource(
+        en = "3-Day",
+        tr = "3 Gün",
+        es = "3 Días",
+        fr = "3 Jours",
+        de = "3 Tage",
+        pt = "3 Dias",
+        ar = "3 أيام",
+        ru = "3 Дня",
+        hi = "3 दिन",
+        ja = "3日",
+        zh = "3天"
+    )
+
+    val viewWeek = StringResource(
+        en = "Week",
+        tr = "Hafta",
+        es = "Semana",
+        fr = "Semaine",
+        de = "Woche",
+        pt = "Semana",
+        ar = "أسبوع",
+        ru = "Неделя",
+        hi = "सप्ताह",
+        ja = "週",
+        zh = "周"
+    )
+
+    val viewMonth = StringResource(
+        en = "Month",
+        tr = "Ay",
+        es = "Mes",
+        fr = "Mois",
+        de = "Monat",
+        pt = "Mês",
+        ar = "شهر",
+        ru = "Месяц",
+        hi = "महीना",
+        ja = "月",
+        zh = "月"
     )
 
     val never = StringResource(
         en = "Never",
         tr = "Asla",
-        es = "Nunca"
+        es = "Nunca",
+        fr = "Jamais",
+        de = "Niemals",
+        pt = "Nunca",
+        ar = "أبداً",
+        ru = "Никогда",
+        hi = "कभी नहीं",
+        ja = "なし",
+        zh = "从不"
     )
 
     val monthly = StringResource(
         en = "Monthly",
         tr = "Aylık",
-        es = "Mensual"
+        es = "Mensual",
+        fr = "Mensuel",
+        de = "Monatlich",
+        pt = "Mensal",
+        ar = "شهري",
+        ru = "Ежемесячно",
+        hi = "मासिक",
+        ja = "毎月",
+        zh = "每月"
     )
 
     // Create Habit - Step 1

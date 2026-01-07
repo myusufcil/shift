@@ -37,7 +37,7 @@ actual class NotificationManager {
 
         println("iOS: Parsed time - hour: $hour, minute: $minute")
 
-        // Create notification content
+        // Create notification content with default sound
         val content = UNMutableNotificationContent().apply {
             setTitle("Time for $habitName!")
             setBody("Don't forget to complete your habit today.")

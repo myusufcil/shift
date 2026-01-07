@@ -145,7 +145,17 @@ fun Step2Schedule(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    listOf("M", "T", "W", "T", "F", "S", "S").forEachIndexed { index, dayLabel ->
+                    // Get localized day abbreviations (single letter for compact display)
+                    val localizedDays = listOf(
+                        StringResources.monday.get(currentLanguage).take(1),
+                        StringResources.tuesday.get(currentLanguage).take(1),
+                        StringResources.wednesday.get(currentLanguage).take(1),
+                        StringResources.thursday.get(currentLanguage).take(1),
+                        StringResources.friday.get(currentLanguage).take(1),
+                        StringResources.saturday.get(currentLanguage).take(1),
+                        StringResources.sunday.get(currentLanguage).take(1)
+                    )
+                    localizedDays.forEachIndexed { index, dayLabel ->
                         val day = DayOfWeek.entries[index]
                         val isSelected = frequency.days.contains(day)
 

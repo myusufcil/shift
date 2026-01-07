@@ -1068,7 +1068,7 @@ private fun TodayProgressSection(
                                 shape = RoundedCornerShape(12.dp)
                             ) {
                                 Text(
-                                    text = "Log Usage (+1)",
+                                    text = "${StringResources.logUsage.get(currentLanguage)} (+1)",
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.SemiBold
                                 )

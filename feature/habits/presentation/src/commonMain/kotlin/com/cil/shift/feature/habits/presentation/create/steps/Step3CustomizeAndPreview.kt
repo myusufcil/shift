@@ -361,9 +361,16 @@ fun Step3CustomizeAndPreview(
                             }
                         }
                         HabitType.NEGATIVE -> {
-                            // Negative/Reduce type units (cups, glasses, times, cigarettes, etc.)
+                            // Negative/Reduce type units with localized labels
                             val negativeUnits = listOf(
-                                "cups", "glasses", "times", "cigarettes", "drinks", "hours", "snacks", "servings"
+                                "cups" to StringResources.unitCups.get(currentLanguage),
+                                "cigarettes" to StringResources.unitCigarettes.get(currentLanguage),
+                                "snacks" to StringResources.unitSnacks.get(currentLanguage),
+                                "glasses" to StringResources.unitGlasses.get(currentLanguage),
+                                "drinks" to StringResources.unitDrinks.get(currentLanguage),
+                                "servings" to StringResources.unitServings.get(currentLanguage),
+                                "times" to StringResources.unitTimes.get(currentLanguage),
+                                "hours" to StringResources.unitHours.get(currentLanguage)
                             )
 
                             // First column - show first 3 units
@@ -371,24 +378,24 @@ fun Step3CustomizeAndPreview(
                                 modifier = Modifier.weight(0.65f),
                                 verticalArrangement = Arrangement.spacedBy(6.dp)
                             ) {
-                                negativeUnits.take(3).forEach { unit ->
+                                negativeUnits.take(3).forEach { (unitKey, unitLabel) ->
                                     Box(
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .height(32.dp)
                                             .clip(RoundedCornerShape(8.dp))
                                             .background(
-                                                if (targetUnit == unit) negativeAccentColor
+                                                if (targetUnit == unitKey) negativeAccentColor
                                                 else cardColor
                                             )
-                                            .clickable { onTargetUnitChange(unit) },
+                                            .clickable { onTargetUnitChange(unitKey) },
                                         contentAlignment = Alignment.Center
                                     ) {
                                         Text(
-                                            text = unit,
+                                            text = unitLabel,
                                             fontSize = 12.sp,
-                                            fontWeight = if (targetUnit == unit) FontWeight.SemiBold else FontWeight.Normal,
-                                            color = if (targetUnit == unit) Color.White else textColor
+                                            fontWeight = if (targetUnit == unitKey) FontWeight.SemiBold else FontWeight.Normal,
+                                            color = if (targetUnit == unitKey) Color.White else textColor
                                         )
                                     }
                                 }
@@ -398,24 +405,24 @@ fun Step3CustomizeAndPreview(
                                 modifier = Modifier.weight(0.65f),
                                 verticalArrangement = Arrangement.spacedBy(6.dp)
                             ) {
-                                negativeUnits.slice(3..5).forEach { unit ->
+                                negativeUnits.slice(3..5).forEach { (unitKey, unitLabel) ->
                                     Box(
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .height(32.dp)
                                             .clip(RoundedCornerShape(8.dp))
                                             .background(
-                                                if (targetUnit == unit) negativeAccentColor
+                                                if (targetUnit == unitKey) negativeAccentColor
                                                 else cardColor
                                             )
-                                            .clickable { onTargetUnitChange(unit) },
+                                            .clickable { onTargetUnitChange(unitKey) },
                                         contentAlignment = Alignment.Center
                                     ) {
                                         Text(
-                                            text = unit,
+                                            text = unitLabel,
                                             fontSize = 12.sp,
-                                            fontWeight = if (targetUnit == unit) FontWeight.SemiBold else FontWeight.Normal,
-                                            color = if (targetUnit == unit) Color.White else textColor
+                                            fontWeight = if (targetUnit == unitKey) FontWeight.SemiBold else FontWeight.Normal,
+                                            color = if (targetUnit == unitKey) Color.White else textColor
                                         )
                                     }
                                 }
@@ -425,24 +432,24 @@ fun Step3CustomizeAndPreview(
                                 modifier = Modifier.weight(0.65f),
                                 verticalArrangement = Arrangement.spacedBy(6.dp)
                             ) {
-                                negativeUnits.drop(6).forEach { unit ->
+                                negativeUnits.drop(6).forEach { (unitKey, unitLabel) ->
                                     Box(
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .height(32.dp)
                                             .clip(RoundedCornerShape(8.dp))
                                             .background(
-                                                if (targetUnit == unit) negativeAccentColor
+                                                if (targetUnit == unitKey) negativeAccentColor
                                                 else cardColor
                                             )
-                                            .clickable { onTargetUnitChange(unit) },
+                                            .clickable { onTargetUnitChange(unitKey) },
                                         contentAlignment = Alignment.Center
                                     ) {
                                         Text(
-                                            text = unit,
+                                            text = unitLabel,
                                             fontSize = 12.sp,
-                                            fontWeight = if (targetUnit == unit) FontWeight.SemiBold else FontWeight.Normal,
-                                            color = if (targetUnit == unit) Color.White else textColor
+                                            fontWeight = if (targetUnit == unitKey) FontWeight.SemiBold else FontWeight.Normal,
+                                            color = if (targetUnit == unitKey) Color.White else textColor
                                         )
                                     }
                                 }

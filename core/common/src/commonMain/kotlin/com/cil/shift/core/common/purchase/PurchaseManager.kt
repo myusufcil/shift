@@ -49,6 +49,9 @@ class PurchaseManager {
     private val _packages = MutableStateFlow<PremiumPackages?>(null)
     val packages: StateFlow<PremiumPackages?> = _packages.asStateFlow()
 
+    private val _errorMessage = MutableStateFlow<String?>(null)
+    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
+
     val isPremium: Boolean
         get() = _premiumState.value is PremiumState.Premium
 
@@ -173,7 +176,7 @@ class PurchaseManager {
                 )
             }
         } catch (e: Exception) {
-            // Non-fatal error, packages just won't be available
+            _errorMessage.value = "loadOfferings error: ${e.message}"
         }
     }
 

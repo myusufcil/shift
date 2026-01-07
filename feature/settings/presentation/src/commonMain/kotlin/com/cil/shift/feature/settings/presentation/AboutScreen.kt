@@ -139,7 +139,7 @@ fun AboutScreen(
                         color = Color.White
                     )
                     Text(
-                        text = "support@shift.app",
+                        text = "contact.shiftapp@gmail.com",
                         fontSize = 14.sp,
                         color = Color(0xFF4E7CFF)
                     )

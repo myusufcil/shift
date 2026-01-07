@@ -15,10 +15,9 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import cafe.adriel.voyager.navigator.LocalNavigator
-import cafe.adriel.voyager.navigator.currentOrThrow
-import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.TabNavigator
+import com.cil.shift.core.designsystem.components.coachMarkTarget
+import com.cil.shift.feature.habits.presentation.home.HomeTutorialTargets
 
 @Composable
 fun BottomNavigationBar(
@@ -109,6 +108,15 @@ fun BottomNavigationBar(
                 .align(Alignment.Center)
                 .offset(y = (-30).dp)
         ) {
+            val fabModifier = Modifier
+                .size(64.dp)
+                .shadow(12.dp, CircleShape)
+                .let { mod ->
+                    GlobalNavigationEvents.coachMarkController?.let { controller ->
+                        mod.coachMarkTarget(controller, HomeTutorialTargets.ADD_HABIT_BUTTON)
+                    } ?: mod
+                }
+
             FloatingActionButton(
                 onClick = onAddClick,
                 containerColor = Color(0xFF4E7CFF),
@@ -119,9 +127,7 @@ fun BottomNavigationBar(
                     hoveredElevation = 10.dp
                 ),
                 shape = CircleShape,
-                modifier = Modifier
-                    .size(64.dp)
-                    .shadow(12.dp, CircleShape)
+                modifier = fabModifier
             ) {
                 Icon(
                     imageVector = Icons.Default.Add,
