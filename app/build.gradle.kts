@@ -113,7 +113,7 @@ android {
         applicationId = "com.cil.shift"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 9
+        versionCode = 11
         versionName = "1.0.0"
     }
 
