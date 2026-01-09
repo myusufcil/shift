@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.cil.shift.core.common.achievement.AchievementManager
 import com.cil.shift.core.common.honey.HoneyManager
 import com.cil.shift.core.common.honey.HoneyReason
+import com.cil.shift.core.common.localization.LocalizationHelpers
+import com.cil.shift.core.common.localization.LocalizationManager
 import com.cil.shift.core.common.onboarding.OnboardingPreferences
 import com.cil.shift.feature.habits.domain.usecase.GetHabitsUseCase
 import com.cil.shift.feature.habits.domain.usecase.ToggleHabitCompletionUseCase
@@ -18,7 +20,8 @@ class HomeViewModel(
     private val habitRepository: com.cil.shift.feature.habits.domain.repository.HabitRepository,
     private val achievementManager: AchievementManager,
     private val onboardingPreferences: OnboardingPreferences,
-    private val honeyManager: HoneyManager
+    private val honeyManager: HoneyManager,
+    private val localizationManager: LocalizationManager
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(HomeState())
@@ -30,6 +33,13 @@ class HomeViewModel(
         loadWeeklyChartData()
         loadUserPreferences()
         loadScheduledEvents()
+
+        // Observe language changes and update date format
+        viewModelScope.launch {
+            localizationManager.currentLanguage.collect {
+                updateCurrentDate()
+            }
+        }
     }
 
     private fun loadUserPreferences() {
@@ -120,7 +130,10 @@ class HomeViewModel(
 
     private fun updateCurrentDate() {
         val today = com.cil.shift.core.common.currentDateTime()
-        val formattedDate = "${today.dayOfWeek.name.lowercase().capitalize()}, ${today.dayOfMonth} ${today.month.name.lowercase().capitalize()}"
+        val currentLanguage = localizationManager.currentLanguage.value
+        val dayName = LocalizationHelpers.getDayNameFull(today.dayOfWeek.isoDayNumber, currentLanguage)
+        val monthName = LocalizationHelpers.getMonthName(today.monthNumber, currentLanguage)
+        val formattedDate = "$dayName, ${today.dayOfMonth} $monthName"
         _state.update { it.copy(currentDate = formattedDate) }
     }
 

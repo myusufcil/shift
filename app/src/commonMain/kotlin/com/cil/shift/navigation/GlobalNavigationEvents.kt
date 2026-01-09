@@ -14,11 +14,18 @@ object GlobalNavigationEvents {
     // Global coach mark controller
     var coachMarkController: CoachMarkController? by mutableStateOf(null)
 
+    // Track current active tab to prevent coach marks on wrong tab
+    var currentTabIndex by mutableStateOf(0)
+
     fun navigateToCreateHabit() {
         shouldNavigateToCreateHabit = true
     }
 
     fun resetNavigateToCreateHabit() {
         shouldNavigateToCreateHabit = false
+    }
+
+    fun setCurrentTab(index: Int) {
+        currentTabIndex = index
     }
 }

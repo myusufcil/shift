@@ -40,9 +40,13 @@ fun BottomNavigationBar(
         ) {
             // First two tabs
             tabs.take(2).forEach { tab ->
+                val tabIndex = tab.options.index.toInt()
                 NavigationBarItem(
                     selected = tabNavigator.current.key == tab.key,
-                    onClick = { tabNavigator.current = tab },
+                    onClick = {
+                        tabNavigator.current = tab
+                        GlobalNavigationEvents.setCurrentTab(tabIndex)
+                    },
                     icon = {
                         tab.options.icon?.let { painter ->
                             Icon(
@@ -73,9 +77,13 @@ fun BottomNavigationBar(
 
             // Last two tabs
             tabs.drop(2).forEach { tab ->
+                val tabIndex = tab.options.index.toInt()
                 NavigationBarItem(
                     selected = tabNavigator.current.key == tab.key,
-                    onClick = { tabNavigator.current = tab },
+                    onClick = {
+                        tabNavigator.current = tab
+                        GlobalNavigationEvents.setCurrentTab(tabIndex)
+                    },
                     icon = {
                         tab.options.icon?.let { painter ->
                             Icon(

@@ -22,6 +22,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.cil.shift.core.common.localization.LocalizationHelpers
@@ -368,8 +370,8 @@ private fun QuickSuggestions(
             }
         }
 
-        // Suggestion chips grid
-        val suggestionRows = suggestions.chunked(3)
+        // Suggestion chips grid - using 2 columns for better text fit
+        val suggestionRows = suggestions.chunked(2)
         Column(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
@@ -387,7 +389,7 @@ private fun QuickSuggestions(
                         )
                     }
                     // Fill remaining spaces if row is not complete
-                    repeat(3 - rowSuggestions.size) {
+                    repeat(2 - rowSuggestions.size) {
                         Spacer(modifier = Modifier.weight(1f))
                     }
                 }
@@ -490,7 +492,9 @@ private fun SuggestionChip(
             fontSize = 12.sp,
             fontWeight = FontWeight.SemiBold,
             color = chipColor.copy(alpha = 0.9f),
-            maxLines = 1
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.Center
         )
     }
 }

@@ -15,7 +15,8 @@ enum class Language(
     RUSSIAN("ru", "Russian", "Русский"),
     HINDI("hi", "Hindi", "हिन्दी"),
     JAPANESE("ja", "Japanese", "日本語"),
-    CHINESE("zh", "Chinese", "中文");
+    CHINESE("zh", "Chinese", "中文"),
+    ITALIAN("it", "Italian", "Italiano");
 
     companion object {
         fun fromCode(code: String): Language {

@@ -223,6 +223,12 @@ private fun getCoachMarkStrings(language: Language): CoachMarkStrings {
             back = "返回",
             finish = "完成"
         )
+        Language.ITALIAN -> CoachMarkStrings(
+            skip = "Salta",
+            next = "Avanti",
+            back = "Indietro",
+            finish = "Fine"
+        )
         Language.ENGLISH -> CoachMarkStrings(
             skip = "Skip",
             next = "Next",

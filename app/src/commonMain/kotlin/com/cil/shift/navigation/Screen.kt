@@ -77,8 +77,8 @@ private object HomeScreenWrapper : cafe.adriel.voyager.core.screen.Screen {
         LaunchedEffect(coachMarkController) {
             if (coachMarkController != null && !onboardingPreferences.hasSeenProductWalkthrough() && !tutorialStarted) {
                 tutorialStarted = true
-                // Delay to let the UI settle and habits to load before showing coach marks
-                kotlinx.coroutines.delay(800)
+                // Short delay to let the UI settle and habits to load before showing coach marks
+                kotlinx.coroutines.delay(300)
                 // Get steps with current habit state at this moment
                 val steps = getHomeTutorialSteps(currentLanguage, hasHabits)
                 coachMarkController.start(steps) {
@@ -179,13 +179,18 @@ private object CalendarScreenWrapper : cafe.adriel.voyager.core.screen.Screen {
         // Use global coach mark controller for calendar tutorial
         val coachMarkController = GlobalNavigationEvents.coachMarkController
 
-        // Show calendar tutorial on first visit
+        // Show calendar tutorial on first visit - only when Calendar tab is active
         var calendarTutorialStarted by remember { mutableStateOf(false) }
-        LaunchedEffect(coachMarkController) {
-            if (coachMarkController != null && !onboardingPreferences.hasSeenCalendarWalkthrough() && !calendarTutorialStarted) {
+        val isCalendarTabActive = GlobalNavigationEvents.currentTabIndex == 3
+
+        LaunchedEffect(coachMarkController, isCalendarTabActive) {
+            if (coachMarkController != null &&
+                isCalendarTabActive &&
+                !onboardingPreferences.hasSeenCalendarWalkthrough() &&
+                !calendarTutorialStarted) {
                 calendarTutorialStarted = true
-                // Delay to let the UI settle
-                kotlinx.coroutines.delay(500)
+                // Short delay to let the UI settle
+                kotlinx.coroutines.delay(200)
                 val steps = com.cil.shift.calendar.getCalendarTutorialSteps(currentLanguage)
                 coachMarkController.start(steps) {
                     onboardingPreferences.setCalendarWalkthroughSeen(true)

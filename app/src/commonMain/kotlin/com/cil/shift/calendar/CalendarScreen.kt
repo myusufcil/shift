@@ -1,8 +1,10 @@
 package com.cil.shift.calendar
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -70,17 +72,66 @@ fun CalendarScreen(
     val habitRepository = koinInject<HabitRepository>()
     val notificationManager = koinInject<NotificationManager>()
     val notificationHistoryRepository = koinInject<NotificationHistoryRepository>()
+    val onboardingPreferences = koinInject<com.cil.shift.core.common.onboarding.OnboardingPreferences>()
     val scope = rememberCoroutineScope()
 
     val today = currentDate()
-    var selectedWeekStart by remember {
-        mutableStateOf(today.minus(today.dayOfWeek.ordinal, DateTimeUnit.DAY))
+
+    // Load saved view mode from preferences
+    var viewMode by remember {
+        val savedMode = onboardingPreferences.getCalendarViewMode()
+        mutableStateOf(
+            try {
+                ScheduleViewMode.valueOf(savedMode)
+            } catch (e: Exception) {
+                ScheduleViewMode.WEEK
+            }
+        )
     }
-    var viewMode by remember { mutableStateOf(ScheduleViewMode.WEEK) }
+
+    // Set initial date based on view mode: today for day views, week start for week/month views
+    var selectedWeekStart by remember(viewMode) {
+        val initialDate = when (viewMode) {
+            ScheduleViewMode.DAY_1, ScheduleViewMode.DAY_3 -> today
+            ScheduleViewMode.WEEK, ScheduleViewMode.MONTH -> today.minus(today.dayOfWeek.ordinal, DateTimeUnit.DAY)
+        }
+        mutableStateOf(initialDate)
+    }
     var showViewModeMenu by remember { mutableStateOf(false) }
     var showEventDialog by remember { mutableStateOf(false) }
     var selectedDate by remember { mutableStateOf<LocalDate?>(null) }
     var selectedHour by remember { mutableStateOf(12) }
+
+    // Grid settings dialog
+    var showGridSettingsDialog by remember { mutableStateOf(false) }
+
+    // Load grid dimensions from preferences
+    var weekViewColumnWidth by remember { mutableStateOf(onboardingPreferences.getWeekViewColumnWidth()) }
+    var weekViewRowHeight by remember { mutableStateOf(onboardingPreferences.getWeekViewRowHeight()) }
+    var monthViewColumnWidth by remember { mutableStateOf(onboardingPreferences.getMonthViewColumnWidth()) }
+    var monthViewRowHeight by remember { mutableStateOf(onboardingPreferences.getMonthViewRowHeight()) }
+    var dayViewColumnWidth by remember { mutableStateOf(onboardingPreferences.getDayViewColumnWidth()) }
+    var dayViewRowHeight by remember { mutableStateOf(onboardingPreferences.getDayViewRowHeight()) }
+    var day3ViewColumnWidth by remember { mutableStateOf(onboardingPreferences.getDay3ViewColumnWidth()) }
+    var day3ViewRowHeight by remember { mutableStateOf(onboardingPreferences.getDay3ViewRowHeight()) }
+
+    // Calculate dimensions based on view mode
+    val currentColumnWidth = when (viewMode) {
+        ScheduleViewMode.DAY_1 -> dayViewColumnWidth.dp
+        ScheduleViewMode.DAY_3 -> day3ViewColumnWidth.dp
+        ScheduleViewMode.WEEK -> weekViewColumnWidth.dp
+        ScheduleViewMode.MONTH -> monthViewColumnWidth.dp
+    }
+    val currentRowHeight = when (viewMode) {
+        ScheduleViewMode.DAY_1 -> dayViewRowHeight.dp
+        ScheduleViewMode.DAY_3 -> day3ViewRowHeight.dp
+        ScheduleViewMode.WEEK -> weekViewRowHeight.dp
+        ScheduleViewMode.MONTH -> monthViewRowHeight.dp
+    }
+
+    // Dynamic day cell sizes based on current view mode settings
+    val scaledDayCellWidth = (currentColumnWidth.value * 0.75f).dp
+    val scaledDayCellHeight = (currentRowHeight.value * 0.5f).dp
 
     var allHabits by remember { mutableStateOf<List<Habit>>(emptyList()) }
     var schedules by remember { mutableStateOf<List<HabitSchedule>>(emptyList()) }
@@ -202,50 +253,79 @@ fun CalendarScreen(
                         )
                     }
                 } else {
-                    // View Mode Toggle
-                    Box(
-                        modifier = Modifier.let { mod ->
-                            coachMarkController?.let {
-                                mod.coachMarkTarget(it, CalendarTutorialTargets.VIEW_MODE_BUTTON)
-                            } ?: mod
-                        }
+                    // View Mode Toggle + Grid Settings buttons
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
+                        Box(
+                            modifier = Modifier.let { mod ->
+                                coachMarkController?.let {
+                                    mod.coachMarkTarget(it, CalendarTutorialTargets.VIEW_MODE_BUTTON)
+                                } ?: mod
+                            }
+                        ) {
+                            IconButton(
+                                onClick = { showViewModeMenu = true },
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(accentColor.copy(alpha = 0.15f))
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.ViewWeek,
+                                    contentDescription = "View Mode",
+                                    tint = accentColor
+                                )
+                            }
+
+                            DropdownMenu(
+                                expanded = showViewModeMenu,
+                                onDismissRequest = { showViewModeMenu = false },
+                                containerColor = cardColor
+                            ) {
+                                ViewModeMenuItem(StringResources.viewDay1.localized(), Icons.Default.ViewDay, viewMode == ScheduleViewMode.DAY_1) {
+                                    viewMode = ScheduleViewMode.DAY_1
+                                    selectedWeekStart = today
+                                    onboardingPreferences.setCalendarViewMode(ScheduleViewMode.DAY_1.name)
+                                    showViewModeMenu = false
+                                }
+                                ViewModeMenuItem(StringResources.viewDay3.localized(), Icons.Default.ViewWeek, viewMode == ScheduleViewMode.DAY_3) {
+                                    viewMode = ScheduleViewMode.DAY_3
+                                    selectedWeekStart = today
+                                    onboardingPreferences.setCalendarViewMode(ScheduleViewMode.DAY_3.name)
+                                    showViewModeMenu = false
+                                }
+                                ViewModeMenuItem(StringResources.viewWeek.localized(), Icons.Default.ViewWeek, viewMode == ScheduleViewMode.WEEK) {
+                                    viewMode = ScheduleViewMode.WEEK
+                                    selectedWeekStart = today.minus(today.dayOfWeek.ordinal, DateTimeUnit.DAY)
+                                    onboardingPreferences.setCalendarViewMode(ScheduleViewMode.WEEK.name)
+                                    showViewModeMenu = false
+                                }
+                                ViewModeMenuItem(StringResources.viewMonth.localized(), Icons.Default.CalendarMonth, viewMode == ScheduleViewMode.MONTH) {
+                                    viewMode = ScheduleViewMode.MONTH
+                                    selectedWeekStart = today.minus(today.dayOfWeek.ordinal, DateTimeUnit.DAY)
+                                    onboardingPreferences.setCalendarViewMode(ScheduleViewMode.MONTH.name)
+                                    showViewModeMenu = false
+                                }
+                            }
+                        }
+
+                        // Grid settings button
                         IconButton(
-                            onClick = { showViewModeMenu = true },
+                            onClick = { showGridSettingsDialog = true },
                             modifier = Modifier
+                                .size(40.dp)
                                 .clip(RoundedCornerShape(12.dp))
                                 .background(accentColor.copy(alpha = 0.15f))
                         ) {
                             Icon(
-                                imageVector = Icons.Default.ViewWeek,
-                                contentDescription = "View Mode",
-                                tint = accentColor
+                                imageVector = Icons.Default.Settings,
+                                contentDescription = "Grid Settings",
+                                tint = accentColor,
+                                modifier = Modifier.size(20.dp)
                             )
                         }
-
-                    DropdownMenu(
-                        expanded = showViewModeMenu,
-                        onDismissRequest = { showViewModeMenu = false },
-                        containerColor = cardColor
-                    ) {
-                        ViewModeMenuItem(StringResources.viewDay1.localized(), Icons.Default.ViewDay, viewMode == ScheduleViewMode.DAY_1) {
-                            viewMode = ScheduleViewMode.DAY_1
-                            showViewModeMenu = false
-                        }
-                        ViewModeMenuItem(StringResources.viewDay3.localized(), Icons.Default.ViewWeek, viewMode == ScheduleViewMode.DAY_3) {
-                            viewMode = ScheduleViewMode.DAY_3
-                            showViewModeMenu = false
-                        }
-                        ViewModeMenuItem(StringResources.viewWeek.localized(), Icons.Default.ViewWeek, viewMode == ScheduleViewMode.WEEK) {
-                            viewMode = ScheduleViewMode.WEEK
-                            showViewModeMenu = false
-                        }
-                        ViewModeMenuItem(StringResources.viewMonth.localized(), Icons.Default.CalendarMonth, viewMode == ScheduleViewMode.MONTH) {
-                            viewMode = ScheduleViewMode.MONTH
-                            showViewModeMenu = false
-                        }
                     }
-                }
                 }
 
                 Text(
@@ -337,7 +417,9 @@ fun CalendarScreen(
 
                     Button(
                         onClick = {
-                            selectedWeekStart = today.minus(today.dayOfWeek.ordinal, DateTimeUnit.DAY)
+                            // Always use fresh current date to handle app being open across midnight
+                            val currentToday = currentDate()
+                            selectedWeekStart = currentToday.minus(currentToday.dayOfWeek.ordinal, DateTimeUnit.DAY)
                         },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = accentColor,
@@ -384,7 +466,7 @@ fun CalendarScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .then(
-                        if (isMonthView || viewMode == ScheduleViewMode.WEEK)
+                        if (viewMode != ScheduleViewMode.DAY_1)
                             Modifier.horizontalScroll(horizontalScrollState)
                         else
                             Modifier
@@ -393,8 +475,8 @@ fun CalendarScreen(
                 // Time column spacer
                 Spacer(modifier = Modifier.width(50.dp))
 
-                // For DAY_1 and DAY_3, use weight to fill available space
-                val useWeight = viewMode == ScheduleViewMode.DAY_1 || viewMode == ScheduleViewMode.DAY_3
+                // Only DAY_1 uses weight to fill available space
+                val useWeight = viewMode == ScheduleViewMode.DAY_1
 
                 daysToShow.forEachIndexed { index, date ->
                     val isToday = date == today
@@ -404,7 +486,7 @@ fun CalendarScreen(
                         modifier = Modifier
                             .then(
                                 if (useWeight) Modifier.weight(1f)
-                                else Modifier.width(if (isMonthView) 48.dp else 60.dp)
+                                else Modifier.width(currentColumnWidth)
                             )
                             .background(if (isWeekend) weekendColor else Color.Transparent)
                             .padding(vertical = 8.dp),
@@ -416,7 +498,7 @@ fun CalendarScreen(
                             Text(
                                 text = getDayAbbreviation(date.dayOfWeek, currentLanguage),
                                 fontSize = if (viewMode == ScheduleViewMode.DAY_1) 16.sp
-                                          else if (isMonthView) 10.sp
+                                          else if (isMonthView) 11.sp
                                           else 14.sp,
                                 fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal,
                                 color = if (isToday) textColor else textColor.copy(alpha = 0.6f)
@@ -424,12 +506,13 @@ fun CalendarScreen(
                             Box(
                                 modifier = Modifier
                                     .padding(top = 4.dp)
-                                    .size(
-                                        if (viewMode == ScheduleViewMode.DAY_1) 48.dp
-                                        else if (isMonthView) 28.dp
-                                        else 36.dp
+                                    .then(
+                                        if (viewMode == ScheduleViewMode.DAY_1)
+                                            Modifier.size(48.dp)
+                                        else
+                                            Modifier.size(width = scaledDayCellWidth, height = scaledDayCellHeight)
                                     )
-                                    .clip(RoundedCornerShape(if (viewMode == ScheduleViewMode.DAY_1) 12.dp else 8.dp))
+                                    .clip(RoundedCornerShape(if (viewMode == ScheduleViewMode.DAY_1) 12.dp else 10.dp))
                                     .background(
                                         if (isToday) accentColor
                                         else Color.Transparent
@@ -439,8 +522,8 @@ fun CalendarScreen(
                                 Text(
                                     text = date.dayOfMonth.toString(),
                                     fontSize = if (viewMode == ScheduleViewMode.DAY_1) 22.sp
-                                              else if (isMonthView) 12.sp
-                                              else 16.sp,
+                                              else if (isMonthView) 13.sp
+                                              else 17.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = if (isToday) Color.White else textColor
                                 )
@@ -492,6 +575,8 @@ fun CalendarScreen(
                         horizontalScrollState = horizontalScrollState,
                         isSelectionMode = isSelectionMode,
                         selectedScheduleIds = selectedScheduleIds,
+                        currentRowHeight = currentRowHeight,
+                        currentColumnWidth = currentColumnWidth,
                         onCellClick = { date, clickedHour ->
                             if (!isSelectionMode) {
                                 selectedDate = date
@@ -648,7 +733,270 @@ fun CalendarScreen(
             }
         )
     }
+
+    // Grid Settings Dialog
+    if (showGridSettingsDialog) {
+        GridSettingsDialog(
+            weekViewColumnWidth = weekViewColumnWidth,
+            weekViewRowHeight = weekViewRowHeight,
+            monthViewColumnWidth = monthViewColumnWidth,
+            monthViewRowHeight = monthViewRowHeight,
+            dayViewColumnWidth = dayViewColumnWidth,
+            dayViewRowHeight = dayViewRowHeight,
+            day3ViewColumnWidth = day3ViewColumnWidth,
+            day3ViewRowHeight = day3ViewRowHeight,
+            onWeekViewColumnWidthChange = {
+                weekViewColumnWidth = it
+                onboardingPreferences.setWeekViewColumnWidth(it)
+            },
+            onWeekViewRowHeightChange = {
+                weekViewRowHeight = it
+                onboardingPreferences.setWeekViewRowHeight(it)
+            },
+            onMonthViewColumnWidthChange = {
+                monthViewColumnWidth = it
+                onboardingPreferences.setMonthViewColumnWidth(it)
+            },
+            onMonthViewRowHeightChange = {
+                monthViewRowHeight = it
+                onboardingPreferences.setMonthViewRowHeight(it)
+            },
+            onDayViewColumnWidthChange = {
+                dayViewColumnWidth = it
+                onboardingPreferences.setDayViewColumnWidth(it)
+            },
+            onDayViewRowHeightChange = {
+                dayViewRowHeight = it
+                onboardingPreferences.setDayViewRowHeight(it)
+            },
+            onDay3ViewColumnWidthChange = {
+                day3ViewColumnWidth = it
+                onboardingPreferences.setDay3ViewColumnWidth(it)
+            },
+            onDay3ViewRowHeightChange = {
+                day3ViewRowHeight = it
+                onboardingPreferences.setDay3ViewRowHeight(it)
+            },
+            onDismiss = { showGridSettingsDialog = false }
+        )
+    }
 }
+
+@Composable
+private fun GridSettingsDialog(
+    weekViewColumnWidth: Int,
+    weekViewRowHeight: Int,
+    monthViewColumnWidth: Int,
+    monthViewRowHeight: Int,
+    dayViewColumnWidth: Int,
+    dayViewRowHeight: Int,
+    day3ViewColumnWidth: Int,
+    day3ViewRowHeight: Int,
+    onWeekViewColumnWidthChange: (Int) -> Unit,
+    onWeekViewRowHeightChange: (Int) -> Unit,
+    onMonthViewColumnWidthChange: (Int) -> Unit,
+    onMonthViewRowHeightChange: (Int) -> Unit,
+    onDayViewColumnWidthChange: (Int) -> Unit,
+    onDayViewRowHeightChange: (Int) -> Unit,
+    onDay3ViewColumnWidthChange: (Int) -> Unit,
+    onDay3ViewRowHeightChange: (Int) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val textColor = MaterialTheme.colorScheme.onBackground
+    val cardColor = MaterialTheme.colorScheme.surface
+    val accentColor = MaterialTheme.colorScheme.primary
+    val dividerColor = textColor.copy(alpha = 0.08f)
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = StringResources.gridSettings.localized(),
+                    fontWeight = FontWeight.Bold,
+                    color = textColor,
+                    fontSize = 16.sp
+                )
+                IconButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Close",
+                        tint = textColor.copy(alpha = 0.6f),
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+        },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 380.dp)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                // 1-Day View Settings
+                GridSettingsSection(
+                    title = StringResources.dayViewLabel.localized(),
+                    columnWidth = dayViewColumnWidth,
+                    rowHeight = dayViewRowHeight,
+                    onColumnWidthChange = onDayViewColumnWidthChange,
+                    onRowHeightChange = onDayViewRowHeightChange,
+                    widthRange = 40..200,
+                    heightRange = 50..150,
+                    textColor = textColor,
+                    accentColor = accentColor
+                )
+
+                HorizontalDivider(color = dividerColor, thickness = 0.5.dp)
+
+                // 3-Day View Settings
+                GridSettingsSection(
+                    title = StringResources.day3ViewLabel.localized(),
+                    columnWidth = day3ViewColumnWidth,
+                    rowHeight = day3ViewRowHeight,
+                    onColumnWidthChange = onDay3ViewColumnWidthChange,
+                    onRowHeightChange = onDay3ViewRowHeightChange,
+                    widthRange = 40..180,
+                    heightRange = 50..150,
+                    textColor = textColor,
+                    accentColor = accentColor
+                )
+
+                HorizontalDivider(color = dividerColor, thickness = 0.5.dp)
+
+                // Week View Settings
+                GridSettingsSection(
+                    title = StringResources.weekViewLabel.localized(),
+                    columnWidth = weekViewColumnWidth,
+                    rowHeight = weekViewRowHeight,
+                    onColumnWidthChange = onWeekViewColumnWidthChange,
+                    onRowHeightChange = onWeekViewRowHeightChange,
+                    widthRange = 40..150,
+                    heightRange = 50..150,
+                    textColor = textColor,
+                    accentColor = accentColor
+                )
+
+                HorizontalDivider(color = dividerColor, thickness = 0.5.dp)
+
+                // Month View Settings
+                GridSettingsSection(
+                    title = StringResources.monthViewLabel.localized(),
+                    columnWidth = monthViewColumnWidth,
+                    rowHeight = monthViewRowHeight,
+                    onColumnWidthChange = onMonthViewColumnWidthChange,
+                    onRowHeightChange = onMonthViewRowHeightChange,
+                    widthRange = 40..150,
+                    heightRange = 50..150,
+                    textColor = textColor,
+                    accentColor = accentColor
+                )
+            }
+        },
+        confirmButton = {},
+        containerColor = cardColor
+    )
+}
+
+@Composable
+private fun GridSettingsSection(
+    title: String,
+    columnWidth: Int,
+    rowHeight: Int,
+    onColumnWidthChange: (Int) -> Unit,
+    onRowHeightChange: (Int) -> Unit,
+    widthRange: IntRange,
+    heightRange: IntRange,
+    textColor: Color,
+    accentColor: Color
+) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        Text(
+            text = title,
+            fontWeight = FontWeight.SemiBold,
+            color = textColor,
+            fontSize = 13.sp
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // Width control
+            CompactSliderControl(
+                label = StringResources.widthLabel.localized(),
+                value = columnWidth,
+                onValueChange = onColumnWidthChange,
+                valueRange = widthRange,
+                textColor = textColor,
+                accentColor = accentColor,
+                modifier = Modifier.weight(1f)
+            )
+            // Height control
+            CompactSliderControl(
+                label = StringResources.heightLabel.localized(),
+                value = rowHeight,
+                onValueChange = onRowHeightChange,
+                valueRange = heightRange,
+                textColor = textColor,
+                accentColor = accentColor,
+                modifier = Modifier.weight(1f)
+            )
+        }
+    }
+}
+
+@Composable
+private fun CompactSliderControl(
+    label: String,
+    value: Int,
+    onValueChange: (Int) -> Unit,
+    valueRange: IntRange,
+    textColor: Color,
+    accentColor: Color,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = label,
+                fontSize = 10.sp,
+                color = textColor.copy(alpha = 0.6f)
+            )
+            Text(
+                text = "${value}dp",
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Medium,
+                color = accentColor
+            )
+        }
+        Slider(
+            value = value.toFloat(),
+            onValueChange = { onValueChange(it.toInt()) },
+            valueRange = valueRange.first.toFloat()..valueRange.last.toFloat(),
+            modifier = Modifier.height(24.dp),
+            colors = SliderDefaults.colors(
+                thumbColor = accentColor,
+                activeTrackColor = accentColor,
+                inactiveTrackColor = textColor.copy(alpha = 0.15f)
+            )
+        )
+    }
+}
+
 
 @Composable
 private fun ScheduleInfoTooltip(
@@ -975,13 +1323,15 @@ private fun TimeRow(
     horizontalScrollState: ScrollState,
     isSelectionMode: Boolean,
     selectedScheduleIds: Set<String>,
+    currentRowHeight: Dp,
+    currentColumnWidth: Dp,
     onCellClick: (LocalDate, Int) -> Unit,
     onScheduleLongPress: (String) -> Unit,
     onScheduleClick: (HabitSchedule) -> Unit
 ) {
     val hourString = "${hour.toString().padStart(2, '0')}:00"
-    val useWeight = viewMode == ScheduleViewMode.DAY_1 || viewMode == ScheduleViewMode.DAY_3
-    val rowHeight = if (viewMode == ScheduleViewMode.DAY_1) 80.dp else 60.dp
+    val useWeight = viewMode == ScheduleViewMode.DAY_1
+    val rowHeight = currentRowHeight
 
     Row(
         modifier = Modifier
@@ -1009,12 +1359,12 @@ private fun TimeRow(
             )
         }
 
-        // Day Cells - with synchronized horizontal scroll (only for week/month)
+        // Day Cells - with synchronized horizontal scroll (all except DAY_1)
         Row(
             modifier = Modifier
                 .weight(1f)
                 .then(
-                    if (isMonthView || viewMode == ScheduleViewMode.WEEK)
+                    if (viewMode != ScheduleViewMode.DAY_1)
                         Modifier.horizontalScroll(horizontalScrollState)
                     else
                         Modifier
@@ -1045,7 +1395,7 @@ private fun TimeRow(
                     modifier = Modifier
                         .then(
                             if (useWeight) Modifier.weight(1f)
-                            else Modifier.width(if (isMonthView) 48.dp else 60.dp)
+                            else Modifier.width(currentColumnWidth)
                         )
                         .fillMaxHeight()
                         .background(
@@ -1066,12 +1416,17 @@ private fun TimeRow(
                         Row(modifier = Modifier.fillMaxSize()) {
                             cellSchedules.forEachIndexed { index, schedule ->
                                 val scheduleStartHour = schedule.startTime.take(2).toIntOrNull() ?: 0
+                                val scheduleStartMinute = schedule.startTime.takeLast(2).toIntOrNull() ?: 0
                                 val scheduleEndHour = schedule.endTime.take(2).toIntOrNull() ?: 24
                                 val scheduleEndMinute = schedule.endTime.takeLast(2).toIntOrNull() ?: 0
                                 val effectiveEndHour = if (scheduleEndMinute > 0) scheduleEndHour else (scheduleEndHour - 1).coerceAtLeast(scheduleStartHour)
 
                                 val isFirstRow = hour == scheduleStartHour
                                 val isLastRow = hour == effectiveEndHour
+
+                                // Calculate proportional offsets (0f to 1f)
+                                val topOffset = if (isFirstRow) scheduleStartMinute / 60f else 0f
+                                val bottomOffset = if (isLastRow && scheduleEndMinute > 0) (60 - scheduleEndMinute) / 60f else 0f
 
                                 Box(
                                     modifier = Modifier
@@ -1086,6 +1441,8 @@ private fun TimeRow(
                                         isSelectionMode = isSelectionMode,
                                         isFirstRow = isFirstRow,
                                         isLastRow = isLastRow,
+                                        topOffsetFraction = topOffset,
+                                        bottomOffsetFraction = bottomOffset,
                                         onLongPress = { onScheduleLongPress(schedule.id) },
                                         onClick = { onScheduleClick(schedule) }
                                     )
@@ -1108,6 +1465,8 @@ private fun ScheduleItemSpanning(
     isSelectionMode: Boolean = false,
     isFirstRow: Boolean = true,
     isLastRow: Boolean = false,
+    topOffsetFraction: Float = 0f,
+    bottomOffsetFraction: Float = 0f,
     onLongPress: () -> Unit = {},
     onClick: () -> Unit = {}
 ) {
@@ -1123,10 +1482,10 @@ private fun ScheduleItemSpanning(
         Color(0xFF6C63FF)
     }
 
-    // For continuous events, we want the background to fill completely
-    // - First row: top rounded, has top padding
-    // - Middle rows: no rounding, no vertical padding (covers borders)
-    // - Last row: bottom rounded, has bottom padding
+    // For continuous events, we want the background to fill proportionally
+    // - First row: top rounded, offset from top based on start minute
+    // - Middle rows: no rounding, fill completely
+    // - Last row: bottom rounded, trim from bottom based on end minute
     val shape = when {
         isFirstRow && isLastRow -> RoundedCornerShape(4.dp) // Single row event
         isFirstRow -> RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp, bottomStart = 0.dp, bottomEnd = 0.dp)
@@ -1134,27 +1493,36 @@ private fun ScheduleItemSpanning(
         else -> RoundedCornerShape(0.dp)
     }
 
-    val topPadding = if (isFirstRow) 2.dp else 0.dp
-    val bottomPadding = if (isLastRow) 2.dp else 0.dp
-
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(start = 2.dp, end = 2.dp, top = topPadding, bottom = bottomPadding)
-            .clip(shape)
-            .background(habitColor.copy(alpha = if (isSelected) 1f else 0.9f))
-            .then(
-                if (isSelected) Modifier.border(2.dp, Color.White, shape)
-                else Modifier
-            )
-            .pointerInput(Unit) {
-                detectTapGestures(
-                    onLongPress = { onLongPress() },
-                    onTap = { onClick() }
-                )
-            }
-            .padding(horizontal = 4.dp, vertical = if (isFirstRow) 2.dp else 0.dp)
+            .padding(start = 2.dp, end = 2.dp)
     ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(1f - topOffsetFraction - bottomOffsetFraction)
+                .align(
+                    when {
+                        topOffsetFraction > 0f && bottomOffsetFraction > 0f -> Alignment.Center
+                        topOffsetFraction > 0f -> Alignment.BottomCenter
+                        else -> Alignment.TopCenter
+                    }
+                )
+                .clip(shape)
+                .background(habitColor.copy(alpha = if (isSelected) 1f else 0.9f))
+                .then(
+                    if (isSelected) Modifier.border(2.dp, Color.White, shape)
+                    else Modifier
+                )
+                .pointerInput(Unit) {
+                    detectTapGestures(
+                        onLongPress = { onLongPress() },
+                        onTap = { onClick() }
+                    )
+                }
+                .padding(horizontal = 4.dp, vertical = if (isFirstRow) 2.dp else 0.dp)
+        ) {
         // Only show full details in first row, continuation rows just show colored background
         if (isFirstRow) {
             Column {
@@ -1195,6 +1563,7 @@ private fun ScheduleItemSpanning(
             }
         }
         // Continuation rows just show the colored bar (no text needed)
+        }
     }
 }
 

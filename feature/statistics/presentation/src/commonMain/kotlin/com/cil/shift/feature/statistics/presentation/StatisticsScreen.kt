@@ -1074,24 +1074,26 @@ private fun PeriodToggleButton(
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
+            .widthIn(min = 80.dp)
             .clickable(
                 onClick = onClick,
                 indication = null,
                 interactionSource = remember { MutableInteractionSource() }
             )
-            .padding(horizontal = 8.dp, vertical = 4.dp)
+            .padding(horizontal = 12.dp, vertical = 4.dp)
     ) {
         Text(
             text = text,
             fontSize = 13.sp,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-            color = if (isSelected) accentColor else textColorBase.copy(alpha = 0.5f)
+            color = if (isSelected) accentColor else textColorBase.copy(alpha = 0.5f),
+            maxLines = 1
         )
         Spacer(modifier = Modifier.height(4.dp))
         // Underline indicator
         Box(
             modifier = Modifier
-                .width(32.dp)
+                .width(40.dp)
                 .height(2.dp)
                 .background(
                     color = if (isSelected) accentColor else Color.Transparent,

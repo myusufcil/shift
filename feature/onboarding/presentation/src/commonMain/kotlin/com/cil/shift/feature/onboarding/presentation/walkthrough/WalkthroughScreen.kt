@@ -497,7 +497,9 @@ private fun GoalsPage(
 
         Row(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(IntrinsicSize.Min)
         ) {
             WeeklyGoal.entries.forEach { goal ->
                 SelectableChip(
@@ -505,7 +507,9 @@ private fun GoalsPage(
                     subtitle = goal.days,
                     isSelected = selectedWeeklyGoal == goal,
                     onClick = { onWeeklyGoalSelected(goal) },
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
                 )
             }
         }

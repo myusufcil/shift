@@ -3872,6 +3872,105 @@ object StringResources {
         ja = "新しい習慣",
         zh = "新习惯"
     )
+
+    // Grid Settings
+    val gridSettings = StringResource(
+        en = "Grid Settings",
+        tr = "Grid Ayarları",
+        es = "Configuración de cuadrícula",
+        fr = "Paramètres de grille",
+        de = "Rastereinstellungen",
+        pt = "Configurações de grade",
+        ar = "إعدادات الشبكة",
+        ru = "Настройки сетки",
+        hi = "ग्रिड सेटिंग्स",
+        ja = "グリッド設定",
+        zh = "网格设置"
+    )
+
+    val dayViewLabel = StringResource(
+        en = "1-Day View",
+        tr = "1 Günlük Görünüm",
+        es = "Vista de 1 día",
+        fr = "Vue 1 jour",
+        de = "1-Tagesansicht",
+        pt = "Vista de 1 dia",
+        ar = "عرض يوم واحد",
+        ru = "1-дневный вид",
+        hi = "1 दिन का दृश्य",
+        ja = "1日表示",
+        zh = "1日视图"
+    )
+
+    val day3ViewLabel = StringResource(
+        en = "3-Day View",
+        tr = "3 Günlük Görünüm",
+        es = "Vista de 3 días",
+        fr = "Vue 3 jours",
+        de = "3-Tagesansicht",
+        pt = "Vista de 3 dias",
+        ar = "عرض 3 أيام",
+        ru = "3-дневный вид",
+        hi = "3 दिन का दृश्य",
+        ja = "3日表示",
+        zh = "3日视图"
+    )
+
+    val weekViewLabel = StringResource(
+        en = "Week View",
+        tr = "Haftalık Görünüm",
+        es = "Vista semanal",
+        fr = "Vue hebdomadaire",
+        de = "Wochenansicht",
+        pt = "Vista semanal",
+        ar = "عرض الأسبوع",
+        ru = "Недельный вид",
+        hi = "सप्ताह का दृश्य",
+        ja = "週表示",
+        zh = "周视图"
+    )
+
+    val monthViewLabel = StringResource(
+        en = "Month View",
+        tr = "Aylık Görünüm",
+        es = "Vista mensual",
+        fr = "Vue mensuelle",
+        de = "Monatsansicht",
+        pt = "Vista mensal",
+        ar = "عرض الشهر",
+        ru = "Месячный вид",
+        hi = "महीने का दृश्य",
+        ja = "月表示",
+        zh = "月视图"
+    )
+
+    val widthLabel = StringResource(
+        en = "Width",
+        tr = "Genişlik",
+        es = "Ancho",
+        fr = "Largeur",
+        de = "Breite",
+        pt = "Largura",
+        ar = "العرض",
+        ru = "Ширина",
+        hi = "चौड़ाई",
+        ja = "幅",
+        zh = "宽度"
+    )
+
+    val heightLabel = StringResource(
+        en = "Height",
+        tr = "Yükseklik",
+        es = "Altura",
+        fr = "Hauteur",
+        de = "Höhe",
+        pt = "Altura",
+        ar = "الارتفاع",
+        ru = "Высота",
+        hi = "ऊंचाई",
+        ja = "高さ",
+        zh = "高度"
+    )
 }
 
 data class StringResource(
@@ -3885,7 +3984,8 @@ data class StringResource(
     val ru: String = en,
     val hi: String = en,
     val ja: String = en,
-    val zh: String = en
+    val zh: String = en,
+    val italian: String = en
 ) {
     fun get(language: Language): String {
         return when (language) {
@@ -3900,6 +4000,7 @@ data class StringResource(
             Language.HINDI -> hi
             Language.JAPANESE -> ja
             Language.CHINESE -> zh
+            Language.ITALIAN -> italian
         }
     }
 }

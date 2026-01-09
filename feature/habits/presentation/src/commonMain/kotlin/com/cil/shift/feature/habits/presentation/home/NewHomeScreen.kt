@@ -1,5 +1,8 @@
 package com.cil.shift.feature.habits.presentation.home
 
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.*
@@ -17,9 +20,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.cil.shift.core.common.achievement.Achievement
 import com.cil.shift.core.common.achievement.AchievementManager
@@ -81,19 +86,27 @@ fun NewHomeScreen(
     var honeyEarnedAmount by remember { mutableStateOf(0) }
     var honeyEarnedReason by remember { mutableStateOf("") }
 
-    // Check for daily reward on screen load
+    // Check for daily reward on screen load - delay to avoid collision with coach marks
+    val onboardingPreferences = koinInject<com.cil.shift.core.common.onboarding.OnboardingPreferences>()
     LaunchedEffect(Unit) {
-        val dailyReward = honeyManager.checkDailyReward()
-        if (dailyReward != null) {
-            honeyEarnedAmount = dailyReward
-            honeyEarnedReason = "Daily check-in bonus!"
-            showHoneyEarned = true
+        // Wait longer to let coach marks fully initialize
+        kotlinx.coroutines.delay(1000)
+        // Skip honey effect entirely if product walkthrough hasn't been seen (first launch)
+        // or if coach mark is currently active
+        if (onboardingPreferences.hasSeenProductWalkthrough() && coachMarkController?.isActive != true) {
+            val dailyReward = honeyManager.checkDailyReward()
+            if (dailyReward != null) {
+                honeyEarnedAmount = dailyReward
+                honeyEarnedReason = "Daily check-in bonus!"
+                showHoneyEarned = true
+            }
         }
     }
 
-    // Observe honey earned from habit completions
+    // Observe honey earned from habit completions - skip if coach mark is active
     LaunchedEffect(state.lastHoneyEarned, state.lastHoneyReason) {
-        if (state.lastHoneyEarned > 0 && state.lastHoneyReason.isNotEmpty()) {
+        if (state.lastHoneyEarned > 0 && state.lastHoneyReason.isNotEmpty() &&
+            coachMarkController?.isActive != true) {
             honeyEarnedAmount = state.lastHoneyEarned
             honeyEarnedReason = state.lastHoneyReason
             showHoneyEarned = true
@@ -375,11 +388,32 @@ fun NewHomeScreen(
                         val habit = habitWithCompletion.habit
                         val habitColor = habit.color.toComposeColor()
                         val isFirstHabit = habit.id == firstHabitId
+
+                        // Apply visual feedback when dragging
+                        val elevation by animateDpAsState(
+                            targetValue = if (isDragging) 8.dp else 0.dp,
+                            animationSpec = tween(200),
+                            label = "dragElevation"
+                        )
+                        val scale by animateFloatAsState(
+                            targetValue = if (isDragging) 1.02f else 1f,
+                            animationSpec = tween(200),
+                            label = "dragScale"
+                        )
+
                         val habitModifier = if (isFirstHabit && coachMarkController != null) {
                             Modifier.coachMarkTarget(coachMarkController, HomeTutorialTargets.FIRST_HABIT)
                         } else {
                             Modifier
                         }
+
+                        val dragModifier = Modifier
+                            .graphicsLayer {
+                                scaleX = scale
+                                scaleY = scale
+                                shadowElevation = elevation.toPx()
+                            }
+                            .zIndex(if (isDragging) 1f else 0f)
 
                         when (habit.habitType) {
                             HabitType.TIMER -> {
@@ -404,7 +438,7 @@ fun NewHomeScreen(
                                         viewModel.onEvent(HomeEvent.ResetTimer(habit.id))
                                     },
                                     onClick = { onNavigateToHabitDetail(habit.id, state.selectedDate?.toString()) },
-                                    modifier = habitModifier.then(Modifier.longPressDraggableHandle())
+                                    modifier = dragModifier.then(habitModifier).then(Modifier.longPressDraggableHandle())
                                 )
                             }
 
@@ -427,7 +461,7 @@ fun NewHomeScreen(
                                         viewModel.onEvent(HomeEvent.DecrementHabit(habit.id, 250))
                                     },
                                     onClick = { onNavigateToHabitDetail(habit.id, state.selectedDate?.toString()) },
-                                    modifier = habitModifier.then(Modifier.longPressDraggableHandle())
+                                    modifier = dragModifier.then(habitModifier).then(Modifier.longPressDraggableHandle())
                                 )
                             }
 
@@ -446,7 +480,7 @@ fun NewHomeScreen(
                                         viewModel.onEvent(HomeEvent.ToggleHabit(habit.id))
                                     },
                                     onClick = { onNavigateToHabitDetail(habit.id, state.selectedDate?.toString()) },
-                                    modifier = habitModifier.then(Modifier.longPressDraggableHandle())
+                                    modifier = dragModifier.then(habitModifier).then(Modifier.longPressDraggableHandle())
                                 )
                             }
 
@@ -457,7 +491,7 @@ fun NewHomeScreen(
                                     icon = habit.icon,
                                     color = habitColor,
                                     onClick = { onNavigateToHabitDetail(habit.id, state.selectedDate?.toString()) },
-                                    modifier = habitModifier.then(Modifier.longPressDraggableHandle())
+                                    modifier = dragModifier.then(habitModifier).then(Modifier.longPressDraggableHandle())
                                 )
                             }
 
@@ -474,7 +508,7 @@ fun NewHomeScreen(
                                         viewModel.onEvent(HomeEvent.IncrementHabit(habit.id, amount))
                                     },
                                     onClick = { onNavigateToHabitDetail(habit.id, state.selectedDate?.toString()) },
-                                    modifier = habitModifier.then(Modifier.longPressDraggableHandle())
+                                    modifier = dragModifier.then(habitModifier).then(Modifier.longPressDraggableHandle())
                                 )
                             }
                         }

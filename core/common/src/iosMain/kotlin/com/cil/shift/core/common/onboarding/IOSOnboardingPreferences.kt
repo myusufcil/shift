@@ -96,6 +96,87 @@ class IOSOnboardingPreferences : OnboardingPreferences {
         userDefaults.synchronize()
     }
 
+    override fun getCalendarViewMode(): String {
+        return userDefaults.stringForKey(KEY_CALENDAR_VIEW_MODE) ?: "WEEK"
+    }
+
+    override fun setCalendarViewMode(mode: String) {
+        userDefaults.setObject(mode, KEY_CALENDAR_VIEW_MODE)
+        userDefaults.synchronize()
+    }
+
+    // Week view
+    override fun getWeekViewColumnWidth(): Int {
+        val value = userDefaults.integerForKey(KEY_WEEK_VIEW_COLUMN_WIDTH).toInt()
+        return if (value == 0) 80 else value.coerceIn(40, 150)
+    }
+    override fun setWeekViewColumnWidth(width: Int) {
+        userDefaults.setInteger(width.coerceIn(40, 150).toLong(), KEY_WEEK_VIEW_COLUMN_WIDTH)
+        userDefaults.synchronize()
+    }
+    override fun getWeekViewRowHeight(): Int {
+        val value = userDefaults.integerForKey(KEY_WEEK_VIEW_ROW_HEIGHT).toInt()
+        return if (value == 0) 70 else value.coerceIn(50, 150)
+    }
+    override fun setWeekViewRowHeight(height: Int) {
+        userDefaults.setInteger(height.coerceIn(50, 150).toLong(), KEY_WEEK_VIEW_ROW_HEIGHT)
+        userDefaults.synchronize()
+    }
+
+    // Month view
+    override fun getMonthViewColumnWidth(): Int {
+        val value = userDefaults.integerForKey(KEY_MONTH_VIEW_COLUMN_WIDTH).toInt()
+        return if (value == 0) 56 else value.coerceIn(40, 150)
+    }
+    override fun setMonthViewColumnWidth(width: Int) {
+        userDefaults.setInteger(width.coerceIn(40, 150).toLong(), KEY_MONTH_VIEW_COLUMN_WIDTH)
+        userDefaults.synchronize()
+    }
+    override fun getMonthViewRowHeight(): Int {
+        val value = userDefaults.integerForKey(KEY_MONTH_VIEW_ROW_HEIGHT).toInt()
+        return if (value == 0) 70 else value.coerceIn(50, 150)
+    }
+    override fun setMonthViewRowHeight(height: Int) {
+        userDefaults.setInteger(height.coerceIn(50, 150).toLong(), KEY_MONTH_VIEW_ROW_HEIGHT)
+        userDefaults.synchronize()
+    }
+
+    // Day view
+    override fun getDayViewColumnWidth(): Int {
+        val value = userDefaults.integerForKey(KEY_DAY_VIEW_COLUMN_WIDTH).toInt()
+        return if (value == 0) 100 else value.coerceIn(40, 200)
+    }
+    override fun setDayViewColumnWidth(width: Int) {
+        userDefaults.setInteger(width.coerceIn(40, 200).toLong(), KEY_DAY_VIEW_COLUMN_WIDTH)
+        userDefaults.synchronize()
+    }
+    override fun getDayViewRowHeight(): Int {
+        val value = userDefaults.integerForKey(KEY_DAY_VIEW_ROW_HEIGHT).toInt()
+        return if (value == 0) 80 else value.coerceIn(50, 150)
+    }
+    override fun setDayViewRowHeight(height: Int) {
+        userDefaults.setInteger(height.coerceIn(50, 150).toLong(), KEY_DAY_VIEW_ROW_HEIGHT)
+        userDefaults.synchronize()
+    }
+
+    // 3-day view
+    override fun getDay3ViewColumnWidth(): Int {
+        val value = userDefaults.integerForKey(KEY_DAY3_VIEW_COLUMN_WIDTH).toInt()
+        return if (value == 0) 90 else value.coerceIn(40, 180)
+    }
+    override fun setDay3ViewColumnWidth(width: Int) {
+        userDefaults.setInteger(width.coerceIn(40, 180).toLong(), KEY_DAY3_VIEW_COLUMN_WIDTH)
+        userDefaults.synchronize()
+    }
+    override fun getDay3ViewRowHeight(): Int {
+        val value = userDefaults.integerForKey(KEY_DAY3_VIEW_ROW_HEIGHT).toInt()
+        return if (value == 0) 75 else value.coerceIn(50, 150)
+    }
+    override fun setDay3ViewRowHeight(height: Int) {
+        userDefaults.setInteger(height.coerceIn(50, 150).toLong(), KEY_DAY3_VIEW_ROW_HEIGHT)
+        userDefaults.synchronize()
+    }
+
     companion object {
         private const val KEY_ONBOARDING_COMPLETED = "onboarding_completed"
         private const val KEY_USER_NAME = "user_name"
@@ -107,5 +188,14 @@ class IOSOnboardingPreferences : OnboardingPreferences {
         private const val KEY_LAST_CONFETTI_DATE = "last_confetti_date"
         private const val KEY_PRODUCT_WALKTHROUGH_SEEN = "product_walkthrough_seen"
         private const val KEY_CALENDAR_WALKTHROUGH_SEEN = "calendar_walkthrough_seen"
+        private const val KEY_CALENDAR_VIEW_MODE = "calendar_view_mode"
+        private const val KEY_WEEK_VIEW_COLUMN_WIDTH = "week_view_column_width"
+        private const val KEY_WEEK_VIEW_ROW_HEIGHT = "week_view_row_height"
+        private const val KEY_MONTH_VIEW_COLUMN_WIDTH = "month_view_column_width"
+        private const val KEY_MONTH_VIEW_ROW_HEIGHT = "month_view_row_height"
+        private const val KEY_DAY_VIEW_COLUMN_WIDTH = "day_view_column_width"
+        private const val KEY_DAY_VIEW_ROW_HEIGHT = "day_view_row_height"
+        private const val KEY_DAY3_VIEW_COLUMN_WIDTH = "day3_view_column_width"
+        private const val KEY_DAY3_VIEW_ROW_HEIGHT = "day3_view_row_height"
     }
 }

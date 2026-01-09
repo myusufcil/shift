@@ -5,6 +5,8 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.*
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.scaleIn
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -159,8 +161,8 @@ fun CoachMarkOverlay(
 
     AnimatedVisibility(
         visible = controller.isActive,
-        enter = fadeIn(animationSpec = tween(300)),
-        exit = fadeOut(animationSpec = tween(300))
+        enter = fadeIn(animationSpec = tween(150)),
+        exit = fadeOut(animationSpec = tween(200))
     ) {
         val currentStep = controller.currentStep ?: return@AnimatedVisibility
         val targetBounds = controller.getTargetBounds(currentStep.id)
@@ -274,7 +276,7 @@ fun CoachMarkOverlay(
             // Tooltip card
             val tooltipWidthDp = 300.dp
             val tooltipHeightDp = 180.dp
-            val bottomNavHeight = 80.dp // Account for bottom nav
+            val bottomNavHeight = 120.dp // Account for bottom nav with extra padding
 
             // Calculate target tooltip position based on current step bounds
             val (targetTooltipX, targetTooltipY) = if (targetBounds != null) {
@@ -285,8 +287,8 @@ fun CoachMarkOverlay(
                     val screenWidth = screenSize.width
                     val screenHeight = screenSize.height
                     val bottomNavHeightPx = bottomNavHeight.toPx()
-                    val safeBottomPx = bottomNavHeightPx + 16.dp.toPx()
-                    val spotlightPadding = 20.dp.toPx() // Extra padding to avoid overlap
+                    val safeBottomPx = bottomNavHeightPx + 24.dp.toPx()
+                    val spotlightPadding = 28.dp.toPx() // Extra padding to avoid overlap
 
                     when (currentStep.position) {
                         TooltipPosition.BOTTOM -> {
@@ -332,7 +334,7 @@ fun CoachMarkOverlay(
                     val tooltipWidthPx = tooltipWidthDp.toPx()
                     val tooltipHeightPx = tooltipHeightDp.toPx()
                     val bottomNavHeightPx = bottomNavHeight.toPx()
-                    val safeBottomPx = bottomNavHeightPx + 16.dp.toPx()
+                    val safeBottomPx = bottomNavHeightPx + 24.dp.toPx()
                     val x = (screenSize.width - tooltipWidthPx) / 2
                     val y = (screenSize.height - tooltipHeightPx - safeBottomPx) / 2
                     Pair(x.coerceAtLeast(16.dp.toPx()), y.coerceAtLeast(60.dp.toPx()))
@@ -351,12 +353,19 @@ fun CoachMarkOverlay(
                 label = "tooltipY"
             )
 
-            // Animate tooltip content with crossfade effect
+            // Animate tooltip content with slide-in, scale, and crossfade effect
             AnimatedContent(
                 targetState = currentStep,
                 transitionSpec = {
-                    fadeIn(animationSpec = tween(300)) togetherWith
-                    fadeOut(animationSpec = tween(200))
+                    (fadeIn(animationSpec = tween(350, easing = EaseOutCubic)) +
+                    slideInVertically(
+                        animationSpec = tween(400, easing = EaseOutCubic),
+                        initialOffsetY = { it / 2 }
+                    ) +
+                    scaleIn(
+                        animationSpec = tween(350, easing = EaseOutCubic),
+                        initialScale = 0.8f
+                    )) togetherWith fadeOut(animationSpec = tween(200))
                 },
                 label = "tooltipContent"
             ) { step ->
