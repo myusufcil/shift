@@ -31,6 +31,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.cil.shift.core.common.isIOS
 import com.cil.shift.core.common.auth.AuthManager
 import com.cil.shift.core.common.auth.AuthResult
 import com.cil.shift.core.common.auth.SocialSignInProvider
@@ -61,7 +62,11 @@ fun LoginScreen(
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(false) }
+    var isGoogleLoading by remember { mutableStateOf(false) }
+    var isAppleLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    val socialSignInProvider = koinInject<SocialSignInProvider>()
 
     val backgroundColor = MaterialTheme.colorScheme.background
     val textColor = MaterialTheme.colorScheme.onBackground
@@ -89,14 +94,18 @@ fun LoginScreen(
         },
         containerColor = backgroundColor
     ) { paddingValues ->
-        Column(
-            modifier = modifier
+        Box(
+            modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .verticalScroll(rememberScrollState())
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Column(
+                modifier = modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
             Spacer(modifier = Modifier.height(32.dp))
 
             // Logo/Title
@@ -295,11 +304,6 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Social Sign-In Buttons
-            val socialSignInProvider = koinInject<SocialSignInProvider>()
-            var isGoogleLoading by remember { mutableStateOf(false) }
-            var isAppleLoading by remember { mutableStateOf(false) }
-
             // Google Sign-In Button
             OutlinedButton(
                 onClick = {
@@ -307,27 +311,31 @@ fun LoginScreen(
                         isGoogleLoading = true
                         errorMessage = null
 
-                        when (val result = socialSignInProvider.signInWithGoogle()) {
-                            is SocialSignInResult.Success -> {
-                                when (val authResult = authManager.signInWithGoogle(result.idToken)) {
-                                    is AuthResult.Success -> {
-                                        purchaseManager.login(authResult.user.uid)
-                                        onLoginSuccess()
-                                    }
-                                    is AuthResult.Error -> {
-                                        errorMessage = authResult.message
+                        try {
+                            when (val result = socialSignInProvider.signInWithGoogle()) {
+                                is SocialSignInResult.Success -> {
+                                    when (val authResult = authManager.signInWithGoogle(result.idToken)) {
+                                        is AuthResult.Success -> {
+                                            purchaseManager.login(authResult.user.uid)
+                                            onLoginSuccess()
+                                        }
+                                        is AuthResult.Error -> {
+                                            errorMessage = authResult.message
+                                        }
                                     }
                                 }
+                                is SocialSignInResult.Error -> {
+                                    errorMessage = result.message
+                                }
+                                SocialSignInResult.Cancelled -> {
+                                    // User cancelled, do nothing
+                                }
                             }
-                            is SocialSignInResult.Error -> {
-                                errorMessage = result.message
-                            }
-                            SocialSignInResult.Cancelled -> {
-                                // User cancelled, do nothing
-                            }
+                        } catch (e: Exception) {
+                            errorMessage = "Unexpected error: ${e.message}"
+                        } finally {
+                            isGoogleLoading = false
                         }
-
-                        isGoogleLoading = false
                     }
                 },
                 modifier = Modifier
@@ -337,74 +345,60 @@ fun LoginScreen(
                 border = ButtonDefaults.outlinedButtonBorder(enabled = !isGoogleLoading),
                 enabled = !isGoogleLoading && !isAppleLoading && !isLoading
             ) {
-                if (isGoogleLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        color = textColor,
-                        strokeWidth = 2.dp
-                    )
-                } else {
-                    // Google logo with multicolor G
-                    GoogleLogo(size = 20.dp)
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        text = strings.continueWithGoogle,
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = textColor
-                    )
-                }
+                // Google logo with multicolor G
+                GoogleLogo(size = 20.dp)
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = strings.continueWithGoogle,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = textColor
+                )
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            // Apple Sign-In Button (iOS only)
+            if (isIOS) {
+                Spacer(modifier = Modifier.height(12.dp))
 
-            // Apple Sign-In Button
-            Button(
-                onClick = {
-                    scope.launch {
-                        isAppleLoading = true
-                        errorMessage = null
+                Button(
+                    onClick = {
+                        scope.launch {
+                            isAppleLoading = true
+                            errorMessage = null
 
-                        when (val result = socialSignInProvider.signInWithApple()) {
-                            is SocialSignInResult.Success -> {
-                                when (val authResult = authManager.signInWithApple(result.idToken)) {
-                                    is AuthResult.Success -> {
-                                        purchaseManager.login(authResult.user.uid)
-                                        onLoginSuccess()
-                                    }
-                                    is AuthResult.Error -> {
-                                        errorMessage = authResult.message
+                            when (val result = socialSignInProvider.signInWithApple()) {
+                                is SocialSignInResult.Success -> {
+                                    when (val authResult = authManager.signInWithApple(result.idToken)) {
+                                        is AuthResult.Success -> {
+                                            purchaseManager.login(authResult.user.uid)
+                                            onLoginSuccess()
+                                        }
+                                        is AuthResult.Error -> {
+                                            errorMessage = authResult.message
+                                        }
                                     }
                                 }
+                                is SocialSignInResult.Error -> {
+                                    errorMessage = result.message
+                                }
+                                SocialSignInResult.Cancelled -> {
+                                    // User cancelled, do nothing
+                                }
                             }
-                            is SocialSignInResult.Error -> {
-                                errorMessage = result.message
-                            }
-                            SocialSignInResult.Cancelled -> {
-                                // User cancelled, do nothing
-                            }
-                        }
 
-                        isAppleLoading = false
-                    }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = textColor,
-                    contentColor = backgroundColor
-                ),
-                enabled = !isAppleLoading && !isGoogleLoading && !isLoading
-            ) {
-                if (isAppleLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        color = backgroundColor,
-                        strokeWidth = 2.dp
-                    )
-                } else {
+                            isAppleLoading = false
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = textColor,
+                        contentColor = backgroundColor
+                    ),
+                    enabled = !isAppleLoading && !isGoogleLoading && !isLoading
+                ) {
                     Text(
                         text = "",
                         fontSize = 20.sp
@@ -437,6 +431,23 @@ fun LoginScreen(
                     color = Color(0xFF4E7CFF),
                     modifier = Modifier.clickable { onNavigateToSignUp() }
                 )
+            }
+            }
+
+            // Full screen loading overlay
+            if (isLoading || isGoogleLoading || isAppleLoading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(backgroundColor.copy(alpha = 0.8f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(48.dp),
+                        color = Color(0xFF4E7CFF),
+                        strokeWidth = 4.dp
+                    )
+                }
             }
         }
     }

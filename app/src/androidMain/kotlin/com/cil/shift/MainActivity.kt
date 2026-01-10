@@ -41,11 +41,6 @@ class MainActivity : ComponentActivity(), KoinComponent {
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        // Update activity reference when resumed (in case it was recreated)
-        socialSignInProvider.setActivity(this)
-    }
 }
 
 @Preview

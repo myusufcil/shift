@@ -45,10 +45,8 @@ kotlin {
             implementation(libs.androidx.work.runtime)
             implementation(libs.koin.core)
 
-            // Google Sign-In
-            implementation(libs.googleid)
-            implementation(libs.androidx.credentials)
-            implementation(libs.androidx.credentials.play.services)
+            // Google Sign-In (Legacy API - more reliable)
+            implementation(libs.play.services.auth)
         }
     }
 }

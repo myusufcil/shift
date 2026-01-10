@@ -1,92 +1,112 @@
 package com.cil.shift.core.common.auth
 
-import android.app.Activity
 import android.content.Context
-import androidx.credentials.CredentialManager
-import androidx.credentials.CustomCredential
-import androidx.credentials.GetCredentialRequest
-import androidx.credentials.GetCredentialResponse
-import androidx.credentials.exceptions.GetCredentialCancellationException
-import androidx.credentials.exceptions.GetCredentialException
-import androidx.credentials.exceptions.NoCredentialException
-import com.google.android.libraries.identity.googleid.GetGoogleIdOption
-import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import android.content.Intent
+import androidx.activity.ComponentActivity
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
+import kotlinx.coroutines.suspendCancellableCoroutine
 import java.lang.ref.WeakReference
+import kotlin.coroutines.resume
 
 /**
- * Android implementation of SocialSignInProvider
+ * Android implementation of SocialSignInProvider using legacy Google Sign-In API
  */
 actual class SocialSignInProvider(
     private val context: Context,
     private val webClientId: String
 ) {
-    private val credentialManager = CredentialManager.create(context)
-    private var activityRef: WeakReference<Activity>? = null
+    private var activityRef: WeakReference<ComponentActivity>? = null
+    private var googleSignInClient: GoogleSignInClient? = null
+    private var signInLauncher: ActivityResultLauncher<Intent>? = null
+    private var pendingCallback: ((SocialSignInResult) -> Unit)? = null
 
     /**
-     * Set the current activity for credential manager operations
-     * This must be called before signInWithGoogle
+     * Set the current activity and register for activity result
      */
-    fun setActivity(activity: Activity) {
+    fun setActivity(activity: ComponentActivity) {
+        // Clean up previous launcher
+        signInLauncher?.unregister()
+
         activityRef = WeakReference(activity)
-    }
 
-    actual suspend fun signInWithGoogle(): SocialSignInResult {
-        val activity = activityRef?.get()
-            ?: return SocialSignInResult.Error("Activity not available. Please try again.")
+        // Configure Google Sign-In
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken(webClientId)
+            .requestEmail()
+            .build()
 
-        return try {
-            val googleIdOption = GetGoogleIdOption.Builder()
-                .setFilterByAuthorizedAccounts(false)
-                .setServerClientId(webClientId)
-                .setAutoSelectEnabled(false)
-                .build()
+        googleSignInClient = GoogleSignIn.getClient(activity, gso)
 
-            val request = GetCredentialRequest.Builder()
-                .addCredentialOption(googleIdOption)
-                .build()
-
-            val result: GetCredentialResponse = credentialManager.getCredential(
-                request = request,
-                context = activity
-            )
-
-            handleGoogleSignInResult(result)
-        } catch (e: GetCredentialCancellationException) {
-            SocialSignInResult.Cancelled
-        } catch (e: NoCredentialException) {
-            SocialSignInResult.Error("No Google account found. Please add a Google account to your device.")
-        } catch (e: GetCredentialException) {
-            SocialSignInResult.Error(e.message ?: "Google Sign-In failed")
-        } catch (e: Exception) {
-            SocialSignInResult.Error(e.message ?: "Unknown error during Google Sign-In")
+        // Register launcher directly using activity result registry
+        signInLauncher = activity.activityResultRegistry.register(
+            "google_sign_in_${System.currentTimeMillis()}",
+            ActivityResultContracts.StartActivityForResult()
+        ) { result ->
+            handleSignInResult(result.data)
         }
     }
 
-    private fun handleGoogleSignInResult(result: GetCredentialResponse): SocialSignInResult {
-        return when (val credential = result.credential) {
-            is CustomCredential -> {
-                if (credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
-                    try {
-                        val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
-                        SocialSignInResult.Success(
-                            idToken = googleIdTokenCredential.idToken,
-                            accessToken = null
-                        )
-                    } catch (e: Exception) {
-                        SocialSignInResult.Error("Failed to parse Google credential: ${e.message}")
-                    }
-                } else {
-                    SocialSignInResult.Error("Unexpected credential type")
+    private fun handleSignInResult(data: Intent?) {
+        try {
+            val task = GoogleSignIn.getSignedInAccountFromIntent(data)
+            val account = task.getResult(ApiException::class.java)
+            val idToken = account?.idToken
+
+            if (idToken != null) {
+                pendingCallback?.invoke(SocialSignInResult.Success(idToken = idToken, accessToken = null))
+            } else {
+                pendingCallback?.invoke(SocialSignInResult.Error("Failed to get ID token"))
+            }
+        } catch (e: ApiException) {
+            val message = when (e.statusCode) {
+                12501 -> "Sign-in cancelled"
+                12502 -> "Sign-in failed. Please try again."
+                10 -> "Developer error: Check SHA-1 and Web Client ID configuration"
+                else -> "Google Sign-In failed: ${e.statusCode} - ${e.message}"
+            }
+            if (e.statusCode == 12501) {
+                pendingCallback?.invoke(SocialSignInResult.Cancelled)
+            } else {
+                pendingCallback?.invoke(SocialSignInResult.Error(message))
+            }
+        } catch (e: Exception) {
+            pendingCallback?.invoke(SocialSignInResult.Error("Sign-in error: ${e.message}"))
+        } finally {
+            pendingCallback = null
+        }
+    }
+
+    actual suspend fun signInWithGoogle(): SocialSignInResult {
+        val launcher = signInLauncher
+            ?: return SocialSignInResult.Error("Activity not initialized. Please restart the app.")
+
+        val client = googleSignInClient
+            ?: return SocialSignInResult.Error("Google Sign-In not configured.")
+
+        return suspendCancellableCoroutine { continuation ->
+            pendingCallback = { result ->
+                if (continuation.isActive) {
+                    continuation.resume(result)
                 }
             }
-            else -> SocialSignInResult.Error("Unexpected credential type")
+
+            continuation.invokeOnCancellation {
+                pendingCallback = null
+            }
+
+            // Sign out first to always show account picker
+            client.signOut().addOnCompleteListener {
+                launcher.launch(client.signInIntent)
+            }
         }
     }
 
     actual suspend fun signInWithApple(): SocialSignInResult {
-        // Apple Sign-In on Android requires using Firebase's native OAuth provider
-        // This is handled differently - typically through Firebase console OAuth setup
         return SocialSignInResult.Error("Apple Sign-In is only available on iOS devices")
     }
 }
