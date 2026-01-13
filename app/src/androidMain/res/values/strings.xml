@@ -3,4 +3,8 @@
     <string name="app_name">Shift</string>
     <string name="widget_description">Track and complete your daily habits quickly from your home screen</string>
     <string name="widget_name">Shift Habits</string>
+    <string name="single_habit_widget_name">Tek Alışkanlık</string>
+    <string name="single_habit_widget_description">Track a single habit from your home screen</string>
+    <string name="summary_widget_name">Shift Özet</string>
+    <string name="summary_widget_description">Günlük ve haftalık ilerlemenizi görün</string>
 </resources>

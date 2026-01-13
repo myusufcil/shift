@@ -24,3 +24,4 @@ iosApp/Pods/
 *.keystore
 *.jks
 app/debug/
+fastlane/

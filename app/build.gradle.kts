@@ -113,8 +113,8 @@ android {
         applicationId = "com.cil.shift"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 23
-        versionName = "1.0.0"
+        versionCode = 31
+        versionName = "1.1.1"
     }
 
     signingConfigs {
