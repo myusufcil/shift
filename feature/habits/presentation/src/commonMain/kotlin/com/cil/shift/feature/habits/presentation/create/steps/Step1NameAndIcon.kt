@@ -144,7 +144,9 @@ fun Step1NameAndIcon(
             Text(
                 text = "💡 ${StringResources.beSpecific.get(currentLanguage)}",
                 fontSize = 12.sp,
-                color = textColor.copy(alpha = 0.45f)
+                color = textColor.copy(alpha = 0.45f),
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
             )
         }
 

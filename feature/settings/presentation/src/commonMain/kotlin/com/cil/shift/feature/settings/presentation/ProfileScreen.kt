@@ -88,6 +88,8 @@ fun ProfileScreen(
     var showLanguageDialog by remember { mutableStateOf(false) }
     var showThemeDialog by remember { mutableStateOf(false) }
     var showSignOutDialog by remember { mutableStateOf(false) }
+    var showDeleteAccountDialog by remember { mutableStateOf(false) }
+    var isDeleting by remember { mutableStateOf(false) }
     var showRestartDialog by remember { mutableStateOf(false) }
     var pendingLanguage by remember { mutableStateOf<Language?>(null) }
     var pendingTheme by remember { mutableStateOf<AppTheme?>(null) }
@@ -262,6 +264,36 @@ fun ProfileScreen(
                                 fontSize = 14.sp,
                                 color = Color(0xFF4E7CFF)
                             )
+                        }
+                    }
+
+                    // Premium badge (if premium)
+                    if (premiumState is PremiumState.Premium) {
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(
+                                    Brush.linearGradient(
+                                        colors = listOf(Color(0xFFFFD700), Color(0xFFFFA500))
+                                    )
+                                )
+                                .padding(horizontal = 16.dp, vertical = 6.dp)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Text(
+                                    text = "⭐",
+                                    fontSize = 14.sp
+                                )
+                                Text(
+                                    text = "Premium",
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
+                            }
                         }
                     }
                 }
@@ -481,21 +513,19 @@ fun ProfileScreen(
                             onClick = { showSignOutDialog = true },
                             isDanger = true
                         )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        ProfileMenuItem(
+                            icon = Icons.Default.Delete,
+                            title = StringResources.deleteAccount.localized(),
+                            onClick = { showDeleteAccountDialog = true },
+                            isDanger = true
+                        )
                     }
                 }
             }
 
-            // Version info
-            item(key = "version_$currentLanguage") {
-                Text(
-                    text = StringResources.version.get(currentLanguage) + " 1.0.0",
-                    fontSize = 12.sp,
-                    color = textColor.copy(alpha = 0.4f),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 16.dp)
-                )
-            }
         }
 
         if (showLanguageDialog) {
@@ -614,6 +644,66 @@ fun ProfileScreen(
                 },
                 dismissButton = {
                     TextButton(onClick = { showSignOutDialog = false }) {
+                        Text(
+                            text = StringResources.cancel.get(currentLanguage)
+                        )
+                    }
+                }
+            )
+        }
+
+        if (showDeleteAccountDialog) {
+            AlertDialog(
+                onDismissRequest = {
+                    if (!isDeleting) showDeleteAccountDialog = false
+                },
+                title = {
+                    Text(
+                        text = StringResources.deleteAccount.get(currentLanguage),
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFFFF6B6B)
+                    )
+                },
+                text = {
+                    Text(
+                        text = StringResources.deleteAccountConfirmMessage.get(currentLanguage)
+                    )
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            scope.launch {
+                                isDeleting = true
+                                // Logout from RevenueCat first
+                                purchaseManager.logout()
+                                // Delete the Firebase account
+                                val result = authManager.deleteAccount()
+                                isDeleting = false
+                                showDeleteAccountDialog = false
+                                // Account deleted, user is automatically signed out
+                            }
+                        },
+                        enabled = !isDeleting
+                    ) {
+                        if (isDeleting) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(16.dp),
+                                strokeWidth = 2.dp,
+                                color = Color(0xFFFF6B6B)
+                            )
+                        } else {
+                            Text(
+                                text = StringResources.delete.get(currentLanguage),
+                                color = Color(0xFFFF6B6B)
+                            )
+                        }
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = { showDeleteAccountDialog = false },
+                        enabled = !isDeleting
+                    ) {
                         Text(
                             text = StringResources.cancel.get(currentLanguage)
                         )

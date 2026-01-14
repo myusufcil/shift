@@ -22,6 +22,7 @@ class AndroidHoneyPreferences(context: Context) : HoneyPreferences {
         private const val KEY_FIRST_OPEN_DATE = "honey_first_open"
         private const val KEY_LOW_WARNING_SHOWN = "honey_low_warning_shown"
         private const val KEY_UNLOCKED_FEATURES = "honey_unlocked_features"
+        private const val KEY_TOTAL_HABITS_CREATED = "honey_total_habits_created"
 
         private const val DEFAULT_BALANCE = 50
     }
@@ -83,5 +84,14 @@ class AndroidHoneyPreferences(context: Context) : HoneyPreferences {
         val current = getUnlockedFeatures().toMutableSet()
         current.add(featureId)
         prefs.edit().putStringSet(KEY_UNLOCKED_FEATURES, current).apply()
+    }
+
+    override fun getTotalHabitsCreated(): Int {
+        return prefs.getInt(KEY_TOTAL_HABITS_CREATED, 0)
+    }
+
+    override fun incrementTotalHabitsCreated() {
+        val current = getTotalHabitsCreated()
+        prefs.edit().putInt(KEY_TOTAL_HABITS_CREATED, current + 1).apply()
     }
 }

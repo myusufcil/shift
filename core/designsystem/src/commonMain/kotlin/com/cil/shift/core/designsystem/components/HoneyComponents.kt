@@ -43,16 +43,19 @@ fun HoneyCounter(
     balance: Int,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    isPremium: Boolean = false,
     isLow: Boolean = balance < 20,
     isCritical: Boolean = balance < 10
 ) {
     val backgroundColor = when {
+        isPremium -> HoneyGold.copy(alpha = 0.15f)
         isCritical -> LowHoneyRed.copy(alpha = 0.2f)
         isLow -> HoneyAmber.copy(alpha = 0.2f)
         else -> HoneyGold.copy(alpha = 0.15f)
     }
 
     val textColor = when {
+        isPremium -> HoneyGold
         isCritical -> LowHoneyRed
         isLow -> HoneyAmber
         else -> HoneyGold
@@ -95,7 +98,7 @@ fun HoneyCounter(
             fontSize = 16.sp
         )
         Text(
-            text = balance.toString(),
+            text = if (isPremium) "∞" else balance.toString(),
             fontSize = 14.sp,
             fontWeight = FontWeight.Bold,
             color = textColor

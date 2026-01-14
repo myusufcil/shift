@@ -26,4 +26,8 @@ interface HoneyPreferences {
     // Track unlocked features (one-time purchases)
     fun getUnlockedFeatures(): Set<String>
     fun addUnlockedFeature(featureId: String)
+
+    // Track total habits ever created (doesn't decrease when deleted)
+    fun getTotalHabitsCreated(): Int
+    fun incrementTotalHabitsCreated()
 }

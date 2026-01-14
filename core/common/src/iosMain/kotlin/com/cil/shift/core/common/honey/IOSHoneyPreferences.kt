@@ -18,6 +18,7 @@ class IOSHoneyPreferences : HoneyPreferences {
         private const val KEY_LOW_WARNING_SHOWN = "honey_low_warning_shown"
         private const val KEY_UNLOCKED_FEATURES = "honey_unlocked_features"
         private const val KEY_INITIALIZED = "honey_initialized"
+        private const val KEY_TOTAL_HABITS_CREATED = "honey_total_habits_created"
 
         private const val DEFAULT_BALANCE = 50
     }
@@ -91,5 +92,14 @@ class IOSHoneyPreferences : HoneyPreferences {
         val current = getUnlockedFeatures().toMutableSet()
         current.add(featureId)
         defaults.setObject(current.toList(), KEY_UNLOCKED_FEATURES)
+    }
+
+    override fun getTotalHabitsCreated(): Int {
+        return defaults.integerForKey(KEY_TOTAL_HABITS_CREATED).toInt()
+    }
+
+    override fun incrementTotalHabitsCreated() {
+        val current = getTotalHabitsCreated()
+        defaults.setInteger((current + 1).toLong(), KEY_TOTAL_HABITS_CREATED)
     }
 }

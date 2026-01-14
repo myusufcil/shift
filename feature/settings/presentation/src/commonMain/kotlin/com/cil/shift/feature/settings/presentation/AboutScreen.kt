@@ -1,6 +1,8 @@
 package com.cil.shift.feature.settings.presentation
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -12,9 +14,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.cil.shift.core.common.appVersion
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -22,6 +26,13 @@ fun AboutScreen(
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val backgroundColor = MaterialTheme.colorScheme.background
+    val textColor = MaterialTheme.colorScheme.onBackground
+    val cardColor = MaterialTheme.colorScheme.surface
+    val borderColor = textColor.copy(alpha = 0.08f)
+    val uriHandler = LocalUriHandler.current
+    val contactEmail = "contact.shiftapp@gmail.com"
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -29,7 +40,7 @@ fun AboutScreen(
                     Text(
                         text = "About",
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = textColor
                     )
                 },
                 navigationIcon = {
@@ -37,16 +48,16 @@ fun AboutScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
-                            tint = Color.White
+                            tint = textColor
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF0A1628)
+                    containerColor = backgroundColor
                 )
             )
         },
-        containerColor = Color(0xFF0A1628)
+        containerColor = backgroundColor
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
@@ -68,9 +79,9 @@ fun AboutScreen(
                         color = Color(0xFF4E7CFF)
                     )
                     Text(
-                        text = "Version 1.0.0",
+                        text = "Version $appVersion",
                         fontSize = 14.sp,
-                        color = Color.White.copy(alpha = 0.6f)
+                        color = textColor.copy(alpha = 0.6f)
                     )
                 }
             }
@@ -80,7 +91,8 @@ fun AboutScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(16.dp))
-                        .background(Color(0xFF1A2942))
+                        .border(1.dp, borderColor, RoundedCornerShape(16.dp))
+                        .background(cardColor)
                         .padding(20.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
@@ -88,12 +100,12 @@ fun AboutScreen(
                         text = "About Shift",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = textColor
                     )
                     Text(
                         text = "Shift is a modern habit tracking application designed to help you build better habits and achieve your goals. Track your daily routines, monitor your progress, and stay motivated with our intuitive interface.",
                         fontSize = 14.sp,
-                        color = Color.White.copy(alpha = 0.7f),
+                        color = textColor.copy(alpha = 0.7f),
                         lineHeight = 20.sp
                     )
                 }
@@ -104,7 +116,8 @@ fun AboutScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(16.dp))
-                        .background(Color(0xFF1A2942))
+                        .border(1.dp, borderColor, RoundedCornerShape(16.dp))
+                        .background(cardColor)
                         .padding(20.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
@@ -112,14 +125,14 @@ fun AboutScreen(
                         text = "Features",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = textColor
                     )
-                    FeatureItem("Multi-step habit creation")
-                    FeatureItem("Track different habit types")
-                    FeatureItem("Visual progress tracking")
-                    FeatureItem("Streak tracking")
-                    FeatureItem("Customizable reminders")
-                    FeatureItem("Dark mode interface")
+                    FeatureItem("Multi-step habit creation", textColor)
+                    FeatureItem("Track different habit types", textColor)
+                    FeatureItem("Visual progress tracking", textColor)
+                    FeatureItem("Streak tracking", textColor)
+                    FeatureItem("Customizable reminders", textColor)
+                    FeatureItem("Dark mode interface", textColor)
                 }
             }
 
@@ -128,7 +141,9 @@ fun AboutScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(16.dp))
-                        .background(Color(0xFF1A2942))
+                        .border(1.dp, borderColor, RoundedCornerShape(16.dp))
+                        .background(cardColor)
+                        .clickable { uriHandler.openUri("mailto:$contactEmail") }
                         .padding(20.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
@@ -136,10 +151,10 @@ fun AboutScreen(
                         text = "Contact",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = textColor
                     )
                     Text(
-                        text = "contact.shiftapp@gmail.com",
+                        text = contactEmail,
                         fontSize = 14.sp,
                         color = Color(0xFF4E7CFF)
                     )
@@ -150,7 +165,7 @@ fun AboutScreen(
 }
 
 @Composable
-private fun FeatureItem(text: String) {
+private fun FeatureItem(text: String, textColor: Color) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.Top
@@ -163,7 +178,7 @@ private fun FeatureItem(text: String) {
         Text(
             text = text,
             fontSize = 14.sp,
-            color = Color.White.copy(alpha = 0.7f)
+            color = textColor.copy(alpha = 0.7f)
         )
     }
 }

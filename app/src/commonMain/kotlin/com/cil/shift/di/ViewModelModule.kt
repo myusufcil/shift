@@ -18,7 +18,7 @@ val viewModelModule = module {
 
     // Habits
     factory { HomeViewModel(get(), get(), get(), get(), get(), get(), get()) }
-    factory { (habitId: String?) -> CreateEditHabitViewModel(habitId, get(), get(), get()) }
+    factory { (habitId: String?) -> CreateEditHabitViewModel(habitId, get(), get(), get(), get()) }
     factory { (habitId: String, selectedDate: String?) -> HabitDetailViewModel(habitId, selectedDate, get(), get(), get(), get()) }
 
     // Statistics

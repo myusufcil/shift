@@ -1,6 +1,7 @@
 package com.cil.shift.feature.settings.presentation
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -11,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -21,6 +23,12 @@ fun PrivacyPolicyScreen(
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val backgroundColor = MaterialTheme.colorScheme.background
+    val textColor = MaterialTheme.colorScheme.onBackground
+    val cardColor = MaterialTheme.colorScheme.surface
+    val uriHandler = LocalUriHandler.current
+    val contactEmail = "contact.shiftapp@gmail.com"
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -28,7 +36,7 @@ fun PrivacyPolicyScreen(
                     Text(
                         text = "Privacy Policy",
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = textColor
                     )
                 },
                 navigationIcon = {
@@ -36,16 +44,16 @@ fun PrivacyPolicyScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
-                            tint = Color.White
+                            tint = textColor
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF0A1628)
+                    containerColor = backgroundColor
                 )
             )
         },
-        containerColor = Color(0xFF0A1628)
+        containerColor = backgroundColor
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
@@ -57,43 +65,77 @@ fun PrivacyPolicyScreen(
             item {
                 PolicySection(
                     title = "Data Collection",
-                    content = "We collect only the data necessary to provide you with the best habit tracking experience. This includes your habit information, completion records, and usage statistics."
+                    content = "We collect only the data necessary to provide you with the best habit tracking experience. This includes your habit information, completion records, and usage statistics.",
+                    cardColor = cardColor,
+                    textColor = textColor
                 )
             }
 
             item {
                 PolicySection(
                     title = "Data Usage",
-                    content = "Your data is used solely to provide and improve our services. We analyze aggregated usage data to enhance app features and user experience."
+                    content = "Your data is used solely to provide and improve our services. We analyze aggregated usage data to enhance app features and user experience.",
+                    cardColor = cardColor,
+                    textColor = textColor
                 )
             }
 
             item {
                 PolicySection(
                     title = "Data Security",
-                    content = "We implement industry-standard security measures to protect your data. All data is encrypted both in transit and at rest."
+                    content = "We implement industry-standard security measures to protect your data. All data is encrypted both in transit and at rest.",
+                    cardColor = cardColor,
+                    textColor = textColor
                 )
             }
 
             item {
                 PolicySection(
                     title = "Third-Party Services",
-                    content = "We may use third-party services for analytics and crash reporting. These services have their own privacy policies and are bound by strict confidentiality agreements."
+                    content = "We may use third-party services for analytics and crash reporting. These services have their own privacy policies and are bound by strict confidentiality agreements.",
+                    cardColor = cardColor,
+                    textColor = textColor
                 )
             }
 
             item {
                 PolicySection(
                     title = "Your Rights",
-                    content = "You have the right to access, modify, or delete your data at any time. You can export your data or request account deletion through the app settings."
+                    content = "You have the right to access, modify, or delete your data at any time. You can export your data or request account deletion through the app settings.",
+                    cardColor = cardColor,
+                    textColor = textColor
                 )
+            }
+
+            item {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(cardColor)
+                        .clickable { uriHandler.openUri("mailto:$contactEmail") }
+                        .padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "Contact",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = textColor
+                    )
+                    Text(
+                        text = contactEmail,
+                        fontSize = 14.sp,
+                        color = Color(0xFF4E7CFF)
+                    )
+                }
             }
 
             item {
                 Text(
                     text = "Last updated: January 2026",
                     fontSize = 12.sp,
-                    color = Color.White.copy(alpha = 0.4f),
+                    color = textColor.copy(alpha = 0.4f),
                     modifier = Modifier.padding(top = 16.dp)
                 )
             }
@@ -105,13 +147,15 @@ fun PrivacyPolicyScreen(
 private fun PolicySection(
     title: String,
     content: String,
+    cardColor: Color,
+    textColor: Color,
     modifier: Modifier = Modifier
 ) {
     Column(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(Color(0xFF1A2942))
+            .background(cardColor)
             .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -119,12 +163,12 @@ private fun PolicySection(
             text = title,
             fontSize = 16.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.White
+            color = textColor
         )
         Text(
             text = content,
             fontSize = 14.sp,
-            color = Color.White.copy(alpha = 0.7f),
+            color = textColor.copy(alpha = 0.7f),
             lineHeight = 20.sp
         )
     }

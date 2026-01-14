@@ -101,6 +101,10 @@ kotlin {
             // Glance (App Widget)
             implementation(libs.androidx.glance)
             implementation(libs.androidx.glance.material3)
+
+            // In-App Updates
+            implementation(libs.play.app.update)
+            implementation(libs.play.app.update.ktx)
         }
     }
 }
@@ -113,8 +117,8 @@ android {
         applicationId = "com.cil.shift"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 31
-        versionName = "1.1.1"
+        versionCode = 41
+        versionName = "1.1.2"
     }
 
     signingConfigs {

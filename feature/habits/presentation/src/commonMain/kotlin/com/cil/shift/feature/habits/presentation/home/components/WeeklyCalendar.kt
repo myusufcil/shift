@@ -1,12 +1,14 @@
 package com.cil.shift.feature.habits.presentation.home.components
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -26,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -79,6 +82,13 @@ fun WeeklyCalendar(
 
     val listState = rememberLazyListState()
     val todayIndex = 30 // Today is at index 30 (0-based, after 30 past days)
+    val density = LocalDensity.current
+
+    // Calculate item dimensions (item width: 48.dp, spacing: 12.dp)
+    val itemWidthPx = with(density) { 48.dp.toPx() }
+    val itemSpacingPx = with(density) { 12.dp.toPx() }
+    val itemTotalWidthPx = itemWidthPx + itemSpacingPx
+    val contentPaddingPx = with(density) { 20.dp.toPx() } // horizontal padding
 
     // Check if today is visible in the current viewport
     val isTodayVisible by remember {
@@ -88,10 +98,45 @@ fun WeeklyCalendar(
         }
     }
 
+    // Calculate center offset based on viewport width
+    fun calculateCenterOffset(): Int {
+        val viewportWidth = listState.layoutInfo.viewportSize.width
+        if (viewportWidth == 0) return 0
+        // Offset to center the item: -(viewportWidth/2 - itemWidth/2)
+        return -((viewportWidth / 2) - (itemWidthPx / 2)).toInt()
+    }
+
+    // Function to smoothly scroll to today with custom animation duration
+    suspend fun animateScrollToToday() {
+        val viewportWidth = listState.layoutInfo.viewportSize.width
+        if (viewportWidth == 0) {
+            // Fallback if layout not ready
+            listState.animateScrollToItem(todayIndex, calculateCenterOffset())
+            return
+        }
+
+        // Calculate target scroll position to center today
+        val targetItemStart = contentPaddingPx + (todayIndex * itemTotalWidthPx)
+        val targetCenterPosition = targetItemStart + (itemWidthPx / 2) - (viewportWidth / 2)
+
+        // Calculate current scroll position
+        val currentPosition = listState.firstVisibleItemIndex * itemTotalWidthPx +
+            listState.firstVisibleItemScrollOffset + contentPaddingPx
+
+        // Calculate how much we need to scroll
+        val scrollDistance = targetCenterPosition - currentPosition
+
+        // Animate scroll with custom duration (400ms - slightly slower)
+        listState.animateScrollBy(
+            value = scrollDistance,
+            animationSpec = tween(durationMillis = 400)
+        )
+    }
+
     // Scroll to today on first composition, centering it in view
     LaunchedEffect(Unit) {
-        // Scroll to show today centered (approximately)
-        listState.scrollToItem(todayIndex - 2) // Offset by 2 to center better
+        // Wait for layout to be ready
+        listState.scrollToItem(todayIndex, calculateCenterOffset())
     }
 
     val textColor = MaterialTheme.colorScheme.onBackground
@@ -158,7 +203,7 @@ fun WeeklyCalendar(
                     .background(Color(0xFF4E7CFF))
                     .clickable {
                         scope.launch {
-                            listState.animateScrollToItem(todayIndex - 2)
+                            animateScrollToToday()
                         }
                         onDaySelected(today)
                     }

@@ -21,11 +21,15 @@ class HomeViewModel(
     private val achievementManager: AchievementManager,
     private val onboardingPreferences: OnboardingPreferences,
     private val honeyManager: HoneyManager,
-    private val localizationManager: LocalizationManager
+    private val localizationManager: LocalizationManager,
+    private val timerPreferences: OnboardingPreferences = onboardingPreferences // Timer persistence
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(HomeState())
     val state: StateFlow<HomeState> = _state.asStateFlow()
+
+    // Background timer jobs - keeps running even when UI is not visible
+    private val timerJobs = mutableMapOf<String, kotlinx.coroutines.Job>()
 
     init {
         loadHabits()
@@ -33,12 +37,107 @@ class HomeViewModel(
         loadWeeklyChartData()
         loadUserPreferences()
         loadScheduledEvents()
+        restoreRunningTimers()
 
         // Observe language changes and update date format
         viewModelScope.launch {
             localizationManager.currentLanguage.collect {
                 updateCurrentDate()
             }
+        }
+    }
+
+    /**
+     * Start a background timer for a habit.
+     * This runs independently of the UI and survives navigation.
+     */
+    private fun startBackgroundTimer(habitId: String) {
+        // Cancel any existing timer for this habit
+        timerJobs[habitId]?.cancel()
+
+        timerJobs[habitId] = viewModelScope.launch {
+            while (true) {
+                kotlinx.coroutines.delay(60_000L) // 1 minute tick
+
+                // Check if timer is still running
+                if (!_state.value.runningTimers.contains(habitId)) {
+                    break
+                }
+
+                // Perform tick
+                val targetDate = _state.value.selectedDate?.toString() ?: getTodayDateString()
+                val habitWithCompletion = _state.value.habits.find { it.habit.id == habitId }
+
+                if (habitWithCompletion != null) {
+                    val newValue = habitWithCompletion.currentValue + 1
+                    val targetValue = habitWithCompletion.habit.targetValue ?: Int.MAX_VALUE
+                    val finalValue = newValue.coerceAtMost(targetValue)
+
+                    // Save to database
+                    habitRepository.updateCurrentValue(habitId, targetDate, finalValue)
+
+                    // Update UI
+                    _state.update { currentState ->
+                        val updatedHabits = currentState.habits.map { habit ->
+                            if (habit.habit.id == habitId) {
+                                habit.copy(currentValue = finalValue)
+                            } else {
+                                habit
+                            }
+                        }
+
+                        // If target reached, stop timer
+                        if (finalValue >= targetValue) {
+                            timerPreferences.removeRunningTimer(habitId)
+                            currentState.copy(
+                                habits = updatedHabits,
+                                runningTimers = currentState.runningTimers - habitId,
+                                timerStartTimes = currentState.timerStartTimes - habitId
+                            )
+                        } else {
+                            currentState.copy(habits = updatedHabits)
+                        }
+                    }
+
+                    // Stop loop if target reached
+                    if (finalValue >= targetValue) {
+                        break
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Stop background timer for a habit.
+     */
+    private fun stopBackgroundTimer(habitId: String) {
+        timerJobs[habitId]?.cancel()
+        timerJobs.remove(habitId)
+    }
+
+    /**
+     * Restore running timers from persistence.
+     * Restores running state and starts background timer jobs.
+     */
+    private fun restoreRunningTimers() {
+        val savedTimers = timerPreferences.getRunningTimers()
+        if (savedTimers.isEmpty()) return
+
+        val now = Clock.System.now().toEpochMilliseconds()
+        val runningTimerIds = savedTimers.keys.toSet()
+
+        // Restore the running state
+        _state.update { currentState ->
+            currentState.copy(
+                runningTimers = runningTimerIds,
+                timerStartTimes = runningTimerIds.associateWith { now }
+            )
+        }
+
+        // Start background timers for each running timer
+        runningTimerIds.forEach { habitId ->
+            startBackgroundTimer(habitId)
         }
     }
 
@@ -320,13 +419,29 @@ class HomeViewModel(
                 onboardingPreferences.setLastConfettiDate(event.date)
             }
             is HomeEvent.ToggleTimer -> {
-                _state.update { currentState ->
-                    val newRunningTimers = if (currentState.runningTimers.contains(event.habitId)) {
-                        currentState.runningTimers - event.habitId
-                    } else {
-                        currentState.runningTimers + event.habitId
+                val now = Clock.System.now().toEpochMilliseconds()
+                val isRunning = _state.value.runningTimers.contains(event.habitId)
+
+                if (isRunning) {
+                    // Stop timer
+                    stopBackgroundTimer(event.habitId)
+                    timerPreferences.removeRunningTimer(event.habitId)
+                    _state.update { currentState ->
+                        currentState.copy(
+                            runningTimers = currentState.runningTimers - event.habitId,
+                            timerStartTimes = currentState.timerStartTimes - event.habitId
+                        )
                     }
-                    currentState.copy(runningTimers = newRunningTimers)
+                } else {
+                    // Start timer
+                    timerPreferences.saveRunningTimer(event.habitId, now)
+                    _state.update { currentState ->
+                        currentState.copy(
+                            runningTimers = currentState.runningTimers + event.habitId,
+                            timerStartTimes = currentState.timerStartTimes + (event.habitId to now)
+                        )
+                    }
+                    startBackgroundTimer(event.habitId)
                 }
             }
             is HomeEvent.TimerTick -> {
@@ -350,13 +465,17 @@ class HomeViewModel(
                                     habit
                                 }
                             }
-                            // If target reached, stop timer and mark complete
-                            val newRunningTimers = if (finalValue >= targetValue) {
-                                currentState.runningTimers - event.habitId
+                            // If target reached, stop timer and remove from persistence
+                            if (finalValue >= targetValue) {
+                                timerPreferences.removeRunningTimer(event.habitId)
+                                currentState.copy(
+                                    habits = updatedHabits,
+                                    runningTimers = currentState.runningTimers - event.habitId,
+                                    timerStartTimes = currentState.timerStartTimes - event.habitId
+                                )
                             } else {
-                                currentState.runningTimers
+                                currentState.copy(habits = updatedHabits)
                             }
-                            currentState.copy(habits = updatedHabits, runningTimers = newRunningTimers)
                         }
 
                         // Refresh chart
@@ -368,8 +487,14 @@ class HomeViewModel(
                 viewModelScope.launch {
                     val targetDate = _state.value.selectedDate?.toString() ?: getTodayDateString()
 
+                    // Stop background timer
+                    stopBackgroundTimer(event.habitId)
+
                     // Stop timer and reset value to 0
                     habitRepository.updateCurrentValue(event.habitId, targetDate, 0)
+
+                    // Remove from persistence
+                    timerPreferences.removeRunningTimer(event.habitId)
 
                     _state.update { currentState ->
                         val updatedHabits = currentState.habits.map { habit ->
@@ -381,7 +506,8 @@ class HomeViewModel(
                         }
                         currentState.copy(
                             habits = updatedHabits,
-                            runningTimers = currentState.runningTimers - event.habitId
+                            runningTimers = currentState.runningTimers - event.habitId,
+                            timerStartTimes = currentState.timerStartTimes - event.habitId
                         )
                     }
 

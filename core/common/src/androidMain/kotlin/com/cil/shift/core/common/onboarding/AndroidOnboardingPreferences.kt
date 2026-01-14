@@ -153,6 +153,52 @@ class AndroidOnboardingPreferences(context: Context) : OnboardingPreferences {
         prefs.edit().putInt(KEY_DAY3_VIEW_ROW_HEIGHT, height.coerceIn(50, 150)).apply()
     }
 
+    // Timer persistence
+    override fun saveRunningTimer(habitId: String, startTimestamp: Long) {
+        val timers = getRunningTimersInternal().toMutableMap()
+        timers[habitId] = startTimestamp
+        saveRunningTimersInternal(timers)
+    }
+
+    override fun removeRunningTimer(habitId: String) {
+        val timers = getRunningTimersInternal().toMutableMap()
+        timers.remove(habitId)
+        saveRunningTimersInternal(timers)
+    }
+
+    override fun getRunningTimers(): Map<String, Long> {
+        return getRunningTimersInternal()
+    }
+
+    override fun clearAllRunningTimers() {
+        prefs.edit().putString(KEY_RUNNING_TIMERS, "").apply()
+    }
+
+    private fun getRunningTimersInternal(): Map<String, Long> {
+        val timersString = prefs.getString(KEY_RUNNING_TIMERS, "") ?: ""
+        if (timersString.isEmpty()) return emptyMap()
+
+        return try {
+            timersString.split(";")
+                .filter { it.isNotEmpty() }
+                .mapNotNull { entry ->
+                    val parts = entry.split(":")
+                    if (parts.size == 2) {
+                        parts[0] to parts[1].toLongOrNull()
+                    } else null
+                }
+                .filter { it.second != null }
+                .associate { it.first to it.second!! }
+        } catch (e: Exception) {
+            emptyMap()
+        }
+    }
+
+    private fun saveRunningTimersInternal(timers: Map<String, Long>) {
+        val timersString = timers.entries.joinToString(";") { "${it.key}:${it.value}" }
+        prefs.edit().putString(KEY_RUNNING_TIMERS, timersString).apply()
+    }
+
     companion object {
         private const val KEY_ONBOARDING_COMPLETED = "onboarding_completed"
         private const val KEY_USER_NAME = "user_name"
@@ -173,5 +219,6 @@ class AndroidOnboardingPreferences(context: Context) : OnboardingPreferences {
         private const val KEY_DAY_VIEW_ROW_HEIGHT = "day_view_row_height"
         private const val KEY_DAY3_VIEW_COLUMN_WIDTH = "day3_view_column_width"
         private const val KEY_DAY3_VIEW_ROW_HEIGHT = "day3_view_row_height"
+        private const val KEY_RUNNING_TIMERS = "running_timers"
     }
 }

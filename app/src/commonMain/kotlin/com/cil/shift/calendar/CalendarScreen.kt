@@ -1,6 +1,7 @@
 package com.cil.shift.calendar
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -30,6 +31,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -211,6 +213,40 @@ fun CalendarScreen(
     // For month view, use horizontal scroll
     val isMonthView = viewMode == ScheduleViewMode.MONTH
     val horizontalScrollState = rememberScrollState()
+    val density = LocalDensity.current
+
+    // Function to scroll to center today's column
+    fun scrollToTodayCenter(todayDate: LocalDate, days: List<LocalDate>) {
+        val todayIndex = days.indexOfFirst { it == todayDate }
+        if (todayIndex >= 0 && viewMode != ScheduleViewMode.DAY_1) {
+            val columnWidthPx = with(density) { currentColumnWidth.toPx() }
+            val timeColumnPx = with(density) { 50.dp.toPx() }
+
+            // Calculate scroll position to center today
+            // Position of today's column start
+            val todayStartPx = timeColumnPx + (todayIndex * columnWidthPx)
+            // We want today's center to be at viewport center
+            val viewportWidth = horizontalScrollState.viewportSize
+            val centerOffset = if (viewportWidth > 0) {
+                (todayStartPx + columnWidthPx / 2 - viewportWidth / 2).toInt().coerceAtLeast(0)
+            } else {
+                (todayStartPx - columnWidthPx).toInt().coerceAtLeast(0)
+            }
+
+            scope.launch {
+                horizontalScrollState.animateScrollTo(centerOffset, animationSpec = tween(durationMillis = 400))
+            }
+        }
+    }
+
+    // Auto-scroll to center today on initial load (for week/month views)
+    LaunchedEffect(viewMode) {
+        if (viewMode != ScheduleViewMode.DAY_1) {
+            // Small delay to ensure layout is ready
+            kotlinx.coroutines.delay(100)
+            scrollToTodayCenter(today, daysToShow)
+        }
+    }
 
     Box(
         modifier = modifier
@@ -419,7 +455,36 @@ fun CalendarScreen(
                         onClick = {
                             // Always use fresh current date to handle app being open across midnight
                             val currentToday = currentDate()
-                            selectedWeekStart = currentToday.minus(currentToday.dayOfWeek.ordinal, DateTimeUnit.DAY)
+
+                            // Calculate new days list based on view mode
+                            val newWeekStart = when (viewMode) {
+                                ScheduleViewMode.DAY_1, ScheduleViewMode.DAY_3 -> currentToday
+                                ScheduleViewMode.WEEK, ScheduleViewMode.MONTH -> currentToday.minus(currentToday.dayOfWeek.ordinal, DateTimeUnit.DAY)
+                            }
+                            selectedWeekStart = newWeekStart
+
+                            // Calculate the days list that will be shown after state update
+                            val newDays = if (viewMode == ScheduleViewMode.MONTH) {
+                                val firstOfMonth = LocalDate(newWeekStart.year, newWeekStart.month, 1)
+                                val daysInMonth = when (newWeekStart.month) {
+                                    Month.JANUARY, Month.MARCH, Month.MAY, Month.JULY, Month.AUGUST, Month.OCTOBER, Month.DECEMBER -> 31
+                                    Month.APRIL, Month.JUNE, Month.SEPTEMBER, Month.NOVEMBER -> 30
+                                    Month.FEBRUARY -> if (newWeekStart.year % 4 == 0 && (newWeekStart.year % 100 != 0 || newWeekStart.year % 400 == 0)) 29 else 28
+                                    else -> 30
+                                }
+                                (0 until daysInMonth).map { offset -> firstOfMonth.plus(offset, DateTimeUnit.DAY) }
+                            } else {
+                                val days = when (viewMode) {
+                                    ScheduleViewMode.DAY_1 -> 1
+                                    ScheduleViewMode.DAY_3 -> 3
+                                    ScheduleViewMode.WEEK -> 7
+                                    else -> 7
+                                }
+                                (0 until days).map { offset -> newWeekStart.plus(offset, DateTimeUnit.DAY) }
+                            }
+
+                            // Scroll to center today with animation
+                            scrollToTodayCenter(currentToday, newDays)
                         },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = accentColor,

@@ -244,29 +244,52 @@ class HoneyManager(
     }
 
     /**
-     * Check habit creation eligibility based on count.
+     * Get total habits ever created (doesn't decrease when deleted).
+     */
+    fun getTotalHabitsCreated(): Int {
+        return preferences.getTotalHabitsCreated()
+    }
+
+    /**
+     * Increment total habits created counter.
+     * Call this after successfully creating a habit.
+     */
+    fun incrementTotalHabitsCreated() {
+        preferences.incrementTotalHabitsCreated()
+    }
+
+    /**
+     * Check habit creation eligibility based on TOTAL habits ever created.
+     * Uses total created count, not current active count, to prevent
+     * users from gaming the system by deleting and recreating habits.
      */
     fun checkHabitCreation(currentHabitCount: Int): HoneyCheckResult {
         if (isPremium()) return HoneyCheckResult.PremiumUser
 
+        // Use total habits ever created, not current count
+        val totalCreated = getTotalHabitsCreated()
+
         return when {
-            currentHabitCount < 3 -> HoneyCheckResult.Free
-            currentHabitCount == 3 -> checkFeature(HoneyFeature.CREATE_HABIT_4TH)
-            currentHabitCount == 4 -> checkFeature(HoneyFeature.CREATE_HABIT_5TH)
+            totalCreated < 3 -> HoneyCheckResult.Free
+            totalCreated == 3 -> checkFeature(HoneyFeature.CREATE_HABIT_4TH)
+            totalCreated == 4 -> checkFeature(HoneyFeature.CREATE_HABIT_5TH)
             else -> checkFeature(HoneyFeature.CREATE_HABIT_6TH_PLUS)
         }
     }
 
     /**
-     * Get the honey cost for creating a habit at the given count.
+     * Get the honey cost for creating a habit based on TOTAL habits ever created.
      */
     fun getHabitCreationCost(currentHabitCount: Int): Int? {
         if (isPremium()) return null
 
+        // Use total habits ever created, not current count
+        val totalCreated = getTotalHabitsCreated()
+
         return when {
-            currentHabitCount < 3 -> null // Free
-            currentHabitCount == 3 -> HoneyFeature.CREATE_HABIT_4TH.cost
-            currentHabitCount == 4 -> HoneyFeature.CREATE_HABIT_5TH.cost
+            totalCreated < 3 -> null // Free
+            totalCreated == 3 -> HoneyFeature.CREATE_HABIT_4TH.cost
+            totalCreated == 4 -> HoneyFeature.CREATE_HABIT_5TH.cost
             else -> HoneyFeature.CREATE_HABIT_6TH_PLUS.cost
         }
     }

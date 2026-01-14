@@ -34,6 +34,8 @@ import com.cil.shift.core.common.haptic.HapticType
 import com.cil.shift.core.common.haptic.getHapticFeedbackManager
 import com.cil.shift.core.common.honey.HoneyManager
 import com.cil.shift.core.common.honey.HoneyReason
+import com.cil.shift.core.common.purchase.PurchaseManager
+import com.cil.shift.core.common.purchase.PremiumState
 import com.cil.shift.core.common.localization.LocalizationHelpers
 import com.cil.shift.core.common.localization.LocalizationManager
 import com.cil.shift.core.common.localization.StringResources
@@ -82,6 +84,11 @@ fun NewHomeScreen(
     // Honey system
     val honeyManager = koinInject<HoneyManager>()
     val honeyStatus by honeyManager.honeyStatus.collectAsState()
+
+    // Premium state - observe reactively for proper recomposition
+    val purchaseManager = koinInject<PurchaseManager>()
+    val premiumState by purchaseManager.premiumState.collectAsState()
+    val isPremiumUser = premiumState is PremiumState.Premium
     var showHoneyEarned by remember { mutableStateOf(false) }
     var honeyEarnedAmount by remember { mutableStateOf(0) }
     var honeyEarnedReason by remember { mutableStateOf("") }
@@ -235,22 +242,23 @@ fun NewHomeScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Honey counter (only show if not premium)
-                        if (!honeyManager.isPremium()) {
-                            HoneyCounter(
-                                balance = honeyStatus.balance,
-                                onClick = {
-                                    // Check if user is logged in before navigating to premium
-                                    if (authState is AuthState.Authenticated) {
-                                        onNavigateToPremium()
-                                    } else {
-                                        onNavigateToLogin()
-                                    }
-                                },
-                                isLow = honeyStatus.isLowBalance,
-                                isCritical = honeyStatus.isCriticalBalance
-                            )
-                        }
+                        // Honey counter (show ∞ for premium users)
+                        HoneyCounter(
+                            balance = honeyStatus.balance,
+                            onClick = {
+                                // Premium users don't need to see premium screen
+                                if (isPremiumUser) return@HoneyCounter
+                                // Check if user is logged in before navigating to premium
+                                if (authState is AuthState.Authenticated) {
+                                    onNavigateToPremium()
+                                } else {
+                                    onNavigateToLogin()
+                                }
+                            },
+                            isPremium = isPremiumUser,
+                            isLow = honeyStatus.isLowBalance,
+                            isCritical = honeyStatus.isCriticalBalance
+                        )
 
                         IconButton(
                             onClick = onNavigateToNotifications,

@@ -236,9 +236,11 @@ class CreateEditHabitViewModel(
 
             when (val result = createHabitUseCase(habit)) {
                 is Result.Success -> {
-                    // Track habit creation achievement only for new habits
+                    // Track habit creation achievement and increment total counter only for new habits
                     if (currentState.habitId == null) {
                         achievementManager?.recordHabitCreated()
+                        // Increment total habits created (doesn't decrease when deleted)
+                        honeyManager?.incrementTotalHabitsCreated()
                     }
                     _state.update { it.copy(isLoading = false, isSaved = true) }
                 }

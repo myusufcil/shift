@@ -63,4 +63,10 @@ interface OnboardingPreferences {
     fun setDay3ViewColumnWidth(width: Int)
     fun getDay3ViewRowHeight(): Int     // default 75dp
     fun setDay3ViewRowHeight(height: Int)
+
+    // Timer persistence - survives app restart
+    fun saveRunningTimer(habitId: String, startTimestamp: Long)
+    fun removeRunningTimer(habitId: String)
+    fun getRunningTimers(): Map<String, Long>  // habitId -> startTimestamp
+    fun clearAllRunningTimers()
 }

@@ -101,22 +101,27 @@ class PurchaseManager {
 
     /**
      * Logout from RevenueCat (call when Firebase Auth signs out)
+     * Always resets premium state to NotPremium after logout,
+     * regardless of device-level subscriptions. User must log back in
+     * to restore their premium status.
      */
     suspend fun logout() {
         try {
-            val customerInfo = suspendCancellableCoroutine { continuation ->
+            suspendCancellableCoroutine<Unit> { continuation ->
                 Purchases.sharedInstance.logOut(
                     onError = { error ->
                         continuation.resumeWithException(Exception(error.message))
                     },
-                    onSuccess = { customerInfo ->
-                        continuation.resume(customerInfo)
+                    onSuccess = { _ ->
+                        continuation.resume(Unit)
                     }
                 )
             }
-            updatePremiumState(customerInfo)
         } catch (e: Exception) {
-            // Ignore logout errors, just reset to not premium
+            // Ignore logout errors
+        } finally {
+            // Always reset to NotPremium after logout
+            // User must log back in to restore premium status
             _premiumState.value = PremiumState.NotPremium
         }
     }

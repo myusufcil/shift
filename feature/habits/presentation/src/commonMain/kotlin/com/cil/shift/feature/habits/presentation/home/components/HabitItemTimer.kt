@@ -25,7 +25,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.cil.shift.core.common.localization.Language
 import com.cil.shift.core.common.localization.StringResources
-import kotlinx.coroutines.delay
 
 @Composable
 fun HabitItemTimer(
@@ -53,13 +52,8 @@ fun HabitItemTimer(
         else -> statusLabel
     }
 
-    // Real-time timer countdown
-    LaunchedEffect(isTimerRunning, currentMinutes) {
-        if (isTimerRunning && currentMinutes < targetMinutes) {
-            delay(60_000L) // 1 minute
-            onTimerTick()
-        }
-    }
+    // Timer ticks are now handled by ViewModel's background coroutine
+    // No UI-based LaunchedEffect needed
 
     val textColor = MaterialTheme.colorScheme.onBackground
     val cardColor = MaterialTheme.colorScheme.surface

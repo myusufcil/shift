@@ -1387,6 +1387,20 @@ object StringResources {
         zh = "删除账户"
     )
 
+    val deleteAccountConfirmMessage = StringResource(
+        en = "Are you sure you want to delete your account? This action cannot be undone. All your data, habits, and progress will be permanently deleted.",
+        tr = "Hesabınızı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz. Tüm verileriniz, alışkanlıklarınız ve ilerlemeniz kalıcı olarak silinecektir.",
+        es = "¿Estás seguro de que deseas eliminar tu cuenta? Esta acción no se puede deshacer. Todos tus datos, hábitos y progreso se eliminarán permanentemente.",
+        fr = "Êtes-vous sûr de vouloir supprimer votre compte ? Cette action est irréversible. Toutes vos données, habitudes et progrès seront définitivement supprimés.",
+        de = "Sind Sie sicher, dass Sie Ihr Konto löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden. Alle Ihre Daten, Gewohnheiten und Fortschritte werden dauerhaft gelöscht.",
+        pt = "Tem certeza de que deseja excluir sua conta? Esta ação não pode ser desfeita. Todos os seus dados, hábitos e progresso serão excluídos permanentemente.",
+        ar = "هل أنت متأكد من أنك تريد حذف حسابك؟ لا يمكن التراجع عن هذا الإجراء. سيتم حذف جميع بياناتك وعاداتك وتقدمك بشكل دائم.",
+        ru = "Вы уверены, что хотите удалить свой аккаунт? Это действие нельзя отменить. Все ваши данные, привычки и прогресс будут удалены навсегда.",
+        hi = "क्या आप वाकई अपना खाता हटाना चाहते हैं? यह क्रिया पूर्ववत नहीं की जा सकती। आपका सभी डेटा, आदतें और प्रगति स्थायी रूप से हटा दी जाएगी।",
+        ja = "本当にアカウントを削除しますか？この操作は元に戻せません。すべてのデータ、習慣、進捗が完全に削除されます。",
+        zh = "您确定要删除您的账户吗？此操作无法撤消。您的所有数据、习惯和进度将被永久删除。"
+    )
+
     val signOut = StringResource(
         en = "Sign Out",
         tr = "Çıkış Yap",
@@ -3410,7 +3424,7 @@ object StringResources {
 
     val afternoon = StringResource(
         en = "Afternoon",
-        tr = "Öğleden Sonra",
+        tr = "Öğle",
         es = "Tarde",
         fr = "Après-midi",
         de = "Nachmittag",
