@@ -199,6 +199,15 @@ class AndroidOnboardingPreferences(context: Context) : OnboardingPreferences {
         prefs.edit().putString(KEY_RUNNING_TIMERS, timersString).apply()
     }
 
+    // Font size preference
+    override fun getFontSize(): String {
+        return prefs.getString(KEY_FONT_SIZE, "NORMAL") ?: "NORMAL"
+    }
+
+    override fun setFontSize(size: String) {
+        prefs.edit().putString(KEY_FONT_SIZE, size).apply()
+    }
+
     companion object {
         private const val KEY_ONBOARDING_COMPLETED = "onboarding_completed"
         private const val KEY_USER_NAME = "user_name"
@@ -220,5 +229,6 @@ class AndroidOnboardingPreferences(context: Context) : OnboardingPreferences {
         private const val KEY_DAY3_VIEW_COLUMN_WIDTH = "day3_view_column_width"
         private const val KEY_DAY3_VIEW_ROW_HEIGHT = "day3_view_row_height"
         private const val KEY_RUNNING_TIMERS = "running_timers"
+        private const val KEY_FONT_SIZE = "font_size"
     }
 }

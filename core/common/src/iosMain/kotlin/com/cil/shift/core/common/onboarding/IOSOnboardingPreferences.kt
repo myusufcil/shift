@@ -225,6 +225,16 @@ class IOSOnboardingPreferences : OnboardingPreferences {
         userDefaults.synchronize()
     }
 
+    // Font size preference
+    override fun getFontSize(): String {
+        return userDefaults.stringForKey(KEY_FONT_SIZE) ?: "NORMAL"
+    }
+
+    override fun setFontSize(size: String) {
+        userDefaults.setObject(size, KEY_FONT_SIZE)
+        userDefaults.synchronize()
+    }
+
     companion object {
         private const val KEY_ONBOARDING_COMPLETED = "onboarding_completed"
         private const val KEY_USER_NAME = "user_name"
@@ -246,5 +256,6 @@ class IOSOnboardingPreferences : OnboardingPreferences {
         private const val KEY_DAY3_VIEW_COLUMN_WIDTH = "day3_view_column_width"
         private const val KEY_DAY3_VIEW_ROW_HEIGHT = "day3_view_row_height"
         private const val KEY_RUNNING_TIMERS = "running_timers"
+        private const val KEY_FONT_SIZE = "font_size"
     }
 }

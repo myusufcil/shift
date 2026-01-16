@@ -654,6 +654,31 @@ private fun String.toComposeColor(): Color {
     }
 }
 
+/**
+ * Calculates the perceived brightness of a color (0-1 range).
+ * Uses weighted RGB formula that approximates human perception.
+ * Used to determine if a color is too light for dark mode buttons.
+ */
+private fun Color.brightness(): Float {
+    // Weighted formula that better matches human perception
+    // Red contributes less, green contributes most
+    return 0.299f * red + 0.587f * green + 0.114f * blue
+}
+
+/**
+ * Returns a suitable button color for dark mode.
+ * If the original color is too light (brightness > 0.5), returns a darker accent color.
+ */
+private fun Color.forDarkModeButton(): Color {
+    // If the color is too light (like beige, yellow, cream), use a darker accent
+    return if (brightness() > 0.55f) {
+        // Use a vibrant blue-purple that works well in dark mode
+        Color(0xFF6C63FF)
+    } else {
+        this
+    }
+}
+
 @Composable
 private fun TodayProgressSection(
     habit: Habit,
@@ -670,7 +695,9 @@ private fun TodayProgressSection(
     cardColor: Color,
     backgroundColor: Color
 ) {
-    val habitColor = habit.color.toComposeColor()
+    val rawHabitColor = habit.color.toComposeColor()
+    // Use dark mode friendly version for buttons (converts light colors like beige to vibrant colors)
+    val habitColor = rawHabitColor.forDarkModeButton()
     val isCompleted = todayCompletion?.isCompleted ?: false
     val currentValue = todayCompletion?.currentValue ?: 0
 

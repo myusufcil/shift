@@ -22,6 +22,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.cil.shift.core.common.font.FontSize
+import com.cil.shift.core.common.font.FontSizeManager
 import com.cil.shift.core.common.theme.AppTheme
 import com.cil.shift.core.common.theme.LocalThemeManager
 import org.koin.compose.koinInject
@@ -35,6 +37,8 @@ fun SettingsScreen(
     val scrollState = rememberScrollState()
     val themeManager = LocalThemeManager.current
     val currentTheme by themeManager.currentTheme.collectAsState()
+    val fontSizeManager = koinInject<FontSizeManager>()
+    val currentFontSize by fontSizeManager.currentFontSize.collectAsState()
     val uriHandler = LocalUriHandler.current
 
     // GitHub Pages URLs
@@ -87,6 +91,23 @@ fun SettingsScreen(
                 currentTheme = currentTheme,
                 onThemeSelected = { theme ->
                     themeManager.setTheme(theme)
+                }
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Font Size Selection
+            Text(
+                text = "Font Size",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = textColor.copy(alpha = 0.7f)
+            )
+
+            FontSizeSelector(
+                currentFontSize = currentFontSize,
+                onFontSizeSelected = { fontSize ->
+                    fontSizeManager.setFontSize(fontSize)
                 }
             )
 
@@ -278,6 +299,76 @@ private fun ThemeSelector(
                         fontSize = 14.sp,
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                         color = if (isSelected) Color(0xFF00D9FF) else textColor
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun FontSizeSelector(
+    currentFontSize: FontSize,
+    onFontSizeSelected: (FontSize) -> Unit
+) {
+    val cardColor = MaterialTheme.colorScheme.surface
+    val textColor = MaterialTheme.colorScheme.onBackground
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        FontSize.entries.forEach { fontSize ->
+            val isSelected = fontSize == currentFontSize
+            val fontLabel = when (fontSize) {
+                FontSize.SMALL -> "A"
+                FontSize.NORMAL -> "A"
+                FontSize.LARGE -> "A"
+                FontSize.EXTRA_LARGE -> "A"
+            }
+            val labelSize = when (fontSize) {
+                FontSize.SMALL -> 12.sp
+                FontSize.NORMAL -> 16.sp
+                FontSize.LARGE -> 20.sp
+                FontSize.EXTRA_LARGE -> 24.sp
+            }
+            val sizeLabel = when (fontSize) {
+                FontSize.SMALL -> "Small"
+                FontSize.NORMAL -> "Normal"
+                FontSize.LARGE -> "Large"
+                FontSize.EXTRA_LARGE -> "XL"
+            }
+
+            Card(
+                modifier = Modifier
+                    .weight(1f)
+                    .clickable { onFontSizeSelected(fontSize) },
+                colors = CardDefaults.cardColors(
+                    containerColor = if (isSelected) Color(0xFF00D9FF).copy(alpha = 0.2f) else cardColor
+                ),
+                shape = RoundedCornerShape(12.dp),
+                border = if (isSelected) {
+                    androidx.compose.foundation.BorderStroke(2.dp, Color(0xFF00D9FF))
+                } else null
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 12.dp, horizontal = 8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        text = fontLabel,
+                        fontSize = labelSize,
+                        fontWeight = FontWeight.Bold,
+                        color = if (isSelected) Color(0xFF00D9FF) else textColor
+                    )
+                    Text(
+                        text = sizeLabel,
+                        fontSize = 10.sp,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                        color = if (isSelected) Color(0xFF00D9FF) else textColor.copy(alpha = 0.7f)
                     )
                 }
             }

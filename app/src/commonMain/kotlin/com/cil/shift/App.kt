@@ -9,6 +9,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import cafe.adriel.voyager.navigator.tab.CurrentTab
 import cafe.adriel.voyager.navigator.tab.TabNavigator
+import com.cil.shift.core.common.auth.AuthManager
+import com.cil.shift.core.common.auth.AuthState
+import com.cil.shift.core.common.font.FontSizeManager
 import com.cil.shift.core.common.localization.Language
 import com.cil.shift.core.common.localization.LocalizationManager
 import com.cil.shift.core.common.localization.ProvideLocalization
@@ -41,6 +44,14 @@ fun App() {
         val notificationManager = koinInject<NotificationManager>()
         val notificationHistoryRepository = koinInject<NotificationHistoryRepository>()
         val purchaseManager = koinInject<PurchaseManager>()
+        val authManager = koinInject<AuthManager>()
+        val fontSizeManager = koinInject<FontSizeManager>()
+
+        // Track auth state for RevenueCat login/logout
+        val authState by authManager.authState.collectAsState()
+
+        // Track font size for typography scaling
+        val currentFontSize by fontSizeManager.currentFontSize.collectAsState()
 
         // Initialize RevenueCat and sync notifications
         val scope = rememberCoroutineScope()
@@ -76,6 +87,31 @@ fun App() {
             }
         }
 
+        // Sync RevenueCat login state with Firebase Auth state
+        LaunchedEffect(authState) {
+            when (val state = authState) {
+                is AuthState.Authenticated -> {
+                    // Login to RevenueCat with Firebase user ID
+                    try {
+                        purchaseManager.login(state.user.uid)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
+                is AuthState.NotAuthenticated -> {
+                    // Logout from RevenueCat when user signs out
+                    try {
+                        purchaseManager.logout()
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
+                else -> {
+                    // Loading state - do nothing
+                }
+            }
+        }
+
         val currentTheme by themeManager.currentTheme.collectAsState()
         val isSystemInDarkTheme = isSystemInDarkTheme()
         // Directly derive isDarkTheme from currentTheme state to ensure reactivity
@@ -87,7 +123,7 @@ fun App() {
 
         ProvideLocalization(localizationManager = localizationManager) {
             ProvideTheme(themeManager = themeManager) {
-                ShiftTheme(darkTheme = isDarkTheme) {
+                ShiftTheme(darkTheme = isDarkTheme, fontScale = currentFontSize.scale) {
                     // Configure system UI (status bar, navigation bar)
                     ConfigureSystemBars(isDarkTheme = isDarkTheme)
 

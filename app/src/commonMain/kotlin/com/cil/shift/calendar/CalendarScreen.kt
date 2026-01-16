@@ -180,7 +180,7 @@ fun CalendarScreen(
     val backgroundColor = MaterialTheme.colorScheme.background
     val textColor = MaterialTheme.colorScheme.onBackground
     val cardColor = MaterialTheme.colorScheme.surface
-    val gridLineColor = textColor.copy(alpha = 0.1f)
+    val gridLineColor = textColor.copy(alpha = 0.06f) // Lighter grid lines (Google Calendar style)
     val accentColor = Color(0xFF4E7CFF) // App theme blue
     val weekendColor = Color(0xFFB8A9C9).copy(alpha = 0.15f) // Soft lavender for weekends
 
@@ -607,10 +607,14 @@ fun CalendarScreen(
             // Time Grid
             val scrollState = rememberLazyListState()
 
+            // Get current time for indicator
+            val currentDateTime = kotlinx.datetime.Clock.System.now()
+                .toLocalDateTime(kotlinx.datetime.TimeZone.currentSystemDefault())
+            val currentHour = currentDateTime.hour
+            val currentMinute = currentDateTime.minute
+
             // Scroll to current time on first load
             LaunchedEffect(Unit) {
-                val currentHour = kotlinx.datetime.Clock.System.now()
-                    .toLocalDateTime(kotlinx.datetime.TimeZone.currentSystemDefault()).hour
                 scrollState.scrollToItem((currentHour - 2).coerceAtLeast(0))
             }
 
@@ -626,49 +630,78 @@ fun CalendarScreen(
                     }
             ) {
                 items(24) { hour ->
-                    TimeRow(
-                        hour = hour,
-                        days = daysToShow,
-                        today = today,
-                        schedules = schedules,
-                        gridLineColor = gridLineColor,
-                        textColor = textColor,
-                        backgroundColor = backgroundColor,
-                        weekendColor = weekendColor,
-                        isMonthView = isMonthView,
-                        viewMode = viewMode,
-                        horizontalScrollState = horizontalScrollState,
-                        isSelectionMode = isSelectionMode,
-                        selectedScheduleIds = selectedScheduleIds,
-                        currentRowHeight = currentRowHeight,
-                        currentColumnWidth = currentColumnWidth,
-                        onCellClick = { date, clickedHour ->
-                            if (!isSelectionMode) {
-                                selectedDate = date
-                                selectedHour = clickedHour
-                                showEventDialog = true
-                            }
-                        },
-                        onScheduleLongPress = { scheduleId ->
-                            isSelectionMode = true
-                            selectedScheduleIds = selectedScheduleIds + scheduleId
-                        },
-                        onScheduleClick = { schedule ->
-                            if (isSelectionMode) {
-                                selectedScheduleIds = if (schedule.id in selectedScheduleIds) {
-                                    selectedScheduleIds - schedule.id
+                    val isCurrentHourRow = hour == currentHour
+
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        TimeRow(
+                            hour = hour,
+                            days = daysToShow,
+                            today = today,
+                            schedules = schedules,
+                            gridLineColor = gridLineColor,
+                            textColor = textColor,
+                            backgroundColor = backgroundColor,
+                            weekendColor = weekendColor,
+                            isMonthView = isMonthView,
+                            viewMode = viewMode,
+                            horizontalScrollState = horizontalScrollState,
+                            isSelectionMode = isSelectionMode,
+                            selectedScheduleIds = selectedScheduleIds,
+                            currentRowHeight = currentRowHeight,
+                            currentColumnWidth = currentColumnWidth,
+                            onCellClick = { date, clickedHour ->
+                                if (!isSelectionMode) {
+                                    selectedDate = date
+                                    selectedHour = clickedHour
+                                    showEventDialog = true
+                                }
+                            },
+                            onScheduleLongPress = { scheduleId ->
+                                isSelectionMode = true
+                                selectedScheduleIds = selectedScheduleIds + scheduleId
+                            },
+                            onScheduleClick = { schedule ->
+                                if (isSelectionMode) {
+                                    selectedScheduleIds = if (schedule.id in selectedScheduleIds) {
+                                        selectedScheduleIds - schedule.id
+                                    } else {
+                                        selectedScheduleIds + schedule.id
+                                    }
+                                    if (selectedScheduleIds.isEmpty()) {
+                                        isSelectionMode = false
+                                    }
                                 } else {
-                                    selectedScheduleIds + schedule.id
+                                    // Show tooltip when not in selection mode
+                                    tooltipSchedule = schedule
                                 }
-                                if (selectedScheduleIds.isEmpty()) {
-                                    isSelectionMode = false
-                                }
-                            } else {
-                                // Show tooltip when not in selection mode
-                                tooltipSchedule = schedule
+                            }
+                        )
+
+                        // Current time indicator line (Google Calendar style)
+                        if (isCurrentHourRow) {
+                            val lineYOffset = (currentRowHeight.value * currentMinute / 60f).dp
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .offset(y = lineYOffset),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Spacer(modifier = Modifier.width(44.dp))
+                                Box(
+                                    modifier = Modifier
+                                        .size(10.dp)
+                                        .clip(CircleShape)
+                                        .background(Color(0xFFEA4335)) // Google red
+                                )
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(2.dp)
+                                        .background(Color(0xFFEA4335))
+                                )
                             }
                         }
-                    )
+                    }
                 }
             }
         }
@@ -1558,12 +1591,20 @@ private fun ScheduleItemSpanning(
         else -> RoundedCornerShape(0.dp)
     }
 
+    // Left bar shape for Google Calendar style
+    val leftBarShape = when {
+        isFirstRow && isLastRow -> RoundedCornerShape(topStart = 4.dp, bottomStart = 4.dp)
+        isFirstRow -> RoundedCornerShape(topStart = 4.dp)
+        isLastRow -> RoundedCornerShape(bottomStart = 4.dp)
+        else -> RoundedCornerShape(0.dp)
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(start = 2.dp, end = 2.dp)
+            .padding(horizontal = 1.dp)
     ) {
-        Box(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .fillMaxHeight(1f - topOffsetFraction - bottomOffsetFraction)
@@ -1575,9 +1616,9 @@ private fun ScheduleItemSpanning(
                     }
                 )
                 .clip(shape)
-                .background(habitColor.copy(alpha = if (isSelected) 1f else 0.9f))
+                .background(habitColor.copy(alpha = if (isSelected) 0.3f else 0.15f))
                 .then(
-                    if (isSelected) Modifier.border(2.dp, Color.White, shape)
+                    if (isSelected) Modifier.border(2.dp, habitColor, shape)
                     else Modifier
                 )
                 .pointerInput(Unit) {
@@ -1586,48 +1627,58 @@ private fun ScheduleItemSpanning(
                         onTap = { onClick() }
                     )
                 }
-                .padding(horizontal = 4.dp, vertical = if (isFirstRow) 2.dp else 0.dp)
         ) {
-        // Only show full details in first row, continuation rows just show colored background
-        if (isFirstRow) {
-            Column {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+            // Left color bar (Google Calendar style)
+            Box(
+                modifier = Modifier
+                    .width(4.dp)
+                    .fillMaxHeight()
+                    .background(habitColor, shape = leftBarShape)
+            )
+
+            // Content area
+            if (isFirstRow) {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = 6.dp, vertical = 2.dp)
                 ) {
-                    if (isSelectionMode) {
-                        Icon(
-                            imageVector = if (isSelected) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
-                            contentDescription = null,
-                            modifier = Modifier.size(12.dp),
-                            tint = Color.White
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        if (isSelectionMode) {
+                            Icon(
+                                imageVector = if (isSelected) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
+                                contentDescription = null,
+                                modifier = Modifier.size(12.dp),
+                                tint = habitColor
+                            )
+                        }
+                        Text(
+                            text = schedule.habitName,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = habitColor.copy(alpha = 0.9f),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                     Text(
-                        text = schedule.habitName,
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        text = "${schedule.startTime} - ${schedule.endTime}",
+                        fontSize = 8.sp,
+                        color = habitColor.copy(alpha = 0.7f)
                     )
-                }
-                Text(
-                    text = "${schedule.startTime} - ${schedule.endTime}",
-                    fontSize = 8.sp,
-                    color = Color.White.copy(alpha = 0.8f)
-                )
-                if (schedule.hasReminder && !isSelectionMode) {
-                    Icon(
-                        imageVector = Icons.Default.Notifications,
-                        contentDescription = null,
-                        modifier = Modifier.size(10.dp),
-                        tint = Color.White.copy(alpha = 0.8f)
-                    )
+                    if (schedule.hasReminder && !isSelectionMode) {
+                        Icon(
+                            imageVector = Icons.Default.Notifications,
+                            contentDescription = null,
+                            modifier = Modifier.size(10.dp),
+                            tint = habitColor.copy(alpha = 0.6f)
+                        )
+                    }
                 }
             }
-        }
-        // Continuation rows just show the colored bar (no text needed)
         }
     }
 }

@@ -35,6 +35,6 @@ class ShiftApplication : Application() {
     }
 
     companion object {
-        private const val REVENUECAT_API_KEY = "goog_bZnpedRehibcaYPThfoTOGwxEaLver"
+        private const val REVENUECAT_API_KEY = "goog_bZnpedRehibcaYPThfoTOGwxEaL"
     }
 }

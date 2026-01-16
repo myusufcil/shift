@@ -69,4 +69,8 @@ interface OnboardingPreferences {
     fun removeRunningTimer(habitId: String)
     fun getRunningTimers(): Map<String, Long>  // habitId -> startTimestamp
     fun clearAllRunningTimers()
+
+    // Font size preference
+    fun getFontSize(): String  // SMALL, NORMAL, LARGE, EXTRA_LARGE
+    fun setFontSize(size: String)
 }

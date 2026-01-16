@@ -1,5 +1,8 @@
 package com.cil.shift.di
 
+import com.cil.shift.core.common.font.FontSizeManager
+import com.cil.shift.core.common.font.FontSizePreferences
+import com.cil.shift.core.common.font.OnboardingFontSizePreferences
 import com.cil.shift.core.common.honey.HoneyManager
 import com.cil.shift.core.common.localization.LocalizationManager
 import com.cil.shift.core.common.notification.NotificationHistoryRepository
@@ -63,6 +66,10 @@ val domainModule = module {
 
     // Theme
     single { ThemeManager(get()) }
+
+    // Font Size
+    single<FontSizePreferences> { OnboardingFontSizePreferences(get()) }
+    single { FontSizeManager(get()) }
 
     // Premium
     single { PremiumManager(get()) }

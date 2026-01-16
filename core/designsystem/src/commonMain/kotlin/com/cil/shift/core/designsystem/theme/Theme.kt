@@ -119,11 +119,13 @@ private fun animateColorScheme(targetColorScheme: ColorScheme): ColorScheme {
  * Applies Material3 theming with custom colors, typography, and shapes.
  *
  * @param darkTheme Whether to use dark theme. Defaults to true as per design.
+ * @param fontScale Font scaling factor (0.85 for small, 1.0 for normal, 1.15 for large, 1.3 for extra large)
  * @param content The composable content to theme
  */
 @Composable
 fun ShiftTheme(
     darkTheme: Boolean = true,
+    fontScale: Float = 1.0f,
     content: @Composable () -> Unit
 ) {
     val targetColorScheme = when {
@@ -134,9 +136,12 @@ fun ShiftTheme(
     // Animate the color scheme for smooth transitions
     val animatedColorScheme = animateColorScheme(targetColorScheme)
 
+    // Create scaled typography based on user preference
+    val scaledTypography = createScaledTypography(fontScale)
+
     MaterialTheme(
         colorScheme = animatedColorScheme,
-        typography = ShiftTypography,
+        typography = scaledTypography,
         shapes = ShiftShapes,
         content = content
     )

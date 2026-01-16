@@ -16,9 +16,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.cil.shift.core.common.localization.LocalizationManager
 import com.cil.shift.core.common.localization.StringResources
-import com.cil.shift.core.common.notification.NotificationManager
-import kotlinx.coroutines.launch
-import org.koin.compose.koinInject
 import org.koin.compose.getKoin
 
 @Composable
@@ -29,8 +26,12 @@ fun NotificationPermissionScreen(
     val koin = getKoin()
     val localizationManager = koin.get<LocalizationManager>()
     val currentLanguage by localizationManager.currentLanguage.collectAsState()
-    val notificationManager = koin.get<NotificationManager>()
-    val scope = rememberCoroutineScope()
+
+    // Use platform-specific permission launcher
+    val requestPermission = rememberNotificationPermissionLauncher { granted ->
+        // Continue regardless of permission result
+        onComplete()
+    }
 
     val backgroundColor = MaterialTheme.colorScheme.background
     val textColor = MaterialTheme.colorScheme.onBackground
@@ -93,12 +94,8 @@ fun NotificationPermissionScreen(
             // Enable button
             Button(
                 onClick = {
-                    scope.launch {
-                        // Request permission
-                        val granted = notificationManager.requestNotificationPermission()
-                        // Continue regardless of permission result
-                        onComplete()
-                    }
+                    // Request permission using platform-specific launcher
+                    requestPermission()
                 },
                 modifier = Modifier
                     .fillMaxWidth()
