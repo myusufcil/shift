@@ -189,20 +189,7 @@ fun ProfileScreen(
     }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = StringResources.profile.get(currentLanguage),
-                        fontWeight = FontWeight.Bold,
-                        color = textColor
-                    )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = backgroundColor
-                )
-            )
-        },
+        topBar = {},
         containerColor = backgroundColor
     ) { paddingValues ->
         LazyColumn(
@@ -215,11 +202,13 @@ fun ProfileScreen(
             // Profile Header
             item {
                 val user = (authState as? AuthState.Authenticated)?.user
-                val onboardingName = onboardingPreferences.getUserName().ifBlank { null }
-                val displayName = user?.displayName
-                    ?: user?.email?.substringBefore("@")?.replaceFirstChar { it.uppercase() }
-                    ?: onboardingName
-                    ?: StringResources.guest.get(currentLanguage)
+                val displayName = if (user != null) {
+                    user.displayName
+                        ?: user.email?.substringBefore("@")?.replaceFirstChar { it.uppercase() }
+                        ?: StringResources.guest.get(currentLanguage)
+                } else {
+                    StringResources.user.get(currentLanguage)
+                }
                 val email = user?.email
                 val initial = displayName.firstOrNull()?.uppercase() ?: "?"
 

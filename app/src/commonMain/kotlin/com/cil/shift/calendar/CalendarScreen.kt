@@ -91,11 +91,12 @@ fun CalendarScreen(
         )
     }
 
-    // Set initial date based on view mode: today for day views, week start for week/month views
+    // Set initial date based on view mode: today for day views, week start for week, month start for month
     var selectedWeekStart by remember(viewMode) {
         val initialDate = when (viewMode) {
             ScheduleViewMode.DAY_1, ScheduleViewMode.DAY_3 -> today
-            ScheduleViewMode.WEEK, ScheduleViewMode.MONTH -> today.minus(today.dayOfWeek.ordinal, DateTimeUnit.DAY)
+            ScheduleViewMode.WEEK -> today.minus(today.dayOfWeek.ordinal, DateTimeUnit.DAY)
+            ScheduleViewMode.MONTH -> LocalDate(today.year, today.monthNumber, 1)
         }
         mutableStateOf(initialDate)
     }
@@ -239,11 +240,11 @@ fun CalendarScreen(
         }
     }
 
-    // Auto-scroll to center today on initial load (for week/month views)
-    LaunchedEffect(viewMode) {
+    // Auto-scroll to center today on initial load and when view/date changes
+    LaunchedEffect(viewMode, selectedWeekStart) {
         if (viewMode != ScheduleViewMode.DAY_1) {
             // Small delay to ensure layout is ready
-            kotlinx.coroutines.delay(100)
+            kotlinx.coroutines.delay(150)
             scrollToTodayCenter(today, daysToShow)
         }
     }
@@ -339,7 +340,7 @@ fun CalendarScreen(
                                 }
                                 ViewModeMenuItem(StringResources.viewMonth.localized(), Icons.Default.CalendarMonth, viewMode == ScheduleViewMode.MONTH) {
                                     viewMode = ScheduleViewMode.MONTH
-                                    selectedWeekStart = today.minus(today.dayOfWeek.ordinal, DateTimeUnit.DAY)
+                                    selectedWeekStart = LocalDate(today.year, today.monthNumber, 1)
                                     onboardingPreferences.setCalendarViewMode(ScheduleViewMode.MONTH.name)
                                     showViewModeMenu = false
                                 }
@@ -439,7 +440,12 @@ fun CalendarScreen(
                             .clip(RoundedCornerShape(6.dp))
                             .background(accentColor.copy(alpha = 0.1f))
                             .clickable {
-                                selectedWeekStart = selectedWeekStart.minus(visibleDays, DateTimeUnit.DAY)
+                                selectedWeekStart = if (viewMode == ScheduleViewMode.MONTH) {
+                                    val prevMonth = selectedWeekStart.minus(1, DateTimeUnit.MONTH)
+                                    LocalDate(prevMonth.year, prevMonth.monthNumber, 1)
+                                } else {
+                                    selectedWeekStart.minus(visibleDays, DateTimeUnit.DAY)
+                                }
                             },
                         contentAlignment = Alignment.Center
                     ) {
@@ -459,7 +465,8 @@ fun CalendarScreen(
                             // Calculate new days list based on view mode
                             val newWeekStart = when (viewMode) {
                                 ScheduleViewMode.DAY_1, ScheduleViewMode.DAY_3 -> currentToday
-                                ScheduleViewMode.WEEK, ScheduleViewMode.MONTH -> currentToday.minus(currentToday.dayOfWeek.ordinal, DateTimeUnit.DAY)
+                                ScheduleViewMode.WEEK -> currentToday.minus(currentToday.dayOfWeek.ordinal, DateTimeUnit.DAY)
+                                ScheduleViewMode.MONTH -> LocalDate(currentToday.year, currentToday.monthNumber, 1)
                             }
                             selectedWeekStart = newWeekStart
 
@@ -506,7 +513,12 @@ fun CalendarScreen(
                             .clip(RoundedCornerShape(6.dp))
                             .background(accentColor.copy(alpha = 0.1f))
                             .clickable {
-                                selectedWeekStart = selectedWeekStart.plus(visibleDays, DateTimeUnit.DAY)
+                                selectedWeekStart = if (viewMode == ScheduleViewMode.MONTH) {
+                                    val nextMonth = selectedWeekStart.plus(1, DateTimeUnit.MONTH)
+                                    LocalDate(nextMonth.year, nextMonth.monthNumber, 1)
+                                } else {
+                                    selectedWeekStart.plus(visibleDays, DateTimeUnit.DAY)
+                                }
                             },
                         contentAlignment = Alignment.Center
                     ) {
@@ -613,9 +625,9 @@ fun CalendarScreen(
             val currentHour = currentDateTime.hour
             val currentMinute = currentDateTime.minute
 
-            // Scroll to current time on first load
-            LaunchedEffect(Unit) {
-                scrollState.scrollToItem((currentHour - 2).coerceAtLeast(0))
+            // Scroll to current time on first load and when view mode changes
+            LaunchedEffect(viewMode) {
+                scrollState.scrollToItem((currentHour - 1).coerceAtLeast(0))
             }
 
             LazyColumn(
@@ -1541,6 +1553,7 @@ private fun TimeRow(
                                         isLastRow = isLastRow,
                                         topOffsetFraction = topOffset,
                                         bottomOffsetFraction = bottomOffset,
+                                        eventCount = eventCount,
                                         onLongPress = { onScheduleLongPress(schedule.id) },
                                         onClick = { onScheduleClick(schedule) }
                                     )
@@ -1565,9 +1578,11 @@ private fun ScheduleItemSpanning(
     isLastRow: Boolean = false,
     topOffsetFraction: Float = 0f,
     bottomOffsetFraction: Float = 0f,
+    eventCount: Int = 1,
     onLongPress: () -> Unit = {},
     onClick: () -> Unit = {}
 ) {
+    val isCompact = eventCount >= 3
     val habitColor = try {
         val colorString = schedule.habitColor.removePrefix("#")
         val colorInt = colorString.toLong(16)
@@ -1616,7 +1631,7 @@ private fun ScheduleItemSpanning(
                     }
                 )
                 .clip(shape)
-                .background(habitColor.copy(alpha = if (isSelected) 0.3f else 0.15f))
+                .background(habitColor.copy(alpha = if (isSelected) 0.3f else if (isCompact) 0.25f else 0.15f))
                 .then(
                     if (isSelected) Modifier.border(2.dp, habitColor, shape)
                     else Modifier
@@ -1641,35 +1656,37 @@ private fun ScheduleItemSpanning(
                 Column(
                     modifier = Modifier
                         .weight(1f)
-                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                        .padding(horizontal = if (isCompact) 3.dp else 6.dp, vertical = 2.dp)
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        horizontalArrangement = Arrangement.spacedBy(if (isCompact) 2.dp else 4.dp)
                     ) {
                         if (isSelectionMode) {
                             Icon(
                                 imageVector = if (isSelected) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
                                 contentDescription = null,
-                                modifier = Modifier.size(12.dp),
+                                modifier = Modifier.size(if (isCompact) 8.dp else 12.dp),
                                 tint = habitColor
                             )
                         }
                         Text(
                             text = schedule.habitName,
-                            fontSize = 10.sp,
+                            fontSize = if (isCompact) 8.sp else 10.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = habitColor.copy(alpha = 0.9f),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
                     }
-                    Text(
-                        text = "${schedule.startTime} - ${schedule.endTime}",
-                        fontSize = 8.sp,
-                        color = habitColor.copy(alpha = 0.7f)
-                    )
-                    if (schedule.hasReminder && !isSelectionMode) {
+                    if (!isCompact) {
+                        Text(
+                            text = "${schedule.startTime} - ${schedule.endTime}",
+                            fontSize = 8.sp,
+                            color = habitColor.copy(alpha = 0.7f)
+                        )
+                    }
+                    if (schedule.hasReminder && !isSelectionMode && !isCompact) {
                         Icon(
                             imageVector = Icons.Default.Notifications,
                             contentDescription = null,

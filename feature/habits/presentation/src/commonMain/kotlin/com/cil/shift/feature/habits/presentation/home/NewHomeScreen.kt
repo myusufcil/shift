@@ -230,8 +230,17 @@ fun NewHomeScreen(
                             color = Color(0xFF4E7CFF),
                             letterSpacing = 1.sp
                         )
+                        val displayName = when {
+                            authState is AuthState.Authenticated -> {
+                                val user = (authState as AuthState.Authenticated).user
+                                user.displayName
+                                    ?: user.email?.substringBefore("@")?.replaceFirstChar { it.uppercase() }
+                                    ?: state.userName
+                            }
+                            else -> StringResources.user.localized()
+                        }
                         Text(
-                            text = "${StringResources.hello.localized()}, ${state.userName}",
+                            text = "${StringResources.hello.localized()}, $displayName",
                             fontSize = 28.sp,
                             fontWeight = FontWeight.Bold,
                             color = textColor

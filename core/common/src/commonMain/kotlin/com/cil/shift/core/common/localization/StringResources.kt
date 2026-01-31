@@ -1429,6 +1429,20 @@ object StringResources {
         zh = "访客"
     )
 
+    val user = StringResource(
+        en = "User",
+        tr = "Kullanıcı",
+        es = "Usuario",
+        fr = "Utilisateur",
+        de = "Benutzer",
+        pt = "Usuário",
+        ar = "مستخدم",
+        ru = "Пользователь",
+        hi = "उपयोगकर्ता",
+        ja = "ユーザー",
+        zh = "用户"
+    )
+
     val signInSignUp = StringResource(
         en = "Sign In / Sign Up",
         tr = "Giriş Yap / Kayıt Ol",
