@@ -28,13 +28,9 @@ class ShiftApplication : Application() {
 
         // Configure RevenueCat
         Purchases.configure(
-            configuration = PurchasesConfiguration(apiKey = REVENUECAT_API_KEY) {
+            configuration = PurchasesConfiguration(apiKey = BuildConfig.REVENUECAT_API_KEY) {
                 // Optional configuration
             }
         )
-    }
-
-    companion object {
-        private const val REVENUECAT_API_KEY = "goog_bZnpedRehibcaYPThfoTOGwxEaL"
     }
 }

@@ -52,10 +52,10 @@ struct iOSApp: App {
         Purchases.logLevel = .debug
         #endif
 
-        // Configure RevenueCat with your App Store API key
-        // Get your API key from: https://app.revenuecat.com/apps -> Your App -> API Keys
-        Purchases.configure(withAPIKey: Self.revenueCatApiKey)
+        // Configure RevenueCat with API key from Info.plist (injected via xcconfig)
+        guard let apiKey = Bundle.main.object(forInfoDictionaryKey: "RevenueCatApiKey") as? String, !apiKey.isEmpty else {
+            fatalError("RevenueCatApiKey not found in Info.plist. Ensure Secrets.xcconfig is configured.")
+        }
+        Purchases.configure(withAPIKey: apiKey)
     }
-
-    private static let revenueCatApiKey = "appl_xkQOlAvgrupLJYaoLRHmUPAqOTe"
 }

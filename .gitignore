@@ -25,3 +25,4 @@ iosApp/Pods/
 *.jks
 app/debug/
 fastlane/
+**/Secrets.xcconfig
