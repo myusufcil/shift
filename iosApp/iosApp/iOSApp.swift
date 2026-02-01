@@ -57,5 +57,5 @@ struct iOSApp: App {
         Purchases.configure(withAPIKey: Self.revenueCatApiKey)
     }
 
-    private static let revenueCatApiKey = "test_vjvuzIodDCVnrSumhQWtVwEpKk"
+    private static let revenueCatApiKey = "appl_xkQOlAvgrupLJYaoLRHmUPAqOTe"
 }
