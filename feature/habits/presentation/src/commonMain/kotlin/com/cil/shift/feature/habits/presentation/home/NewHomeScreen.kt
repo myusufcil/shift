@@ -14,6 +14,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -58,6 +59,7 @@ fun NewHomeScreen(
     onNavigateToCreateHabit: () -> Unit,
     onNavigateToHabitDetail: (String, String?) -> Unit,
     onNavigateToNotifications: () -> Unit = {},
+    onNavigateToPomodoro: () -> Unit = {},
     onNavigateToProfile: () -> Unit = {},
     onNavigateToPremium: () -> Unit = {},
     onNavigateToLogin: () -> Unit = {},
@@ -268,6 +270,21 @@ fun NewHomeScreen(
                             isLow = honeyStatus.isLowBalance,
                             isCritical = honeyStatus.isCriticalBalance
                         )
+
+                        IconButton(
+                            onClick = onNavigateToPomodoro,
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .background(cardColor)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Timer,
+                                contentDescription = StringResources.pomodoroFocusTimer.localized(),
+                                tint = Color(0xFF4ECDC4),
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
 
                         IconButton(
                             onClick = onNavigateToNotifications,

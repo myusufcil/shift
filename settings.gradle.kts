@@ -54,5 +54,8 @@ include(":feature:statistics:presentation")
 // Feature modules - Settings
 include(":feature:settings:presentation")
 
+// Feature modules - Pomodoro
+include(":feature:pomodoro:presentation")
+
 // Feature modules - Onboarding
 include(":feature:onboarding:presentation")

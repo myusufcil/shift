@@ -57,6 +57,7 @@ kotlin {
             implementation(project(":feature:habits:data"))
             implementation(project(":feature:statistics:presentation"))
             implementation(project(":feature:settings:presentation"))
+            implementation(project(":feature:pomodoro:presentation"))
 
             // Navigation
             implementation(libs.voyager.navigator)

@@ -5,6 +5,7 @@ import com.cil.shift.feature.habits.presentation.detail.HabitDetailViewModel
 import com.cil.shift.feature.habits.presentation.home.HomeViewModel
 import com.cil.shift.feature.onboarding.presentation.walkthrough.WalkthroughViewModel
 import com.cil.shift.feature.onboarding.presentation.suggestions.HabitSuggestionsViewModel
+import com.cil.shift.feature.pomodoro.presentation.PomodoroViewModel
 import com.cil.shift.feature.settings.presentation.SettingsViewModel
 import com.cil.shift.feature.settings.presentation.NotificationsViewModel
 import com.cil.shift.feature.statistics.presentation.StatisticsViewModel
@@ -27,4 +28,7 @@ val viewModelModule = module {
     // Settings
     factory { SettingsViewModel(get(), get(), get()) }
     factory { NotificationsViewModel(get()) }
+
+    // Pomodoro
+    factory { PomodoroViewModel(get(), get(), get()) }
 }

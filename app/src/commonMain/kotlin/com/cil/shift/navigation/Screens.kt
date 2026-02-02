@@ -13,6 +13,8 @@ import com.cil.shift.feature.habits.presentation.create.MultiStepCreateHabitScre
 import com.cil.shift.feature.habits.presentation.create.CreateEditHabitViewModel
 import com.cil.shift.feature.habits.presentation.detail.HabitDetailScreen
 import com.cil.shift.feature.habits.presentation.detail.HabitDetailViewModel
+import com.cil.shift.feature.pomodoro.presentation.PomodoroScreen
+import com.cil.shift.feature.pomodoro.presentation.PomodoroViewModel
 import com.cil.shift.feature.settings.presentation.*
 import com.cil.shift.feature.settings.presentation.achievements.AchievementsScreen
 import com.cil.shift.feature.settings.presentation.auth.LoginScreen
@@ -60,6 +62,26 @@ data class HabitDetailScreen(val habitId: String, val selectedDate: String? = nu
         HabitDetailScreen(
             onNavigateBack = { navigator.pop() },
             onNavigateToEdit = { id -> navigator.push(CreateHabitScreen(id)) },
+            viewModel = viewModel
+        )
+    }
+}
+
+object PomodoroScreenNav : Screen {
+    @Composable
+    override fun Content() {
+        val navigator = LocalNavigator.currentOrThrow
+        val viewModel: PomodoroViewModel = koinInject()
+
+        DisposableEffect(Unit) {
+            GlobalNavigationEvents.isFullScreenActive = true
+            onDispose {
+                GlobalNavigationEvents.isFullScreenActive = false
+            }
+        }
+
+        PomodoroScreen(
+            onNavigateBack = { navigator.pop() },
             viewModel = viewModel
         )
     }

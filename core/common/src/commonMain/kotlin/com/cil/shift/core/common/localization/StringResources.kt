@@ -2402,6 +2402,111 @@ object StringResources {
         pt = "Registrar", ar = "تسجيل", ru = "Записать", hi = "उपयोग दर्ज", ja = "記録", zh = "记录"
     )
 
+    // Pomodoro / Focus Timer
+    val pomodoroFocusTimer = StringResource(
+        en = "Focus Timer", tr = "Odak Zamanlayıcı", es = "Temporizador", fr = "Minuterie Focus",
+        de = "Fokus-Timer", pt = "Temporizador", ar = "مؤقت التركيز", ru = "Таймер фокусировки",
+        hi = "फोकस टाइमर", ja = "集中タイマー", zh = "专注计时器"
+    )
+    val pomodoroFocus = StringResource(
+        en = "Focus", tr = "Odak", es = "Enfoque", fr = "Focus",
+        de = "Fokus", pt = "Foco", ar = "تركيز", ru = "Фокус",
+        hi = "फोकस", ja = "集中", zh = "专注"
+    )
+    val pomodoroShortBreak = StringResource(
+        en = "Short Break", tr = "Kısa Mola", es = "Pausa Corta", fr = "Pause Courte",
+        de = "Kurze Pause", pt = "Pausa Curta", ar = "استراحة قصيرة", ru = "Короткий перерыв",
+        hi = "छोटा ब्रेक", ja = "短い休憩", zh = "短休息"
+    )
+    val pomodoroLongBreak = StringResource(
+        en = "Long Break", tr = "Uzun Mola", es = "Pausa Larga", fr = "Longue Pause",
+        de = "Lange Pause", pt = "Pausa Longa", ar = "استراحة طويلة", ru = "Длинный перерыв",
+        hi = "लंबा ब्रेक", ja = "長い休憩", zh = "长休息"
+    )
+    val pomodoroStart = StringResource(
+        en = "Start", tr = "Başla", es = "Iniciar", fr = "Démarrer",
+        de = "Starten", pt = "Iniciar", ar = "ابدأ", ru = "Старт",
+        hi = "शुरू", ja = "開始", zh = "开始"
+    )
+    val pomodoroPause = StringResource(
+        en = "Pause", tr = "Duraklat", es = "Pausar", fr = "Pause",
+        de = "Pause", pt = "Pausar", ar = "إيقاف", ru = "Пауза",
+        hi = "रोकें", ja = "一時停止", zh = "暂停"
+    )
+    val pomodoroResume = StringResource(
+        en = "Resume", tr = "Devam Et", es = "Reanudar", fr = "Reprendre",
+        de = "Fortsetzen", pt = "Retomar", ar = "استئناف", ru = "Продолжить",
+        hi = "जारी रखें", ja = "再開", zh = "继续"
+    )
+    val pomodoroReset = StringResource(
+        en = "Reset", tr = "Sıfırla", es = "Reiniciar", fr = "Réinitialiser",
+        de = "Zurücksetzen", pt = "Reiniciar", ar = "إعادة", ru = "Сброс",
+        hi = "रीसेट", ja = "リセット", zh = "重置"
+    )
+    val pomodoroSkip = StringResource(
+        en = "Skip", tr = "Atla", es = "Saltar", fr = "Passer",
+        de = "Überspringen", pt = "Pular", ar = "تخطي", ru = "Пропустить",
+        hi = "छोड़ें", ja = "スキップ", zh = "跳过"
+    )
+    val pomodoroSettings = StringResource(
+        en = "Settings", tr = "Ayarlar", es = "Ajustes", fr = "Paramètres",
+        de = "Einstellungen", pt = "Configurações", ar = "الإعدادات", ru = "Настройки",
+        hi = "सेटिंग्स", ja = "設定", zh = "设置"
+    )
+    val pomodoroFocusDuration = StringResource(
+        en = "Focus Duration", tr = "Odak Süresi", es = "Duración de Enfoque", fr = "Durée de Focus",
+        de = "Fokus-Dauer", pt = "Duração do Foco", ar = "مدة التركيز", ru = "Длительность фокуса",
+        hi = "फोकस अवधि", ja = "集中時間", zh = "专注时长"
+    )
+    val pomodoroSessionCount = StringResource(
+        en = "Sessions Before Long Break", tr = "Uzun Moladan Önce Oturum", es = "Sesiones Antes de Pausa Larga",
+        fr = "Sessions Avant Longue Pause", de = "Sitzungen vor Langer Pause", pt = "Sessões Antes da Pausa Longa",
+        ar = "الجلسات قبل الاستراحة الطويلة", ru = "Сессий до длинного перерыва", hi = "लंबे ब्रेक से पहले सत्र",
+        ja = "長休憩までのセッション数", zh = "长休息前的会话数"
+    )
+    val pomodoroAutoStartBreaks = StringResource(
+        en = "Auto-start Breaks", tr = "Molaları Otomatik Başlat", es = "Iniciar Pausas Automáticamente",
+        fr = "Démarrage Auto des Pauses", de = "Pausen automatisch starten", pt = "Iniciar Pausas Automaticamente",
+        ar = "بدء الاستراحات تلقائياً", ru = "Автоматический старт перерывов", hi = "ब्रेक ऑटो-स्टार्ट",
+        ja = "自動休憩開始", zh = "自动开始休息"
+    )
+    val pomodoroAutoStartFocus = StringResource(
+        en = "Auto-start Focus", tr = "Odaklanmayı Otomatik Başlat", es = "Iniciar Enfoque Automáticamente",
+        fr = "Démarrage Auto du Focus", de = "Fokus automatisch starten", pt = "Iniciar Foco Automaticamente",
+        ar = "بدء التركيز تلقائياً", ru = "Автоматический старт фокуса", hi = "फोकस ऑटो-स्टार्ट",
+        ja = "自動集中開始", zh = "自动开始专注"
+    )
+    val pomodoroLinkHabit = StringResource(
+        en = "Link to Habit", tr = "Alışkanlığa Bağla", es = "Vincular a Hábito", fr = "Lier à une Habitude",
+        de = "Mit Gewohnheit verknüpfen", pt = "Vincular ao Hábito", ar = "ربط بعادة", ru = "Привязать к привычке",
+        hi = "आदत से लिंक करें", ja = "習慣にリンク", zh = "关联习惯"
+    )
+    val pomodoroToday = StringResource(
+        en = "Today", tr = "Bugün", es = "Hoy", fr = "Aujourd'hui",
+        de = "Heute", pt = "Hoje", ar = "اليوم", ru = "Сегодня",
+        hi = "आज", ja = "今日", zh = "今天"
+    )
+    val pomodoroTotalSessions = StringResource(
+        en = "Total Sessions", tr = "Toplam Oturum", es = "Sesiones Totales", fr = "Sessions Totales",
+        de = "Gesamtsitzungen", pt = "Total de Sessões", ar = "إجمالي الجلسات", ru = "Всего сессий",
+        hi = "कुल सत्र", ja = "合計セッション", zh = "总会话数"
+    )
+    val pomodoroMinutes = StringResource(
+        en = "min", tr = "dk", es = "min", fr = "min",
+        de = "Min", pt = "min", ar = "د", ru = "мин",
+        hi = "मिनट", ja = "分", zh = "分钟"
+    )
+    val pomodoroSessionComplete = StringResource(
+        en = "Session Complete!", tr = "Oturum Tamamlandı!", es = "¡Sesión Completada!", fr = "Session Terminée !",
+        de = "Sitzung Abgeschlossen!", pt = "Sessão Concluída!", ar = "!اكتملت الجلسة", ru = "Сессия завершена!",
+        hi = "सत्र पूरा!", ja = "セッション完了！", zh = "会话完成！"
+    )
+    val pomodoroBreakOver = StringResource(
+        en = "Break Over!", tr = "Mola Bitti!", es = "¡Pausa Terminada!", fr = "Pause Terminée !",
+        de = "Pause Vorbei!", pt = "Pausa Acabou!", ar = "!انتهت الاستراحة", ru = "Перерыв окончен!",
+        hi = "ब्रेक खत्म!", ja = "休憩終了！", zh = "休息结束！"
+    )
+
     // Predefined Habit Names
     val habitEveningWalk = StringResource(
         en = "Evening Walk",
