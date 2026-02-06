@@ -23,6 +23,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
@@ -41,6 +42,7 @@ import com.cil.shift.core.common.localization.LocalizationHelpers
 import com.cil.shift.core.common.localization.LocalizationManager
 import com.cil.shift.core.common.localization.StringResources
 import com.cil.shift.core.common.localization.localized
+import com.cil.shift.core.designsystem.components.AutoSizeText
 import com.cil.shift.core.designsystem.components.CoachMarkController
 import com.cil.shift.core.designsystem.components.coachMarkTarget
 import com.cil.shift.core.designsystem.components.HoneyCounter
@@ -241,9 +243,10 @@ fun NewHomeScreen(
                             }
                             else -> StringResources.user.localized()
                         }
-                        Text(
+                        AutoSizeText(
                             text = "${StringResources.hello.localized()}, $displayName",
-                            fontSize = 28.sp,
+                            maxFontSize = 28.sp,
+                            minFontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
                             color = textColor
                         )
@@ -384,7 +387,10 @@ fun NewHomeScreen(
                         text = StringResources.todaysHabits.localized(),
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
-                        color = textColor
+                        color = textColor,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false)
                     )
 
                     TextButton(onClick = { viewModel.onEvent(HomeEvent.ToggleShowAll) }) {

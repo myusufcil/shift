@@ -20,7 +20,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusDirection
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
@@ -142,19 +141,18 @@ fun LoginScreen(
                     )
                 },
                 singleLine = true,
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Email,
-                    imeAction = ImeAction.Next
-                ),
-                keyboardActions = KeyboardActions(
-                    onNext = { focusManager.moveFocus(FocusDirection.Down) }
-                ),
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = Color(0xFF4E7CFF),
-                    unfocusedBorderColor = textColor.copy(alpha = 0.2f)
-                )
+                    unfocusedBorderColor = textColor.copy(alpha = 0.2f),
+                    focusedTextColor = textColor,
+                    unfocusedTextColor = textColor,
+                    cursorColor = Color(0xFF4E7CFF),
+                    focusedLabelColor = Color(0xFF4E7CFF),
+                    unfocusedLabelColor = textColor.copy(alpha = 0.6f)
+                ),
+                enabled = !isLoading
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -304,56 +302,58 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Google Sign-In Button
-            OutlinedButton(
-                onClick = {
-                    scope.launch {
-                        isGoogleLoading = true
-                        errorMessage = null
+            // Google Sign-In Button (Android only - not implemented on iOS)
+            if (!isIOS) {
+                OutlinedButton(
+                    onClick = {
+                        scope.launch {
+                            isGoogleLoading = true
+                            errorMessage = null
 
-                        try {
-                            when (val result = socialSignInProvider.signInWithGoogle()) {
-                                is SocialSignInResult.Success -> {
-                                    when (val authResult = authManager.signInWithGoogle(result.idToken)) {
-                                        is AuthResult.Success -> {
-                                            purchaseManager.login(authResult.user.uid)
-                                            onLoginSuccess()
-                                        }
-                                        is AuthResult.Error -> {
-                                            errorMessage = authResult.message
+                            try {
+                                when (val result = socialSignInProvider.signInWithGoogle()) {
+                                    is SocialSignInResult.Success -> {
+                                        when (val authResult = authManager.signInWithGoogle(result.idToken)) {
+                                            is AuthResult.Success -> {
+                                                purchaseManager.login(authResult.user.uid)
+                                                onLoginSuccess()
+                                            }
+                                            is AuthResult.Error -> {
+                                                errorMessage = authResult.message
+                                            }
                                         }
                                     }
+                                    is SocialSignInResult.Error -> {
+                                        errorMessage = result.message
+                                    }
+                                    SocialSignInResult.Cancelled -> {
+                                        // User cancelled, do nothing
+                                    }
                                 }
-                                is SocialSignInResult.Error -> {
-                                    errorMessage = result.message
-                                }
-                                SocialSignInResult.Cancelled -> {
-                                    // User cancelled, do nothing
-                                }
+                            } catch (e: Exception) {
+                                errorMessage = "Unexpected error: ${e.message}"
+                            } finally {
+                                isGoogleLoading = false
                             }
-                        } catch (e: Exception) {
-                            errorMessage = "Unexpected error: ${e.message}"
-                        } finally {
-                            isGoogleLoading = false
                         }
-                    }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                shape = RoundedCornerShape(12.dp),
-                border = ButtonDefaults.outlinedButtonBorder(enabled = !isGoogleLoading),
-                enabled = !isGoogleLoading && !isAppleLoading && !isLoading
-            ) {
-                // Google logo with multicolor G
-                GoogleLogo(size = 20.dp)
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(
-                    text = strings.continueWithGoogle,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = textColor
-                )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    border = ButtonDefaults.outlinedButtonBorder(enabled = !isGoogleLoading),
+                    enabled = !isGoogleLoading && !isAppleLoading && !isLoading
+                ) {
+                    // Google logo with multicolor G
+                    GoogleLogo(size = 20.dp)
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = strings.continueWithGoogle,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = textColor
+                    )
+                }
             }
 
             // Apple Sign-In Button (iOS only)
@@ -368,7 +368,7 @@ fun LoginScreen(
 
                             when (val result = socialSignInProvider.signInWithApple()) {
                                 is SocialSignInResult.Success -> {
-                                    when (val authResult = authManager.signInWithApple(result.idToken)) {
+                                    when (val authResult = authManager.signInWithApple(result.idToken, result.rawNonce)) {
                                         is AuthResult.Success -> {
                                             purchaseManager.login(authResult.user.uid)
                                             onLoginSuccess()
@@ -399,10 +399,7 @@ fun LoginScreen(
                     ),
                     enabled = !isAppleLoading && !isGoogleLoading && !isLoading
                 ) {
-                    Text(
-                        text = "",
-                        fontSize = 20.sp
-                    )
+                    AppleLogo(size = 18.dp, color = backgroundColor)
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
                         text = strings.continueWithApple,
@@ -450,6 +447,45 @@ fun LoginScreen(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun AppleLogo(
+    size: androidx.compose.ui.unit.Dp,
+    color: Color,
+    modifier: Modifier = Modifier
+) {
+    androidx.compose.foundation.Canvas(
+        modifier = modifier.size(size)
+    ) {
+        val s = size.toPx() / 24f
+        val path = androidx.compose.ui.graphics.Path().apply {
+            // Apple body
+            moveTo(18.71f * s, 19.5f * s)
+            cubicTo(17.88f * s, 20.74f * s, 17f * s, 21.95f * s, 15.66f * s, 21.97f * s)
+            cubicTo(14.32f * s, 21.99f * s, 13.89f * s, 21.18f * s, 12.37f * s, 21.18f * s)
+            cubicTo(10.84f * s, 21.18f * s, 10.37f * s, 21.95f * s, 9.1f * s, 21.99f * s)
+            cubicTo(7.79f * s, 22.03f * s, 6.8f * s, 20.68f * s, 5.96f * s, 19.47f * s)
+            cubicTo(4.25f * s, 16.56f * s, 2.93f * s, 11.3f * s, 4.7f * s, 7.72f * s)
+            cubicTo(5.57f * s, 5.94f * s, 7.36f * s, 4.86f * s, 9.28f * s, 4.84f * s)
+            cubicTo(10.56f * s, 4.82f * s, 11.78f * s, 5.71f * s, 12.58f * s, 5.71f * s)
+            cubicTo(13.38f * s, 5.71f * s, 14.88f * s, 4.63f * s, 16.42f * s, 4.8f * s)
+            cubicTo(17.07f * s, 4.83f * s, 18.9f * s, 5.06f * s, 20.06f * s, 6.79f * s)
+            cubicTo(19.96f * s, 6.85f * s, 17.62f * s, 8.22f * s, 17.65f * s, 11.04f * s)
+            cubicTo(17.68f * s, 14.37f * s, 20.58f * s, 15.48f * s, 20.61f * s, 15.49f * s)
+            cubicTo(20.58f * s, 15.56f * s, 20.15f * s, 17.05f * s, 19.09f * s, 18.57f * s)
+            lineTo(18.71f * s, 19.5f * s)
+            close()
+            // Leaf
+            moveTo(13f * s, 3.5f * s)
+            cubicTo(13.73f * s, 2.67f * s, 14.94f * s, 2.04f * s, 15.94f * s, 2f * s)
+            cubicTo(16.07f * s, 3.17f * s, 15.6f * s, 4.35f * s, 14.9f * s, 5.19f * s)
+            cubicTo(14.21f * s, 6.04f * s, 13.07f * s, 6.7f * s, 11.95f * s, 6.61f * s)
+            cubicTo(11.8f * s, 5.46f * s, 12.36f * s, 4.26f * s, 13f * s, 3.5f * s)
+            close()
+        }
+        drawPath(path, color = color)
     }
 }
 

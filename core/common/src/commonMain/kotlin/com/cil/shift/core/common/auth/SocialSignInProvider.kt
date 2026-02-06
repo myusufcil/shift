@@ -4,7 +4,7 @@ package com.cil.shift.core.common.auth
  * Result of social sign-in operation
  */
 sealed class SocialSignInResult {
-    data class Success(val idToken: String, val accessToken: String? = null) : SocialSignInResult()
+    data class Success(val idToken: String, val accessToken: String? = null, val rawNonce: String? = null) : SocialSignInResult()
     data class Error(val message: String) : SocialSignInResult()
     data object Cancelled : SocialSignInResult()
 }

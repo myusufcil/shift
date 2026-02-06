@@ -62,11 +62,11 @@ fun SignUpScreen(
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
     // Email validation - simple check
-    fun isValidEmail(email: String): Boolean {
-        return email.contains("@") &&
-               email.contains(".") &&
-               email.indexOf("@") < email.lastIndexOf(".") &&
-               email.length >= 5
+    fun isValidEmail(value: String): Boolean {
+        return value.contains("@") &&
+               value.contains(".") &&
+               value.indexOf("@") < value.lastIndexOf(".") &&
+               value.length >= 5
     }
 
     // Password validation rules
@@ -179,19 +179,18 @@ fun SignUpScreen(
                     )
                 },
                 singleLine = true,
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Email,
-                    imeAction = ImeAction.Next
-                ),
-                keyboardActions = KeyboardActions(
-                    onNext = { focusManager.moveFocus(FocusDirection.Down) }
-                ),
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = Color(0xFF4E7CFF),
-                    unfocusedBorderColor = textColor.copy(alpha = 0.2f)
-                )
+                    unfocusedBorderColor = textColor.copy(alpha = 0.2f),
+                    focusedTextColor = textColor,
+                    unfocusedTextColor = textColor,
+                    cursorColor = Color(0xFF4E7CFF),
+                    focusedLabelColor = Color(0xFF4E7CFF),
+                    unfocusedLabelColor = textColor.copy(alpha = 0.6f)
+                ),
+                enabled = !isLoading
             )
 
             Spacer(modifier = Modifier.height(16.dp))

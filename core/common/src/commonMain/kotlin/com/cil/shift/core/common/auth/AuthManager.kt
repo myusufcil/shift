@@ -69,6 +69,7 @@ class AuthManager {
         } catch (e: Exception) {
             val errorMessage = when {
                 e.message?.contains("INVALID_LOGIN_CREDENTIALS") == true -> "Invalid email or password"
+                e.message?.contains("INVALID_CREDENTIAL") == true -> "Invalid email or password"
                 e.message?.contains("USER_NOT_FOUND") == true -> "No account found with this email"
                 e.message?.contains("WRONG_PASSWORD") == true -> "Incorrect password"
                 e.message?.contains("TOO_MANY_REQUESTS") == true -> "Too many attempts. Please try again later"
@@ -149,9 +150,9 @@ class AuthManager {
     /**
      * Sign in with Apple credential
      */
-    suspend fun signInWithApple(idToken: String): AuthResult {
+    suspend fun signInWithApple(idToken: String, rawNonce: String? = null): AuthResult {
         return try {
-            val credential = OAuthProvider.credential("apple.com", idToken, null)
+            val credential = OAuthProvider.credential("apple.com", idToken, rawNonce)
             val result = auth.signInWithCredential(credential)
             result.user?.let { user ->
                 _authState.value = AuthState.Authenticated(user.toAuthUser())

@@ -122,7 +122,7 @@ android {
         applicationId = "com.cil.shift"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 45
+        versionCode = 46
         versionName = "1.1.4"
 
         buildConfigField("String", "REVENUECAT_API_KEY", "\"${localProperties.getProperty("REVENUECAT_API_KEY", "")}\"")

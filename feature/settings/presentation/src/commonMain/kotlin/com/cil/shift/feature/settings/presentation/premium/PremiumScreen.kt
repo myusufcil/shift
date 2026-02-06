@@ -69,6 +69,8 @@ fun PremiumScreen(
 
     // Load offerings and check status on screen open
     LaunchedEffect(Unit) {
+        localErrorMessage = null
+        purchaseManager.clearError()
         purchaseManager.initialize()
     }
 
@@ -174,7 +176,7 @@ fun PremiumScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp, vertical = 8.dp),
+                .padding(horizontal = 20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Premium badge - smaller
@@ -285,6 +287,15 @@ fun PremiumScreen(
                         )
                     }
                 }
+            } else {
+                // Packages loading/unavailable
+                Spacer(modifier = Modifier.height(8.dp))
+                CircularProgressIndicator(
+                    color = Color(0xFF4E7CFF),
+                    modifier = Modifier.size(32.dp),
+                    strokeWidth = 3.dp
+                )
+                Spacer(modifier = Modifier.height(8.dp))
             }
 
             // Error message

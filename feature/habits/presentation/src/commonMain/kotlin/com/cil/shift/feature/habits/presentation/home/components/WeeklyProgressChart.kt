@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.cil.shift.core.common.localization.Language
@@ -63,8 +64,13 @@ fun WeeklyProgressChart(
                 text = StringResources.thisWeek.get(currentLanguage),
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = textColor.copy(alpha = 0.8f)
+                color = textColor.copy(alpha = 0.8f),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f, fill = false)
             )
+
+            Spacer(modifier = Modifier.width(8.dp))
 
             // Chart type selector
             Row(
@@ -223,7 +229,7 @@ private fun ChartTypeButton(
         ),
         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
         modifier = Modifier
-            .height(24.dp)
+            .defaultMinSize(minWidth = 1.dp, minHeight = 1.dp)
             .graphicsLayer {
                 scaleX = scale.value
                 scaleY = scale.value
@@ -232,7 +238,9 @@ private fun ChartTypeButton(
         Text(
             text = text,
             fontSize = 10.sp,
-            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
     }
 }

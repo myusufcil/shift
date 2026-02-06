@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -29,6 +30,7 @@ import com.cil.shift.core.common.localization.LocalizationHelpers
 import com.cil.shift.core.common.localization.LocalizationManager
 import com.cil.shift.core.common.localization.StringResources
 import com.cil.shift.core.common.localization.localized
+import com.cil.shift.core.designsystem.components.AutoSizeText
 import com.cil.shift.feature.statistics.presentation.components.LineChart
 import com.cil.shift.feature.statistics.presentation.components.ChartData
 import com.cil.shift.feature.statistics.presentation.components.PieChart
@@ -84,7 +86,9 @@ fun StatisticsScreen(
                         text = StringResources.statistics.localized(),
                         fontSize = 28.sp,
                         fontWeight = FontWeight.Bold,
-                        color = textColor
+                        color = textColor,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
 
                     // Streak Calendar
@@ -174,7 +178,9 @@ private fun StreakCalendarCard(
                 text = StringResources.activityCalendar.localized(),
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
-                color = textColor
+                color = textColor,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
 
             // Streak stats header
@@ -550,9 +556,10 @@ private fun StreakCard(currentStreak: Int) {
                     fontSize = 14.sp,
                     color = textColor.copy(alpha = 0.6f)
                 )
-                Text(
+                AutoSizeText(
                     text = "${animatedStreak.value.coerceAtLeast(0)} ${StringResources.daysStreak.localized()}",
-                    fontSize = 28.sp,
+                    maxFontSize = 28.sp,
+                    minFontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF00D9FF)
                 )
@@ -612,7 +619,9 @@ private fun ChartTypeSelectorButton(
             text = text,
             fontSize = 11.sp,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-            color = if (isSelected) accentColor else textColor.copy(alpha = 0.5f)
+            color = if (isSelected) accentColor else textColor.copy(alpha = 0.5f),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
         Spacer(modifier = Modifier.height(2.dp))
         // Underline indicator
@@ -1074,20 +1083,21 @@ private fun PeriodToggleButton(
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
-            .widthIn(min = 80.dp)
+            .widthIn(min = 60.dp)
             .clickable(
                 onClick = onClick,
                 indication = null,
                 interactionSource = remember { MutableInteractionSource() }
             )
-            .padding(horizontal = 12.dp, vertical = 4.dp)
+            .padding(horizontal = 8.dp, vertical = 4.dp)
     ) {
         Text(
             text = text,
             fontSize = 13.sp,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
             color = if (isSelected) accentColor else textColorBase.copy(alpha = 0.5f),
-            maxLines = 1
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
         Spacer(modifier = Modifier.height(4.dp))
         // Underline indicator

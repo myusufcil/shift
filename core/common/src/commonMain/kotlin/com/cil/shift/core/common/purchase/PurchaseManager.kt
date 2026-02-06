@@ -55,6 +55,10 @@ class PurchaseManager {
     val isPremium: Boolean
         get() = _premiumState.value is PremiumState.Premium
 
+    fun clearError() {
+        _errorMessage.value = null
+    }
+
     companion object {
         // RevenueCat entitlement identifier (must match RevenueCat dashboard)
         const val PREMIUM_ENTITLEMENT = "Shift Pro"
@@ -180,8 +184,9 @@ class PurchaseManager {
                     lifetime = lifetime
                 )
             }
-        } catch (e: Exception) {
-            _errorMessage.value = "loadOfferings error: ${e.message}"
+        } catch (_: Exception) {
+            // Don't show loadOfferings errors as purchase errors
+            // Packages will remain null and UI will handle gracefully
         }
     }
 
