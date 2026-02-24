@@ -152,7 +152,7 @@ class AuthManager {
      */
     suspend fun signInWithApple(idToken: String, rawNonce: String? = null): AuthResult {
         return try {
-            val credential = OAuthProvider.credential("apple.com", idToken, rawNonce)
+            val credential = OAuthProvider.credential("apple.com", idToken = idToken, rawNonce = rawNonce)
             val result = auth.signInWithCredential(credential)
             result.user?.let { user ->
                 _authState.value = AuthState.Authenticated(user.toAuthUser())

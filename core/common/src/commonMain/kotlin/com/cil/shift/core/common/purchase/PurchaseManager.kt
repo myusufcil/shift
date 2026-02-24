@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
@@ -67,6 +68,9 @@ class PurchaseManager {
         const val PACKAGE_MONTHLY = "\$rc_monthly"
         const val PACKAGE_YEARLY = "\$rc_annual"
         const val PACKAGE_LIFETIME = "\$rc_lifetime"
+
+        // Timeout for RevenueCat API calls to prevent indefinite loading (e.g., in sandbox)
+        private const val API_TIMEOUT_MS = 15_000L
     }
 
     /**
@@ -74,8 +78,18 @@ class PurchaseManager {
      */
     suspend fun initialize() {
         try {
-            checkPremiumStatus()
-            loadOfferings()
+            // Use timeout to prevent indefinite loading if RevenueCat callbacks never fire
+            val statusResult = withTimeoutOrNull(API_TIMEOUT_MS) {
+                checkPremiumStatus()
+            }
+            if (statusResult == null) {
+                // Timeout reached - default to NotPremium so user can still see packages
+                _premiumState.value = PremiumState.NotPremium
+            }
+
+            withTimeoutOrNull(API_TIMEOUT_MS) {
+                loadOfferings()
+            }
         } catch (e: Exception) {
             _premiumState.value = PremiumState.Error(e.message ?: "Failed to initialize")
         }

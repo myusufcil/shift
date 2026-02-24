@@ -67,11 +67,26 @@ fun PremiumScreen(
     val rawErrorMessage = localErrorMessage ?: purchaseError
     val errorMessage = PremiumStrings.localizeError(rawErrorMessage, strings)
 
+    var packagesLoadFailed by remember { mutableStateOf(false) }
+    var loadingTimedOut by remember { mutableStateOf(false) }
+
+    // Safety timeout: if premiumState stays Loading too long, skip to NotPremium
+    LaunchedEffect(Unit) {
+        kotlinx.coroutines.delay(10_000L)
+        if (purchaseManager.premiumState.value is PremiumState.Loading) {
+            loadingTimedOut = true
+        }
+    }
+
     // Load offerings and check status on screen open
     LaunchedEffect(Unit) {
         localErrorMessage = null
         purchaseManager.clearError()
         purchaseManager.initialize()
+        // If packages still null after initialize, mark as failed
+        if (purchaseManager.packages.value == null) {
+            packagesLoadFailed = true
+        }
     }
 
     // Auto-select yearly as default
@@ -88,8 +103,8 @@ fun PremiumScreen(
         }
     }
 
-    // Show loading while checking premium status
-    if (premiumState is PremiumState.Loading) {
+    // Show loading while checking premium status (with timeout fallback)
+    if (premiumState is PremiumState.Loading && !loadingTimedOut) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -102,6 +117,11 @@ fun PremiumScreen(
             )
         }
         return
+    }
+
+    // If premium state error, treat as not premium (allow user to see packages)
+    if (premiumState is PremiumState.Error) {
+        // Fall through to show the purchase UI
     }
 
     // If already premium, show nothing (will navigate back via LaunchedEffect)
@@ -287,8 +307,37 @@ fun PremiumScreen(
                         )
                     }
                 }
+            } else if (packagesLoadFailed) {
+                // Packages failed to load - show retry
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = strings.errorNetwork,
+                    fontSize = 12.sp,
+                    color = textColor.copy(alpha = 0.6f),
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                TextButton(
+                    onClick = {
+                        scope.launch {
+                            packagesLoadFailed = false
+                            purchaseManager.loadOfferings()
+                            if (purchaseManager.packages.value == null) {
+                                packagesLoadFailed = true
+                            }
+                        }
+                    }
+                ) {
+                    Text(
+                        text = strings.retry,
+                        color = Color(0xFF4E7CFF),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+                Spacer(modifier = Modifier.height(8.dp))
             } else {
-                // Packages loading/unavailable
+                // Packages loading
                 Spacer(modifier = Modifier.height(8.dp))
                 CircularProgressIndicator(
                     color = Color(0xFF4E7CFF),
@@ -609,7 +658,8 @@ private data class PremiumStrings(
     val errorRestoreFailed: String,
     val errorDeviceNotAllowed: String,
     val errorGeneric: String,
-    val noPurchasesToRestore: String
+    val noPurchasesToRestore: String,
+    val retry: String
 ) {
     companion object {
         fun get(language: Language): PremiumStrings {
@@ -638,7 +688,8 @@ private data class PremiumStrings(
                     errorRestoreFailed = "Geri yukleme basarisiz. Lutfen tekrar deneyin.",
                     errorDeviceNotAllowed = "Bu cihaz satin alma icin desteklenmiyor.",
                     errorGeneric = "Bir hata olustu. Lutfen tekrar deneyin.",
-                    noPurchasesToRestore = "Geri yuklenecek satin alma bulunamadi."
+                    noPurchasesToRestore = "Geri yuklenecek satin alma bulunamadi.",
+                    retry = "Tekrar Dene"
                 )
                 else -> PremiumStrings(
                     title = "Shift Premium",
@@ -664,7 +715,8 @@ private data class PremiumStrings(
                     errorRestoreFailed = "Restore failed. Please try again.",
                     errorDeviceNotAllowed = "This device is not supported for purchases.",
                     errorGeneric = "An error occurred. Please try again.",
-                    noPurchasesToRestore = "No purchases found to restore."
+                    noPurchasesToRestore = "No purchases found to restore.",
+                    retry = "Retry"
                 )
             }
         }

@@ -27,7 +27,6 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.cil.shift.core.common.localization.LocalizationHelpers
 import com.cil.shift.core.common.localization.LocalizationManager
 import com.cil.shift.core.common.localization.StringResources
@@ -42,10 +41,7 @@ fun HabitDetailScreen(
     onNavigateBack: () -> Unit,
     onNavigateToEdit: (String) -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: HabitDetailViewModel = viewModel {
-        // TODO: Inject dependencies via DI
-        throw IllegalStateException("ViewModel should be provided via DI")
-    }
+    viewModel: HabitDetailViewModel = koinInject()
 ) {
     val localizationManager = koinInject<LocalizationManager>()
     val currentLanguage by localizationManager.currentLanguage.collectAsState()

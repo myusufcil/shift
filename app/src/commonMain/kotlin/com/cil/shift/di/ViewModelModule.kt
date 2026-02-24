@@ -26,7 +26,7 @@ val viewModelModule = module {
     factory { StatisticsViewModel(get(), get(), get()) }
 
     // Settings
-    factory { SettingsViewModel(get(), get(), get()) }
+    factory { SettingsViewModel(get(), get(), get(), get()) }
     factory { NotificationsViewModel(get()) }
 
     // Pomodoro

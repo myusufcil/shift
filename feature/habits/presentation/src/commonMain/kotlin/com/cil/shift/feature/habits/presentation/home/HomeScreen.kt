@@ -17,7 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import org.koin.compose.koinInject
 import com.cil.shift.feature.habits.presentation.home.components.HabitCard
 
 @Composable
@@ -25,10 +25,7 @@ fun HomeScreen(
     onNavigateToCreateHabit: () -> Unit,
     onNavigateToHabitDetail: (String) -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: HomeViewModel = viewModel {
-        // TODO: Inject dependencies via DI
-        throw IllegalStateException("ViewModel should be provided via DI")
-    }
+    viewModel: HomeViewModel = koinInject()
 ) {
     val state by viewModel.state.collectAsState()
     val backgroundColor = MaterialTheme.colorScheme.background

@@ -26,7 +26,7 @@ import com.cil.shift.core.common.onboarding.OnboardingPreferences
 import org.koin.compose.koinInject
 import org.koin.core.parameter.parametersOf
 
-data class CreateHabitScreen(val habitId: String? = null) : Screen {
+data class CreateHabitScreen(val habitId: String? = null, val selectedDate: String? = null) : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
@@ -41,6 +41,7 @@ data class CreateHabitScreen(val habitId: String? = null) : Screen {
 
         MultiStepCreateHabitScreen(
             onNavigateBack = { navigator.pop() },
+            onNavigateToPremium = { navigator.push(PremiumScreenNav) },
             viewModel = viewModel
         )
     }

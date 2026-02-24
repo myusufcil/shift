@@ -366,27 +366,31 @@ fun LoginScreen(
                             isAppleLoading = true
                             errorMessage = null
 
-                            when (val result = socialSignInProvider.signInWithApple()) {
-                                is SocialSignInResult.Success -> {
-                                    when (val authResult = authManager.signInWithApple(result.idToken, result.rawNonce)) {
-                                        is AuthResult.Success -> {
-                                            purchaseManager.login(authResult.user.uid)
-                                            onLoginSuccess()
-                                        }
-                                        is AuthResult.Error -> {
-                                            errorMessage = authResult.message
+                            try {
+                                when (val result = socialSignInProvider.signInWithApple()) {
+                                    is SocialSignInResult.Success -> {
+                                        when (val authResult = authManager.signInWithApple(result.idToken, result.rawNonce)) {
+                                            is AuthResult.Success -> {
+                                                purchaseManager.login(authResult.user.uid)
+                                                onLoginSuccess()
+                                            }
+                                            is AuthResult.Error -> {
+                                                errorMessage = authResult.message
+                                            }
                                         }
                                     }
+                                    is SocialSignInResult.Error -> {
+                                        errorMessage = result.message
+                                    }
+                                    SocialSignInResult.Cancelled -> {
+                                        // User cancelled, do nothing
+                                    }
                                 }
-                                is SocialSignInResult.Error -> {
-                                    errorMessage = result.message
-                                }
-                                SocialSignInResult.Cancelled -> {
-                                    // User cancelled, do nothing
-                                }
+                            } catch (e: Exception) {
+                                errorMessage = "Unexpected error: ${e.message}"
+                            } finally {
+                                isAppleLoading = false
                             }
-
-                            isAppleLoading = false
                         }
                     },
                     modifier = Modifier

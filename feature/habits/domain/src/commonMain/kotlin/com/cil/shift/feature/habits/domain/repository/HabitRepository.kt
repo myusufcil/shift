@@ -54,6 +54,11 @@ interface HabitRepository {
     suspend fun deleteHabit(id: String)
 
     /**
+     * Deletes all active habits (soft delete - marks all as archived).
+     */
+    suspend fun deleteAllHabits()
+
+    /**
      * Toggles habit completion for a specific date.
      * If already completed, removes the completion. If not completed, adds completion.
      *

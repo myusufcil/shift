@@ -18,7 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import org.koin.compose.koinInject
 import com.cil.shift.core.designsystem.components.NotEnoughHoneyDialog
 import com.cil.shift.feature.habits.presentation.create.components.ColorPicker
 import com.cil.shift.feature.habits.presentation.create.components.FrequencySelector
@@ -28,11 +28,9 @@ import com.cil.shift.feature.habits.presentation.create.components.CategorizedIc
 @Composable
 fun CreateEditHabitScreen(
     onNavigateBack: () -> Unit,
+    onNavigateToPremium: () -> Unit = {},
     modifier: Modifier = Modifier,
-    viewModel: CreateEditHabitViewModel = viewModel {
-        // TODO: Inject dependencies via DI
-        throw IllegalStateException("ViewModel should be provided via DI")
-    }
+    viewModel: CreateEditHabitViewModel = koinInject()
 ) {
     val state by viewModel.state.collectAsState()
     val scrollState = rememberScrollState()
@@ -265,7 +263,7 @@ fun CreateEditHabitScreen(
             currentBalance = state.honeyBalance,
             onGetPremium = {
                 viewModel.onEvent(CreateEditHabitEvent.DismissNotEnoughHoneyDialog)
-                // TODO: Navigate to premium screen
+                onNavigateToPremium()
             },
             onDismiss = {
                 viewModel.onEvent(CreateEditHabitEvent.DismissNotEnoughHoneyDialog)

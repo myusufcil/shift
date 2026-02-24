@@ -14,6 +14,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.Modifier
@@ -30,6 +33,8 @@ import org.koin.compose.koinInject
 
 @Composable
 fun SettingsScreen(
+    onNavigateToProfile: () -> Unit = {},
+    onNavigateToDeleteAllHabits: () -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: SettingsViewModel = koinInject()
 ) {
@@ -45,9 +50,34 @@ fun SettingsScreen(
     val privacyPolicyUrl = "https://myusufcil.github.io/shift/privacy.html"
     val termsOfServiceUrl = "https://myusufcil.github.io/shift/terms.html"
 
+    var showDeleteAllDialog by remember { mutableStateOf(false) }
+
     val backgroundColor = MaterialTheme.colorScheme.background
     val textColor = MaterialTheme.colorScheme.onBackground
     val cardColor = MaterialTheme.colorScheme.surface
+
+    if (showDeleteAllDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteAllDialog = false },
+            title = { Text("Delete All Habits") },
+            text = { Text("Are you sure you want to delete all your habits? This action cannot be undone.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteAllDialog = false
+                        viewModel.onEvent(SettingsEvent.DeleteAllHabits)
+                    }
+                ) {
+                    Text("Delete", color = Color(0xFFFF6B6B))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteAllDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
 
     Box(
         modifier = modifier
@@ -150,7 +180,7 @@ fun SettingsScreen(
                 subtitle = "Change your name and email",
                 cardColor = cardColor,
                 textColor = textColor,
-                onClick = { /* TODO: Navigate to edit profile */ }
+                onClick = onNavigateToProfile
             )
 
             SettingItem(
@@ -192,7 +222,7 @@ fun SettingsScreen(
                 subtitle = "Remove all your habit data",
                 cardColor = cardColor,
                 textColor = textColor,
-                onClick = { /* TODO: Show confirmation dialog */ },
+                onClick = { showDeleteAllDialog = true },
                 titleColor = Color(0xFFFF6B6B)
             )
 

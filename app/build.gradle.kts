@@ -94,11 +94,6 @@ kotlin {
             implementation(libs.androidx.work.runtime)
             implementation(libs.androidx.splashscreen)
 
-            // Google Sign-In
-            implementation(libs.googleid)
-            implementation(libs.androidx.credentials)
-            implementation(libs.androidx.credentials.play.services)
-
             // Glance (App Widget)
             implementation(libs.androidx.glance)
             implementation(libs.androidx.glance.material3)
@@ -122,8 +117,8 @@ android {
         applicationId = "com.cil.shift"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 46
-        versionName = "1.1.4"
+        versionCode = 47
+        versionName = "1.1.5"
 
         buildConfigField("String", "REVENUECAT_API_KEY", "\"${localProperties.getProperty("REVENUECAT_API_KEY", "")}\"")
     }

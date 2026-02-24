@@ -201,9 +201,7 @@ private object CalendarScreenWrapper : cafe.adriel.voyager.core.screen.Screen {
 
         CalendarScreen(
             onNavigateToCreateHabit = { selectedDate ->
-                // Navigate to create habit screen
-                // TODO: Pass selected date to CreateHabitScreen when implemented
-                navigator.push(CreateHabitScreen())
+                navigator.push(CreateHabitScreen(selectedDate = selectedDate.toString()))
             },
             coachMarkController = coachMarkController
         )

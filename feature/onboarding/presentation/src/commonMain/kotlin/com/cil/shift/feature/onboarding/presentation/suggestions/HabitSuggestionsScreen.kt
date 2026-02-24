@@ -23,15 +23,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import org.koin.compose.koinInject
 
 @Composable
 fun HabitSuggestionsScreen(
     onComplete: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: HabitSuggestionsViewModel = viewModel {
-        throw IllegalStateException("ViewModel should be provided via DI")
-    }
+    viewModel: HabitSuggestionsViewModel = koinInject()
 ) {
     val state by viewModel.state.collectAsState()
 

@@ -85,6 +85,12 @@ class HabitRepositoryImpl(
         }
     }
 
+    override suspend fun deleteAllHabits() {
+        withContext(Dispatchers.IO) {
+            habitQueries.archiveAll()
+        }
+    }
+
     override suspend fun toggleCompletion(habitId: String, date: String) {
         withContext(Dispatchers.IO) {
             habitQueries.toggleCompletion(

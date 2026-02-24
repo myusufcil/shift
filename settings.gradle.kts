@@ -28,9 +28,6 @@ dependencyResolutionManagement {
     }
 }
 
-// Old composeApp (will migrate later)
-include(":composeApp")
-
 // Shift app module
 include(":app")
 

@@ -64,6 +64,12 @@ UPDATE Habit
 SET is_archived = 1
 WHERE id = ?;
 
+-- Soft delete all habits (mark all as archived)
+archiveAll:
+UPDATE Habit
+SET is_archived = 1
+WHERE is_archived = 0;
+
 -- Hard delete a habit (for testing/cleanup)
 hardDelete:
 DELETE FROM Habit

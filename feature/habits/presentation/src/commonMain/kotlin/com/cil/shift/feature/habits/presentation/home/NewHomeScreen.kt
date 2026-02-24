@@ -27,7 +27,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.cil.shift.core.common.achievement.Achievement
 import com.cil.shift.core.common.achievement.AchievementManager
 import com.cil.shift.core.common.auth.AuthManager
@@ -67,9 +66,7 @@ fun NewHomeScreen(
     onNavigateToLogin: () -> Unit = {},
     coachMarkController: CoachMarkController? = null,
     modifier: Modifier = Modifier,
-    viewModel: HomeViewModel = viewModel {
-        throw IllegalStateException("ViewModel should be provided via DI")
-    }
+    viewModel: HomeViewModel = koinInject()
 ) {
     val state by viewModel.state.collectAsState()
     val localizationManager = koinInject<LocalizationManager>()

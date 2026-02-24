@@ -16,7 +16,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.cil.shift.core.common.localization.LocalizationHelpers
 import com.cil.shift.core.common.localization.LocalizationManager
 import com.cil.shift.core.common.localization.StringResources
@@ -32,9 +31,7 @@ fun MultiStepCreateHabitScreen(
     onNavigateBack: () -> Unit,
     onNavigateToPremium: () -> Unit = {},
     modifier: Modifier = Modifier,
-    viewModel: CreateEditHabitViewModel = viewModel {
-        throw IllegalStateException("ViewModel should be provided via DI")
-    }
+    viewModel: CreateEditHabitViewModel = koinInject()
 ) {
     val state by viewModel.state.collectAsState()
     var currentStep by remember { mutableStateOf(0) }
@@ -291,7 +288,7 @@ fun MultiStepCreateHabitScreen(
                 viewModel.onEvent(CreateEditHabitEvent.DismissNotEnoughHoneyDialog)
                 onNavigateToPremium()
             },
-            onWatchAd = null, // TODO: Implement ad watching
+            onWatchAd = null, // TODO: Ad SDK integration pending
             onDismiss = {
                 viewModel.onEvent(CreateEditHabitEvent.DismissNotEnoughHoneyDialog)
             }
